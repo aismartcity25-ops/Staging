@@ -13,7 +13,7 @@ process.on('uncaughtException', (err) => {
   console.error('🚨 Uncaught exception (server kept running):', err && err.stack ? err.stack : err);
 });
 
-const { liveAvatarConfig } = require('./liveavatar-config.js');
+const { liveAvatarConfig } = require('./src/config/liveavatar-config.js');
 liveAvatarConfig.validate();
 
 const fs      = require('fs');
@@ -33,6 +33,7 @@ const { upload, classifyMime } = require('./src/lib/uploads');
 const { transcribeAudio } = require('./src/lib/stt');
 const { textToSpeech } = require('./src/lib/tts');
 const { searchConfiguredSites: deepSearchConfiguredSites } = require('./deep-search-engine.js');
+const { analyzeSite } = require('./src/lib/site-analyzer');
 
 // Upload audio per l'input vocale (/api/chat/stt): in memoria, mai su disco
 // (a differenza di `upload`, che persiste gli allegati chat) — la
@@ -390,9 +391,31 @@ apiRouter.post('/validate-url', async (req, res) => {
   }
 });
 
+// ── Site analysis (bottone "Analizza sito" in fase di creazione demo) ────────
+// Scan strutturale (non guidato da query) fino a 3 livelli: gerarchia +
+// data di ultima modifica per pagina, più verifica sitemap/feed. Non ha
+// relazione con deep-search-engine.js (quello è il motore di ricerca live
+// usato durante la chat) né con il knowledge-engine (ancora scollegato).
+const SITE_ANALYSIS_VALID_MODES = new Set(['live', 'crawling']);
+
+apiRouter.post('/site-analysis', requireAuth, async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ success: false, error: 'URL richiesto' });
+  try { new URL(url); }
+  catch { return res.status(400).json({ success: false, error: 'URL non valido' }); }
+
+  try {
+    const result = await analyzeSite(url);
+    res.json(result);
+  } catch (err) {
+    console.error('Site analysis error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ── Demos CRUD ───────────────────────────────────────────────────────────────
 apiRouter.post('/demos', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, searchMode } = req.body;
 
   if (!clientUrl || !searchUrls || !Array.isArray(searchUrls) || searchUrls.length === 0)
     return res.status(400).json({ error: 'Dati mancanti o non validi' });
@@ -406,6 +429,11 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
     createdBy:   req.session.user.username,
     product:     req.session.user.currentProduct,
     clientUrl, searchUrls,
+    // 'crawling' non è ancora collegato (knowledge-engine dormiente): la
+    // preferenza viene comunque salvata sulla demo, ma il motore usato in
+    // chat resta sempre quello live (deep-search-engine.js) finché non
+    // decidiamo insieme come attivare l'indicizzazione.
+    searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : 'live',
     instructions: instructions || '',
     colors: colors || { primary:'#00b4ff', secondary:'#0066cc', userBg:'#3b82f6', userText:'#ffffff', aiBg:'#e5e7eb', aiText:'#1f2937' }
   };
@@ -417,7 +445,7 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
 });
 
 apiRouter.put('/demos/:id', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, searchMode } = req.body;
   const demoId = req.params.id;
 
   if (!demoId) return res.status(400).json({ error: 'ID demo richiesto' });
@@ -431,10 +459,16 @@ apiRouter.put('/demos/:id', requireAuth, (req, res) => {
   const idx = demos.findIndex(d => d.id === demoId);
   if (idx === -1) return res.status(404).json({ error: 'Demo non trovata' });
 
+  const user = req.session.user;
+  if (user.role !== 'admin' && demos[idx].createdBy !== user.username) {
+    return res.status(403).json({ error: 'Non autorizzato a modificare questa demo' });
+  }
+
   demos[idx] = {
     ...demos[idx],
     clientUrl,
     searchUrls,
+    searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : (demos[idx].searchMode || 'live'),
     instructions: instructions || '',
     colors: colors || demos[idx].colors,
     updatedAt: new Date().toISOString()

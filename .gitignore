@@ -1,8 +1,37 @@
-.env
-.env.example
-*.md
+# Dependencies
+node_modules/
+widget-src/node_modules/
 
-# Keep the /data folder structure but ignore its contents
-data/**
-!data/**/
-!data/**/.gitkeep
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Runtime data (uploads, crawl state, vector store, job queues) —
+# struttura preservata via .gitkeep, contenuto reale mai committato
+data/uploads/*
+!data/uploads/.gitkeep
+data/crawl-state/*
+!data/crawl-state/.gitkeep
+data/jobs/*
+!data/jobs/.gitkeep
+data/lancedb/*
+!data/lancedb/.gitkeep
+data/knowledge-engine/*
+!data/knowledge-engine/.gitkeep
+!data/knowledge-engine/jobs
+data/knowledge-engine/jobs/*
+!data/knowledge-engine/jobs/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Widget build output (regenerated via `npm run build:widget`)
+widget-src/dist-embed/*.map

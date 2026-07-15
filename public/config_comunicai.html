@@ -260,6 +260,14 @@
 
     .btn-crea svg { width: 20px; height: 20px; fill: white; }
 
+    .btn-cancel-edit {
+      width: 100%; padding: 10px; margin-top: 10px;
+      background: transparent; border: 1px solid var(--border); border-radius: 10px;
+      color: var(--muted); font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel-edit:hover { background: rgba(0,0,0,0.04); }
+
     .spinner {
       width: 18px; height: 18px;
       border: 2px solid rgba(255,255,255,0.3);
@@ -343,6 +351,19 @@
     .btn-delete-demo:hover { background: rgba(255, 124, 148, 0.792); }
     .btn-delete-demo svg { width: 16px; height: 16px; }
 
+    .btn-edit-demo {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgb(255, 255, 255);
+      border: 1px solid rgba(19,160,106,0.25);
+      border-radius: 8px;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-edit-demo:hover { background: rgba(19,160,106,0.12); }
+    .btn-edit-demo svg { width: 16px; height: 16px; }
+
     .btn-show-more {
       display: block; width: 100%; margin-top: 12px;
       padding: 10px; text-align: center;
@@ -424,6 +445,88 @@
       color: white;
       border-bottom-right-radius: 4px;
     }
+
+    /* Analisi sito */
+    .btn-analyze { margin-top: 16px; }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
+    .analysis-report {
+      display: none; margin-top: 14px; padding: 16px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: rgba(19,160,106,0.04);
+    }
+    .analysis-report.visible { display: block; animation: fadeUp 0.3s ease; }
+    .analysis-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .analysis-badge {
+      font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
+      border: 1px solid var(--border); color: var(--muted);
+    }
+    .analysis-badge.found { color: var(--accent); border-color: rgba(19,160,106,0.4); background: rgba(19,160,106,0.08); }
+    .analysis-pages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .analysis-page-row { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding: 4px 0; }
+    .analysis-page-title { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .analysis-page-date { margin-left: auto; flex-shrink: 0; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+    .analysis-empty { font-size: 13px; color: var(--muted); }
+
+    .analysis-report.visible { cursor: pointer; transition: box-shadow 0.15s; }
+    .analysis-report.visible:hover { box-shadow: 0 0 0 1px rgba(19,160,106,0.4) inset; }
+    .analysis-expand-hint {
+      font-size: 12.5px; font-weight: 600; color: var(--accent);
+      padding-top: 8px; margin-top: 10px; border-top: 1px dashed var(--border);
+    }
+
+    .analysis-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(15,23,32,0.55); align-items: center; justify-content: center; padding: 24px;
+    }
+    .analysis-modal-overlay.visible { display: flex; }
+    .analysis-modal {
+      background: #fff; border-radius: 14px; width: min(760px, 100%); max-height: 85vh;
+      display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.35); overflow: hidden;
+    }
+    .analysis-modal-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .analysis-modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .analysis-modal-close {
+      background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer;
+      color: var(--muted); padding: 2px 8px; border-radius: 6px;
+    }
+    .analysis-modal-close:hover { background: rgba(0,0,0,0.06); }
+    .analysis-modal-body { padding: 16px 20px 20px; overflow: auto; }
+    .tree-toolbar { display: flex; gap: 8px; margin: 10px 0 14px; }
+    .tree-toolbar-btn {
+      font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; cursor: pointer; color: var(--muted); font-weight: 600;
+    }
+    .tree-toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tree-container { overflow: auto; }
+    .tree-root, .tree-children { list-style: none; margin: 0; padding-left: 0; }
+    .tree-children { margin-left: 16px; padding-left: 16px; border-left: 1px dashed var(--border); }
+    .tree-node { position: relative; margin: 3px 0; }
+    .tree-node.collapsed > .tree-children { display: none; }
+    .tree-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 6px; border-radius: 6px; }
+    .tree-row:hover { background: rgba(0,0,0,0.04); }
+    .tree-toggle {
+      flex-shrink: 0; width: 16px; height: 16px; border: none; background: none; cursor: pointer;
+      color: var(--muted); font-size: 11px; padding: 0; display: flex; align-items: center; justify-content: center;
+    }
+    .tree-toggle-leaf { cursor: default; }
+    .tree-page-title { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-page-date { margin-left: auto; flex-shrink: 0; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    /* Modalità di ricerca */
+    .mode-toggle { display: flex; gap: 10px; margin-top: 8px; }
+    .mode-btn {
+      flex: 1; text-align: left; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: transparent; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; color: var(--muted); transition: all 0.15s;
+    }
+    .mode-btn strong { display: block; color: var(--text); font-size: 14px; margin-bottom: 2px; }
+    .mode-btn span { display: block; font-size: 12px; color: var(--muted); }
+    .mode-btn.active { border-color: var(--accent); background: rgba(19,160,106,0.08); }
+    .mode-btn.active strong { color: var(--accent); }
+    .mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -478,6 +581,27 @@
         <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
           <textarea id="bulkSearchUrls" placeholder="Incolla più URL, uno per riga" rows="4"></textarea>
           <button class="btn-add" onclick="addUrlsBulk()">Aggiungi tutti</button>
+        </div>
+
+        <button class="btn-add btn-analyze" id="btnAnalyzeSite" onclick="analyzeSite()" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+          Analizza sito
+        </button>
+        <div class="analysis-report" id="analysisReport" onclick="openAnalysisModal()"></div>
+
+        <div style="margin-top:20px;">
+          <label>Modalità di ricerca</label>
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn active" id="modeBtnLive" onclick="setSearchMode('live')">
+              <strong>⚡ Live</strong>
+              <span>Ricerca in tempo reale sul sito ad ogni domanda dell'utente</span>
+            </button>
+            <button type="button" class="mode-btn" id="modeBtnCrawling" onclick="setSearchMode('crawling')" disabled title="Prossimamente">
+              <strong>🗂️ Crawling</strong>
+              <span>Indicizzazione del sito — prossimamente</span>
+            </button>
+          </div>
+          <input type="hidden" id="searchMode" value="live">
         </div>
       </div>
 
@@ -559,6 +683,7 @@
           <div class="spinner"></div>
           <span class="btn-text">CREA DEMO</span>
         </button>
+        <button type="button" id="btnCancelEdit" class="btn-cancel-edit" style="display:none" onclick="cancelEdit()">Annulla modifica</button>
       </div>
 
       <!-- Recent demos -->
@@ -573,6 +698,16 @@
       </div>
     </div>
   </main>
+
+  <div class="analysis-modal-overlay" id="analysisModalOverlay" onclick="if (event.target === this) closeAnalysisModal()">
+    <div class="analysis-modal">
+      <div class="analysis-modal-header">
+        <div class="analysis-modal-title">Struttura gerarchica del sito</div>
+        <button type="button" class="analysis-modal-close" onclick="closeAnalysisModal()" aria-label="Chiudi">×</button>
+      </div>
+      <div class="analysis-modal-body" id="analysisModalBody"></div>
+    </div>
+  </div>
 
   <script src="/auth.js"></script>
   <script>
@@ -646,6 +781,182 @@
 
       bulkInput.value = '';
       document.querySelector('.search-url:last-of-type')?.focus();
+    }
+
+    // ── Analisi sito (bottone "Analizza sito") ──────────────────────────────
+    let lastAnalysisData = null;
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function formatAnalysisDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso; // data non-ISO (es. RFC822 dei feed): mostra il valore grezzo
+      return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function renderAnalysisBadges(data) {
+      return [
+        `<span class="analysis-badge ${data.sitemap.found ? 'found' : ''}">${data.sitemap.found ? '✓ Sitemap trovata' : 'Nessuna sitemap'}</span>`,
+        `<span class="analysis-badge ${data.feed.found ? 'found' : ''}">${data.feed.found ? '✓ Feed trovato' : 'Nessun feed'}</span>`,
+        `<span class="analysis-badge">${data.totalPages} pagine (fino a 3 livelli)</span>`
+      ].join('');
+    }
+
+    function renderAnalysisReport(data) {
+      lastAnalysisData = data;
+      const el = document.getElementById('analysisReport');
+      el.classList.add('visible');
+
+      if (!data.success) {
+        el.innerHTML = `<div class="analysis-empty">Analisi non riuscita: ${escapeHtml(data.error || 'errore sconosciuto')}</div>`;
+        return;
+      }
+
+      const badges = renderAnalysisBadges(data);
+
+      if (data.pages.length === 0) {
+        el.innerHTML = `<div class="analysis-summary">${badges}</div><div class="analysis-empty">Nessuna pagina raggiungibile dal sito indicato.</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="analysis-summary">${badges}</div>
+        <div class="analysis-expand-hint">🔍 Clicca per visualizzare la struttura gerarchica completa (${data.pages.length} pagine)</div>
+      `;
+    }
+
+    function buildAnalysisTree(pages) {
+      const nodesByUrl = new Map();
+      pages.forEach(p => nodesByUrl.set(p.url, Object.assign({}, p, { children: [] })));
+      const roots = [];
+      pages.forEach(p => {
+        const node = nodesByUrl.get(p.url);
+        const parent = p.parentUrl ? nodesByUrl.get(p.parentUrl) : null;
+        if (parent) parent.children.push(node);
+        else roots.push(node);
+      });
+      return roots;
+    }
+
+    function renderTreeNode(node) {
+      const dateLabel = formatAnalysisDate(node.lastModified);
+      const hasChildren = node.children.length > 0;
+      const tooltip = escapeHtml((node.breadcrumb || []).join(' › '));
+      const toggle = hasChildren
+        ? `<button type="button" class="tree-toggle" onclick="toggleTreeNode(this)">▾</button>`
+        : `<span class="tree-toggle tree-toggle-leaf"></span>`;
+      const childrenHtml = hasChildren
+        ? `<ul class="tree-children">${node.children.map(renderTreeNode).join('')}</ul>`
+        : '';
+      return `
+        <li class="tree-node">
+          <div class="tree-row" title="${tooltip}">
+            ${toggle}
+            <span class="tree-page-title">${escapeHtml(node.title || node.url)}</span>
+            <span class="tree-page-date">${dateLabel ? dateLabel : 'data non disponibile'}</span>
+          </div>
+          ${childrenHtml}
+        </li>`;
+    }
+
+    function renderAnalysisModalContent(data) {
+      const badges = renderAnalysisBadges(data);
+      if (data.pages.length === 0) {
+        return `<div class="analysis-summary">${badges}</div><div class="analysis-empty">Nessuna pagina raggiungibile dal sito indicato.</div>`;
+      }
+      const tree = buildAnalysisTree(data.pages);
+      const treeHtml = `<ul class="tree-root">${tree.map(renderTreeNode).join('')}</ul>`;
+      return `
+        <div class="analysis-summary">${badges}</div>
+        <div class="tree-toolbar">
+          <button type="button" class="tree-toolbar-btn" onclick="expandAllTree()">Espandi tutto</button>
+          <button type="button" class="tree-toolbar-btn" onclick="collapseAllTree()">Comprimi tutto</button>
+        </div>
+        <div class="tree-container">${treeHtml}</div>
+      `;
+    }
+
+    function toggleTreeNode(btn) {
+      const li = btn.closest('.tree-node');
+      const collapsed = li.classList.toggle('collapsed');
+      btn.textContent = collapsed ? '▸' : '▾';
+    }
+
+    function expandAllTree() {
+      document.querySelectorAll('#analysisModalBody .tree-node.collapsed').forEach(li => {
+        li.classList.remove('collapsed');
+        const btn = li.querySelector(':scope > .tree-row > .tree-toggle');
+        if (btn && !btn.classList.contains('tree-toggle-leaf')) btn.textContent = '▾';
+      });
+    }
+
+    function collapseAllTree() {
+      document.querySelectorAll('#analysisModalBody .tree-node').forEach(li => {
+        if (li.querySelector(':scope > .tree-children')) {
+          li.classList.add('collapsed');
+          const btn = li.querySelector(':scope > .tree-row > .tree-toggle');
+          if (btn) btn.textContent = '▸';
+        }
+      });
+    }
+
+    function handleAnalysisModalKeydown(e) {
+      if (e.key === 'Escape') closeAnalysisModal();
+    }
+
+    function openAnalysisModal() {
+      if (!lastAnalysisData || !lastAnalysisData.success || lastAnalysisData.pages.length === 0) return;
+      document.getElementById('analysisModalBody').innerHTML = renderAnalysisModalContent(lastAnalysisData);
+      document.getElementById('analysisModalOverlay').classList.add('visible');
+      document.addEventListener('keydown', handleAnalysisModalKeydown);
+    }
+
+    function closeAnalysisModal() {
+      document.getElementById('analysisModalOverlay').classList.remove('visible');
+      document.removeEventListener('keydown', handleAnalysisModalKeydown);
+    }
+
+    async function analyzeSite() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const firstSearchUrl = document.querySelector('.search-url')?.value.trim();
+      const targetUrl = firstSearchUrl || clientUrl;
+
+      if (!targetUrl) {
+        alert('Inserisci prima un URL del sito (Step 1 o Step 2) da analizzare.');
+        return;
+      }
+
+      const btn = document.getElementById('btnAnalyzeSite');
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Analisi in corso…';
+
+      try {
+        const res = await fetch(ApiConfig.get('siteAnalysis'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl })
+        });
+        const data = await res.json();
+        renderAnalysisReport(data);
+      } catch (err) {
+        renderAnalysisReport({ success: false, error: err.message });
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // ── Modalità di ricerca (live / crawling) ───────────────────────────────
+    function setSearchMode(mode) {
+      if (mode === 'crawling') return; // non ancora disponibile
+      document.getElementById('searchMode').value = mode;
+      document.getElementById('modeBtnLive').classList.toggle('active', mode === 'live');
+      document.getElementById('modeBtnCrawling').classList.toggle('active', mode === 'crawling');
     }
 
     // Color picker sync
@@ -782,12 +1093,77 @@
       return results;
     }
 
+    let editingDemoId = null;
+
+    function editDemo(id) {
+      const demo = allDemos.find(d => d.id === id);
+      if (!demo) return;
+
+      editingDemoId = id;
+
+      document.getElementById('clientUrl').value = demo.clientUrl || '';
+
+      const urlList = document.getElementById('urlList');
+      urlList.innerHTML = '';
+      (demo.searchUrls && demo.searchUrls.length ? demo.searchUrls : ['']).forEach(url => {
+        const row = document.createElement('div');
+        row.className = 'url-row';
+        row.innerHTML = `<input type="url" placeholder="https://..." class="search-url"><button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>`;
+        row.querySelector('input').value = url;
+        urlList.appendChild(row);
+      });
+
+      document.getElementById('instructions').value = demo.instructions || '';
+
+      const colors = demo.colors || {};
+      ['Primary', 'Secondary', 'UserBg', 'UserText', 'AiBg', 'AiText'].forEach(field => {
+        const key = field.charAt(0).toLowerCase() + field.slice(1);
+        const value = colors[key];
+        if (!value) return;
+        document.getElementById('color' + field).value = value;
+        document.getElementById('color' + field + 'Text').value = value;
+      });
+      updatePreview();
+
+      setSearchMode(demo.searchMode === 'crawling' ? 'live' : (demo.searchMode || 'live'));
+
+      document.getElementById('alertError').className = 'alert';
+      document.getElementById('alertSuccess').className = 'alert';
+      document.getElementById('btnCrea').querySelector('.btn-text').textContent = 'SALVA MODIFICHE';
+      document.getElementById('btnCancelEdit').style.display = 'block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingDemoId = null;
+
+      document.getElementById('alertError').className = 'alert';
+      document.getElementById('alertSuccess').className = 'alert';
+
+      document.getElementById('clientUrl').value = '';
+      document.getElementById('urlList').innerHTML = '<div class="url-row"><input type="url" placeholder="https://www.comune-esempio.it" class="search-url"><button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button></div>';
+      document.getElementById('instructions').value = '';
+
+      ['Primary', 'Secondary', 'UserBg', 'UserText', 'AiBg', 'AiText'].forEach(field => {
+        const key = field.charAt(0).toLowerCase() + field.slice(1);
+        document.getElementById('color' + field).value = initialColors[key];
+        document.getElementById('color' + field + 'Text').value = initialColors[key];
+      });
+      updatePreview();
+
+      setSearchMode('live');
+
+      document.getElementById('btnCrea').querySelector('.btn-text').textContent = 'CREA DEMO';
+      document.getElementById('btnCancelEdit').style.display = 'none';
+    }
+
     async function createDemo() {
       const clientUrl = document.getElementById('clientUrl').value.trim();
       const searchInputs = document.querySelectorAll('.search-url');
       const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
       const instructions = document.getElementById('instructions').value.trim();
-      
+
       // Collect colors
       const colors = {
         primary: document.getElementById('colorPrimary').value,
@@ -814,7 +1190,7 @@
       // Validate all URLs before creating demo
       const validationResults = await validateAllUrls();
       const invalidUrls = validationResults.filter(r => !r.valid);
-      
+
       if (invalidUrls.length > 0) {
         const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
         errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
@@ -825,20 +1201,38 @@
       const btn = document.getElementById('btnCrea');
       btn.disabled = true; btn.classList.add('loading');
 
+      const searchMode = document.getElementById('searchMode').value;
+      const isEditing = !!editingDemoId;
+
       try {
-        const res = await fetch(ApiConfig.get('demos'), {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors })
+        const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
+          method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, searchMode })
         });
         const data = await res.json();
 
         if (!res.ok) {
           errEl.textContent = data.error || 'Errore nella creazione della demo.';
           errEl.className = 'alert error visible';
+        } else if (isEditing) {
+          cancelEdit();
+          sucEl.textContent = 'Demo aggiornata con successo.';
+          sucEl.className = 'alert success visible';
+          loadDemos();
         } else {
           errEl.className = 'alert';
           const kbId = (data.demo && data.demo.knowledgeBaseId) || null;
-          openProgressPopup(kbId, data.demoUrl, clientUrl);
+          if (kbId) {
+            // Solo se la demo ha una knowledge base collegata (crawling attivo)
+            // ha senso mostrare l'avanzamento dell'indicizzazione.
+            openProgressPopup(kbId, data.demoUrl, clientUrl);
+          } else {
+            // Nessun crawling da attendere (modalità live, deep-search-engine.js):
+            // la demo è già pronta, si apre subito senza popup di avanzamento.
+            sucEl.textContent = 'Demo creata con successo! Apertura in una nuova scheda...';
+            sucEl.className = 'alert success visible';
+            setTimeout(() => window.open(data.demoUrl, '_blank'), 600);
+          }
           loadDemos();
         }
       } catch {
@@ -869,6 +1263,9 @@
           </div>
           <div class="demo-card-actions">
             <a class="btn-open-demo" href="/demo.html?id=${d.id}" target="_blank">Apri ↗</a>
+            <button class="btn-edit-demo" title="Modifica demo" onclick="editDemo('${d.id}')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
             <button class="btn-delete-demo" title="Cancella demo" onclick="deleteDemo('${d.id}')">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7zm2 2v11h8V9H8zm1-5h6l1 2H8l1-2zM4 6h16v2H4V6z"/></svg>
             </button>

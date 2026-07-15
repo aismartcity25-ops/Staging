@@ -9,11 +9,11 @@
 // Valori validi per l'API OpenAI TTS: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' | 'ash' | 'sage' | 'coral'.
 // (in precedenza mappati a nomi tipo 'it-IT-Stella', non validi per l'API → causava 500 su ogni richiesta TTS)
 const voiceMap = {
-  it: 'fable',
-  en: 'fable',
-  de: 'fable',
-  fr: 'fable',
-  ar: 'fable'
+  it: 'marin',
+  en: 'marin',
+  de: 'marin',
+  fr: 'marin',
+  ar: 'marin'
 };
 
 /**
@@ -43,7 +43,7 @@ function detectLanguage(text) {
   return null;
 }
 
-async function openaiTextToSpeech(text, voice = 'fable', speed = 1.0, openai) {
+async function openaiTextToSpeech(text, voice = 'marin', speed = 1.0, openai) {
   const mp3 = await openai.audio.speech.create({
     model: 'gpt-4o-mini-tts',
     voice,
@@ -61,7 +61,7 @@ async function openaiTextToSpeech(text, voice = 'fable', speed = 1.0, openai) {
   };
 }
 
-async function textToSpeech(text, voice = 'fable', speed = 1.0, openai) {
+async function textToSpeech(text, voice = 'marin', speed = 1.0, openai) {
   const lang = detectLanguage(text);
   const voiceName = voiceMap[lang] || voice;
   return await openaiTextToSpeech(text, voiceName, speed, openai);
