@@ -27,7 +27,7 @@ const MAX_DEPTH = 3;
 // (bug osservato in test: 39 pagine trovate a depth=1, zero a depth 2/3).
 // Elaborando un livello alla volta e capando ciascuno, i livelli 2 e 3 sono
 // sempre esplorati, indipendentemente da quanto è "largo" il livello 1.
-const MAX_PAGES_PER_LEVEL = 15;
+const MAX_PAGES_PER_LEVEL = 100;
 const MAX_TOTAL_PAGES = 90; // tetto di sicurezza su tempo/carico complessivo
 // Tetto per singolo genitore quando si costruisce il livello successivo:
 // impedisce a una sezione "ricca di link" (es. Amministrazione Trasparente,
@@ -182,6 +182,56 @@ async function findFeed(origin) {
 
 // ─── Estrazione dati pagina (titolo, link, segnali di data) ──────────────────
 
+const ITALIAN_MONTHS = {
+  gennaio: 1, gen: 1,
+  febbraio: 2, feb: 2,
+  marzo: 3, mar: 3,
+  aprile: 4, apr: 4,
+  maggio: 5, mag: 5,
+  giugno: 6, giu: 6,
+  luglio: 7, lug: 7,
+  agosto: 8, ago: 8,
+  settembre: 9, set: 9,
+  ottobre: 10, ott: 10,
+  novembre: 11, nov: 11,
+  dicembre: 12, dic: 12
+};
+
+// Molti siti (soprattutto PA italiane) mostrano un testo esplicito tipo
+// "Ultimo aggiornamento: 15/07/2026" direttamente nella pagina: è un segnale
+// più affidabile di sitemap <lastmod>/header Last-Modified/meta tag, che
+// spesso sono sbagliati o non aggiornati dal CMS (osservato: date da
+// sitemap/header non corrispondenti alla data reale dichiarata in pagina).
+const VISIBLE_DATE_LABEL_REGEX = /\b(?:ultimo\s+aggiornamento|ultima\s+modifica|aggiornat[oa]\s+il|data\s+(?:di\s+)?(?:ultimo\s+aggiornamento|ultima\s+modifica))[^0-9a-zA-Zàèéìòù]{0,15}(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{1,2}\s+[a-zàèéìòù]{3,9}\s+\d{4})/i;
+
+function parseItalianVisibleDate(raw) {
+  const numeric = raw.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (numeric) {
+    let [, d, m, y] = numeric.map(Number);
+    if (y < 100) y += 2000;
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const date = new Date(Date.UTC(y, m - 1, d));
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  }
+
+  const textual = raw.match(/^(\d{1,2})\s+([a-zàèéìòù]{3,9})\s+(\d{4})$/i);
+  if (textual) {
+    const [, d, monthName, y] = textual;
+    const m = ITALIAN_MONTHS[monthName.toLowerCase()];
+    if (!m) return null;
+    const date = new Date(Date.UTC(Number(y), m - 1, Number(d)));
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  }
+
+  return null;
+}
+
+function extractVisibleLastModified(pageText) {
+  const match = pageText.match(VISIBLE_DATE_LABEL_REGEX);
+  if (!match) return null;
+  return parseItalianVisibleDate(match[1].trim());
+}
+
 function extractPageInfo(html, headers, pageUrl) {
   const $ = cheerio.load(html);
   $('script, style, noscript, iframe, svg, img, video, audio').remove();
@@ -195,6 +245,7 @@ function extractPageInfo(html, headers, pageUrl) {
     null;
 
   const headerModified = headers && headers['last-modified'] ? headers['last-modified'] : null;
+  const visibleModified = extractVisibleLastModified($('body').text());
 
   const links = [];
   $('a[href]').each((_, el) => {
@@ -202,7 +253,7 @@ function extractPageInfo(html, headers, pageUrl) {
     if (resolved && isSameDomain(resolved, pageUrl) && !isBinaryUrl(resolved) && !isUtilityUrl(resolved)) links.push(resolved);
   });
 
-  return { title, links: [...new Set(links)], metaModified, headerModified };
+  return { title, links: [...new Set(links)], metaModified, headerModified, visibleModified };
 }
 
 // Safety net: alcune pagine di utilità (login/ricerca) hanno URL che non
@@ -285,7 +336,7 @@ async function crawlStructure(rootUrl) {
     for (const { url, parentUrl, info } of fetched) {
       if (isUtilityTitle(info.title)) continue; // pagina di utilità: scartata, niente discesa nei suoi link
 
-      pages.push({ url, depth, parentUrl, title: info.title, metaModified: info.metaModified, headerModified: info.headerModified });
+      pages.push({ url, depth, parentUrl, title: info.title, metaModified: info.metaModified, headerModified: info.headerModified, visibleModified: info.visibleModified });
 
       if (depth < MAX_DEPTH) {
         const kept = [];
@@ -365,7 +416,10 @@ async function analyzeSite(rootUrl) {
       let lastModified = null;
       let lastModifiedSource = null;
 
-      if (sitemapResult.lastmodByUrl.has(p.url)) {
+      if (p.visibleModified) {
+        lastModified = p.visibleModified;
+        lastModifiedSource = 'page-text';
+      } else if (sitemapResult.lastmodByUrl.has(p.url)) {
         lastModified = sitemapResult.lastmodByUrl.get(p.url);
         lastModifiedSource = 'sitemap';
       } else if (p.headerModified) {

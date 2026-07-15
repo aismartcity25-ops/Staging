@@ -6,7 +6,7 @@ widget-src/node_modules/
 .env
 .env.local
 .env.*.local
-
+*.demos.json
 # Runtime data (uploads, crawl state, vector store, job queues) —
 # struttura preservata via .gitkeep, contenuto reale mai committato
 data/uploads/*
