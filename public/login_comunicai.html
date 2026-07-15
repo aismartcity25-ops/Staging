@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComunicAI — Accesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="/api-config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #ffffff;
+      --panel:     #ffffff;
+      --border:    #e2e8f0;
+      --accent:    #1a8c5c;
+      --accent2:  #13a06a;
+      --text:      #1a202c;
+      --muted:     #718096;
+      --error:     #e53e3e;
+      --success:   #38a169;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Subtle background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(26, 140, 92, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 90%, rgba(26, 140, 92, 0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Grid lines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(26, 140, 93, 0.212) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26, 140, 93, 0.274) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo area */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(26, 140, 92, 0.25);
+    }
+
+    .logo-mark img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+    }
+
+    .logo-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .logo-name span {
+      color: var(--accent);
+    }
+
+    .logo-tagline {
+      font-size: 13px;
+      color: var(--text);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Card */
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .card-subtitle {
+      font-size: 13.5px;
+      color: var(--text);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    /* Form */
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      background: #f7fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input::placeholder { color: var(--text); }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26, 140, 92, 0.1);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(26, 140, 92, 0.25);
+    }
+
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(26, 140, 92, 0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Error / success */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .alert.error   { background: #fed7d7; border: 1px solid #fc8181; color: #c53030; }
+    .alert.success { background: #c6f6d5; border: 1px solid #68d391; color: #2f855a; }
+    .alert.visible { display: block; animation: fadeUp 0.3s ease; }
+
+    /* Loader */
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .loading .spinner { display: block; }
+    .loading .btn-text { opacity: 0.7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-area">
+      <div class="logo-mark">
+        <img src="Loghi/comunicai_1.png" alt="ComunicAI">
+      </div>
+      <div class="logo-name">Comunic<span>AI</span></div>
+      <div class="logo-tagline">Piattaforma demo per la pubblica amministrazione</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Accesso riservato</div>
+      <div class="card-subtitle">Inserisci le tue credenziali per attivare una demo cliente.</div>
+
+      <div class="alert error" id="alertError"></div>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="es. mario.rossi" autocomplete="username">
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn" id="btnLogin" onclick="doLogin()">
+        <div class="btn-inner">
+          <div class="spinner"></div>
+          <span class="btn-text">ENTRA</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, redirect
+    (async () => {
+      try {
+        const res = await fetch(ApiConfig.get('me'), { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (data.user && data.user.currentProduct === 'comunicai') {
+          window.location.href = '/config_comunicai.html';
+        }
+      } catch {}
+    })();
+
+    async function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('btnLogin');
+      const alertEl = document.getElementById('alertError');
+
+      alertEl.className = 'alert';
+      if (!username || !password) {
+        alertEl.textContent = 'Inserisci username e password.';
+        alertEl.className = 'alert error visible';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const res = await fetch(ApiConfig.get('login'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, product: 'comunicai' })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alertEl.textContent = data.error || 'Errore di accesso.';
+          alertEl.className = 'alert error visible';
+        } else {
+          window.location.href = data.redirect;
+        }
+      } catch {
+        alertEl.textContent = 'Errore di connessione. Riprova.';
+        alertEl.className = 'alert error visible';
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>

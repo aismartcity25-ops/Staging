@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo — caricamento...</title>
+  <script src="/api-config.js"></script>
+
+  <!-- Import shared widget styles (React widget build output, from widget-src) -->
+  <link rel="stylesheet" href="/widget-src/dist-embed/chat-widget.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e1a; overflow: hidden; height: 100vh; }
+    #topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 48px; background: rgba(10, 14, 26, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 12px; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .product-badge { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0; }
+    .product-badge.comunicai { background: rgba(0,180,255,0.15); color: #00b4ff; border: 1px solid rgba(0,180,255,0.25); }
+    .product-badge.medicai { background: rgba(26,140,92,0.15); color: #1a8c5c; border: 1px solid rgba(26,140,92,0.25); }
+    .product-badge.tourism { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.25); }
+    .demo-badge { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+    .client-url { font-size: 12.5px; color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .btn-topbar { padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-topbar:hover { color: white; border-color: rgba(255,255,255,0.3); }
+    #iframeWrap { position: fixed; top: 48px; left: 0; right: 0; bottom: 0; }
+    #siteFrame { width: 100%; height: 100%; border: none; display: block; background: white; }
+    #blockedFallback { display: none; width: 100%; height: 100%; background: #111827; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 40px; }
+    .blocked-icon { width: 56px; height: 56px; border-radius: 16px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; }
+    .blocked-icon svg { width: 28px; height: 28px; fill: rgba(255,255,255,0.4); }
+    .blocked-title { font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .blocked-text { font-size: 14px; color: rgba(255,255,255,0.4); max-width: 440px; line-height: 1.7; }
+    .blocked-url { font-size: 13px; color: rgba(255,255,255,0.25); word-break: break-all; max-width: 500px; }
+    .btn-open-external { padding: 10px 20px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-open-external:hover { background: rgba(255,255,255,0.14); color: white; }
+    #loadingOverlay { position: fixed; inset: 0; top: 48px; background: #0a0e1a; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; z-index: 500; transition: opacity 0.4s ease; }
+    .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: rgba(255,255,255,0.5); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .loading-text { font-size: 14px; color: rgba(255,255,255,0.35); }
+    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
+    #errorState { display: none; position: fixed; inset: 0; top: 48px; background: #0a0e1a; align-items: center; justify-content: center; flex-direction: column; gap: 16px; text-align: center; padding: 40px; z-index: 600; }
+    .error-title { font-size: 18px; color: rgba(255,255,255,0.7); font-weight: 600; }
+    .error-text { font-size: 14px; color: rgba(255,255,255,0.35); max-width: 400px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="topbar-left">
+      <div class="product-badge" id="productBadge">Demo</div>
+      <div class="demo-badge">DEMO</div>
+      <div class="client-url" id="clientUrlDisplay">—</div>
+    </div>
+    <div class="topbar-right">
+      <a class="btn-topbar" id="btnOpenSite" href="#" target="_blank">Apri sito ↗</a>
+      <button class="btn-topbar" onclick="goBack()">← Nuova demo</button>
+    </div>
+  </div>
+  <div id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Caricamento demo in corso...</div>
+  </div>
+  <div id="errorState">
+    <div class="error-title">Demo non trovata</div>
+    <div class="error-text">L'ID demo non è valido o la demo è scaduta. Torna indietro e crea una nuova demo.</div>
+    <button class="btn-open-external" onclick="goBack()">← Torna alla configurazione</button>
+  </div>
+  <div id="iframeWrap">
+    <iframe id="siteFrame" title="Sito cliente"></iframe>
+    <div id="blockedFallback">
+      <div class="blocked-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"/></svg></div>
+      <div class="blocked-title">Questo sito non può essere incorporato</div>
+      <div class="blocked-text">Il sito del cliente blocca l'incorporamento tramite iframe (X-Frame-Options).<br>Per la versione finale su WordPress, il plugin ComunicAI/MedicAI risolve automaticamente questo problema.</div>
+      <div class="blocked-url" id="blockedUrl"></div>
+      <a class="btn-open-external" id="btnOpenBlocked" href="#" target="_blank">Apri sito in nuova scheda</a>
+    </div>
+  </div>
+  <script src="/widget-src/dist-embed/chat-widget.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const demoId = params.get('id');
+    let demoData = null;
+    const CONFIG_PAGES = { comunicai: 'config_comunicai.html', medicai: 'config_medicai.html', tourism: 'config_tourism.html' };
+    const PRODUCT_LABELS = { comunicai: 'ComunicAI', medicai: 'MedicAI', tourism: 'TourismAI' };
+    function goBack() {
+      if (demoData && demoData.product) {
+        const configPage = CONFIG_PAGES[demoData.product] || 'config_comunicai.html';
+        window.location.href = '/' + configPage;
+      } else { history.back(); }
+    }
+    async function init() {
+      if (!demoId) { showError(); return; }
+      try {
+        const res = await fetch(ApiConfig.get('demos') + '/' + demoId, { credentials: 'include' });
+        if (!res.ok) { showError(); return; }
+        demoData = await res.json();
+      } catch { showError(); return; }
+      document.title = 'Demo — ' + new URL(demoData.clientUrl).hostname;
+      const badge = document.getElementById('productBadge');
+      badge.textContent = PRODUCT_LABELS[demoData.product] || demoData.product;
+      badge.className = 'product-badge ' + demoData.product;
+      document.getElementById('clientUrlDisplay').textContent = demoData.clientUrl;
+      document.getElementById('btnOpenSite').href = demoData.clientUrl;
+      loadIframe(demoData.clientUrl);
+      initChatbot(demoData);
+    }
+    function loadIframe(url) {
+      const frame = document.getElementById('siteFrame');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      let blocked = false;
+      const timeout = setTimeout(() => { blocked = true; showBlockedFallback(url); }, 8000);
+      frame.onload = () => { if (blocked) return; clearTimeout(timeout); loadingOverlay.classList.add('hidden'); };
+      frame.onerror = () => { clearTimeout(timeout); showBlockedFallback(url); };
+      frame.src = url;
+    }
+    function showBlockedFallback(url) {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('siteFrame').style.display = 'none';
+      const fallback = document.getElementById('blockedFallback');
+      fallback.style.display = 'flex';
+      document.getElementById('blockedUrl').textContent = url;
+      document.getElementById('btnOpenBlocked').href = url;
+    }
+    function showError() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('errorState').style.display = 'flex';
+    }
+    function initChatbot(demo) {
+      ChatWidget.init({
+        product: demo.product,
+        searchUrls: demo.searchUrls || [],
+        instructions: demo.instructions || '',
+        clientUrl: demo.clientUrl || '',
+        demoId: demo.id || '',
+        colors: demo.colors || null,
+        apiEndpoint: ApiConfig.get('chatMessage')
+      });
+    }
+    init();
+  </script>
+</body>
+</html>

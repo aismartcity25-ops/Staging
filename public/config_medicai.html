@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedicAI — Configura Demo</title>
+  <script src="/api-config.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #050d1a;
+      --bg2:      #eef5f1;
+      --panel:    #ffffff;
+      --border:   #d4e8dd;
+      --border2:  #e8f3ed;
+      --accent:   #00b4ff;
+      --accent2:  #0066cc;
+      --light:    #e8f5ee;
+      --text:     #ffffff;
+      --muted:    #ffffff;
+      --error:    #e05555;
+      --success:  #1a8c5c;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at -5% 50%, rgba(0,102,204,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 105% 50%, rgba(19,160,106,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(0,102,204,0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    header {
+      position: relative; z-index: 10;
+      background: rgba(0, 102, 204, 0.651);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 1px 12px rgba(0,102,204,0.06);
+    }
+
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark img { width: 24px; height: 24px; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.8); }
+
+    .logo-name { font-family:'Fraunces',serif; font-size:20px; font-weight:700; }
+    .logo-name span { color: var(--accent); }
+
+    .header-right { display:flex; align-items:center; gap:16px; }
+    .user-badge { font-size:13px; color:var(--muted); }
+    .user-badge strong { color:var(--text); }
+
+    .btn-logout {
+      padding:7px 16px; background:transparent;
+      border:1.5px solid var(--border); border-radius:8px;
+      color:var(--muted); font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; cursor:pointer; transition:all .2s;
+    }
+    .btn-logout:hover { color:var(--accent); border-color:var(--accent); }
+
+    main {
+      position:relative; z-index:1; flex:1;
+      display:flex; align-items:flex-start; justify-content:center;
+      padding:48px 24px;
+    }
+
+    .form-container {
+      width:100%; max-width:680px;
+      animation:fadeUp .5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(20px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+
+    .page-title {
+      font-family:'Fraunces',serif;
+      font-size:32px; font-weight:700; letter-spacing:-0.5px;
+      margin-bottom:8px;
+      color: white;
+    }
+
+    .page-subtitle {
+      color:white; font-size:15px; margin-bottom:40px; line-height:1.6;
+    }
+
+    .section {
+      background: linear-gradient(135deg, rgba(0,102,204,0.15), rgba(0,180,255,0.08)) !important;
+      background:var(--panel);
+      border:1.5px solid var(--border);
+      border-radius:20px; padding:28px; margin-bottom:14px;
+      box-shadow:0 2px 12px rgba(0,102,204,0.04);
+    }
+
+    .section-header {
+      display:flex; align-items:center; gap:12px; margin-bottom:20px;
+    }
+
+    .section-num {
+      width:30px; height:30px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; font-weight:700; color:white; flex-shrink:0;
+    }
+
+    .section-title { font-size:15px; font-weight:700; color: white; }
+    .section-desc { font-size:13px; color:var(--muted); margin-left:auto; }
+
+    label {
+      display:block; font-size:12px; font-weight:600;
+      text-transform:uppercase; letter-spacing:.7px;
+      color:white; margin-bottom:8px;
+    }
+
+    input[type="url"], input[type="text"], textarea {
+      width:100%; padding:12px 14px;
+      background:var(--bg); border:1.5px solid var(--border);
+      border-radius:12px; color:var(--text);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:14.5px;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    input::placeholder, textarea::placeholder { color: white; }
+    input:focus, textarea:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(0,102,204,.09);
+    }
+    textarea { resize:vertical; min-height:100px; line-height:1.6; }
+
+    .url-list { display:flex; flex-direction:column; gap:8px; }
+
+    .url-row {
+      display:flex; gap:8px; align-items:center;
+      animation:fadeUp .25s ease both;
+    }
+    .url-row input { flex:1; }
+
+    .btn-icon {
+      width:40px; height:40px; flex-shrink:0;
+      border-radius:10px; border:1.5px solid var(--border);
+      background:transparent; cursor:pointer; color:var(--muted);
+      display:flex; align-items:center; justify-content:center;
+      transition:all .2s; font-size:18px; line-height:1;
+    }
+    .btn-icon:hover { color:var(--error); border-color:rgba(224,85,85,.4); background:rgba(224,85,85,.05); }
+
+    .btn-add {
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      margin-top:10px; padding:9px 14px;
+      background:var(--light); border:1.5px dashed rgba(0,102,204,.3);
+      border-radius:10px; color:var(--accent);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13.5px; font-weight:600;
+      cursor:pointer; transition:all .2s; width:100%;
+    }
+    .btn-add:hover { background:rgba(0,102,204,.12); border-color:var(--accent); }
+
+    .btn-crea {
+      width:100%; padding:15px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border:none; border-radius:14px;
+      color:white; font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:15px; font-weight:700; letter-spacing:.3px;
+      cursor:pointer; transition:all .2s;
+      box-shadow:0 4px 24px rgba(0,102,204,.3);
+      display:flex; align-items:center; justify-content:center; gap:10px;
+    }
+    .btn-crea:hover { transform:translateY(-1px); box-shadow:0 8px 32px rgba(0,102,204,.4); }
+    .btn-crea:active { transform:none; }
+    .btn-crea:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .btn-crea svg { width:20px; height:20px; fill:white; }
+    .spinner {
+      width:18px; height:18px;
+      border:2px solid rgba(255,255,255,.3); border-top-color:white;
+      border-radius:50%; animation:spin .7s linear infinite; display:none;
+    }
+    .loading .spinner { display:block; }
+    .loading .btn-text { opacity:.7; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    .alert {
+      padding:14px 18px; border-radius:12px;
+      font-size:14px; margin-bottom:16px; display:none; line-height:1.5;
+    }
+    .alert.error { background:#fef2f2; border:1.5px solid #fca5a5; color:#b91c1c; }
+    .alert.success { background:var(--light); border:1.5px solid rgba(0,102,204,.3); color:var(--accent); }
+    .alert.visible { display:block; animation:fadeUp .3s ease; }
+
+    .demos.section {
+      background: linear-gradient(135deg, rgba(0,102,204,0.15), rgba(0,180,255,0.08)) !important; margin-top:40px; }
+    .demos-title {
+      font-size:15px; font-weight:700; margin-bottom:16px;
+      color:var(--muted); display:flex; align-items:center; gap:8px;
+    }
+    .demo-list { display:flex; flex-direction:column; gap:8px; }
+    .demo-card {
+      background:#00b4ff96; border:1.5px solid var(--border2);
+      border-radius:14px; padding:14px 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      box-shadow:0 1px 6px rgba(0,102,204,.04);
+    }
+    .demo-card-left { min-width:0; }
+    .demo-card-url { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .demo-card-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+    .btn-open-demo {
+      padding:7px 14px; flex-shrink:0;
+      background:var(--light); border:1.5px solid rgba(0,102,204,.25);
+      border-radius:8px; color:var(--accent);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600;
+      cursor:pointer; text-decoration:none; transition:all .2s;
+    }
+    .btn-open-demo:hover { background:rgba(0,102,204,.15); }
+
+    .demo-card-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .btn-delete-demo {
+      width:34px; height:34px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgb(255, 255, 255); border:1.5px solid rgba(224,85,85,.35);
+      border-radius:8px; color:var(--error);
+      cursor:pointer; transition:all .2s;
+    }
+    .btn-delete-demo:hover { background:rgba(255, 124, 148, 0.792); }
+    .btn-delete-demo svg { width:16px; height:16px; }
+
+    .btn-show-more {
+      display:block; width:100%; margin-top:12px;
+      padding:10px; text-align:center;
+      background:transparent; border:1.5px dashed var(--border2);
+      border-radius:10px; color:var(--muted);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600;
+      cursor:pointer; transition:all .2s;
+    }
+    .btn-show-more:hover { background:rgba(255,255,255,.15); color:var(--accent); }
+
+    .empty-state { color:var(--muted); font-size:14px; padding:16px 0; }
+
+    /* Color picker styles */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .color-field { margin-bottom: 0; }
+    .color-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      background: none;
+    }
+    .color-input-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+    .color-input-wrap input[type="color"]::-webkit-color-swatch { border-radius: 6px; border: none; }
+    .color-text {
+      flex: 1;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+    .color-preview {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .color-preview > span {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 12px;
+    }
+    .preview-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 280px;
+    }
+    .preview-ai-msg, .preview-user-msg {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      max-width: 85%;
+    }
+    .preview-ai-msg {
+      align-self: flex-start;
+      background: #e5e7eb;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+    }
+    .preview-user-msg {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+  </style>
+
+</head>
+<body>
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-mark">
+        <img src="Loghi/medicai.png" alt="MedicAI">
+      </div>
+      <div class="logo-name">Medic<span>AI</span></div>
+    </a>
+    <div class="header-right">
+      <div class="user-badge">Ciao, <strong id="userName">—</strong></div>
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="form-container">
+      <div class="page-title">Configura la tua demo</div>
+      <div class="page-subtitle">Inserisci i dati del cliente per generare una demo interattiva con il chatbot MedicAI.</div>
+
+      <div class="alert error" id="alertError"></div>
+      <div class="alert success" id="alertSuccess"></div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">1</div>
+          <div class="section-title">Sito del cliente</div>
+        </div>
+        <label for="clientUrl">URL del sito da mostrare nella demo</label>
+        <input type="url" id="clientUrl" placeholder="https://www.clinica-esempio.it">
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">2</div>
+          <div class="section-title">Siti in cui cercare le informazioni</div>
+        </div>
+        <label>URL sorgente per il chatbot (uno o più)</label>
+        <div class="url-list" id="urlList">
+          <div class="url-row">
+            <input type="url" placeholder="https://www.clinica-esempio.it" class="search-url">
+            <button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>
+          </div>
+        </div>
+        <button class="btn-add" onclick="addUrl()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Aggiungi URL
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">3</div>
+          <div class="section-title">Istruzioni aggiuntive</div>
+          <span class="section-desc">Opzionale</span>
+        </div>
+        <label for="instructions">Guida o limita le risposte del chatbot</label>
+        <textarea id="instructions" placeholder="Es: Rispondi solo a domande sui servizi medici offerti. Non fornire diagnosi. Indirizza sempre verso la prenotazione..."></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">4</div>
+          <div class="section-title">Colori del chatbot</div>
+          <span class="section-desc">Personalizza l'aspetto</span>
+        </div>
+        <div class="color-grid">
+          <div class="color-field">
+            <label for="colorPrimary">Colore principale</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorPrimary" value="#00b4ff">
+              <input type="text" id="colorPrimaryText" value="#00b4ff" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorSecondary">Colore secondario</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorSecondary" value="#0066cc">
+              <input type="text" id="colorSecondaryText" value="#0066cc" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorUserBg">Sfondo messaggi utente</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorUserBg" value="#3b82f6">
+              <input type="text" id="colorUserBgText" value="#3b82f6" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorUserText">Testo messaggi utente</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorUserText" value="#ffffff">
+              <input type="text" id="colorUserTextText" value="#ffffff" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorAiBg">Sfondo messaggi AI</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorAiBg" value="#e5e7eb">
+              <input type="text" id="colorAiBgText" value="#e5e7eb" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorAiText">Testo messaggi AI</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorAiText" value="#1f2937">
+              <input type="text" id="colorAiTextText" value="#1f2937" class="color-text">
+            </div>
+          </div>
+        </div>
+        <div class="color-preview">
+          <span>Anteprima:</span>
+          <div class="preview-chat">
+            <div class="preview-ai-msg" id="previewAiMsg">Ciao! Come posso aiutarti?</div>
+            <div class="preview-user-msg" id="previewUserMsg">Vorrei informazioni</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-area" style="margin-top:8px">
+        <button class="btn-crea" id="btnCrea" onclick="createDemo()">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+          <div class="spinner"></div>
+          <span class="btn-text">CREA DEMO</span>
+        </button>
+      </div>
+
+      <div class="demos-section">
+        <div class="demos-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+          Demo recenti
+        </div>
+        <div class="demo-list" id="demoList">
+          <div class="empty-state">Caricamento...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    (async () => {
+      const user = await checkAuth('medicai');
+      if (!user) { window.location.href = '/login_medicai.html'; return; }
+      document.getElementById('userName').textContent = user.name;
+      loadDemos();
+    })();
+
+    function doLogout() { logout('medicai'); }
+
+    function addUrl() {
+      const list = document.getElementById('urlList');
+      const row = document.createElement('div');
+      row.className = 'url-row';
+      row.innerHTML = `<input type="url" placeholder="https://..." class="search-url"><button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>`;
+      list.appendChild(row);
+      row.querySelector('input').focus();
+    }
+
+    function removeUrl(btn) {
+      if (document.querySelectorAll('.url-row').length <= 1) return;
+      btn.closest('.url-row').remove();
+    }
+
+    // Color picker sync
+    const colorFields = [
+      { color: 'colorPrimary', text: 'colorPrimaryText' },
+      { color: 'colorSecondary', text: 'colorSecondaryText' },
+      { color: 'colorUserBg', text: 'colorUserBgText' },
+      { color: 'colorUserText', text: 'colorUserTextText' },
+      { color: 'colorAiBg', text: 'colorAiBgText' },
+      { color: 'colorAiText', text: 'colorAiTextText' }
+    ];
+
+    colorFields.forEach(({ color, text }) => {
+      const colorInput = document.getElementById(color);
+      const textInput = document.getElementById(text);
+      
+      colorInput.addEventListener('input', () => {
+        textInput.value = colorInput.value;
+        updatePreview();
+      });
+      
+      textInput.addEventListener('input', () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
+          colorInput.value = textInput.value;
+          updatePreview();
+        }
+      });
+    });
+
+    function updatePreview() {
+      const userBg = document.getElementById('colorUserBg').value;
+      const userText = document.getElementById('colorUserText').value;
+      const aiBg = document.getElementById('colorAiBg').value;
+      const aiText = document.getElementById('colorAiText').value;
+      
+      const userMsg = document.getElementById('previewUserMsg');
+      const aiMsg = document.getElementById('previewAiMsg');
+      
+      if (userMsg) {
+        userMsg.style.background = userBg;
+        userMsg.style.color = userText;
+      }
+      if (aiMsg) {
+        aiMsg.style.background = aiBg;
+        aiMsg.style.color = aiText;
+      }
+      
+      const colors = {
+        primary: document.getElementById('colorPrimary').value,
+        secondary: document.getElementById('colorSecondary').value,
+        userBg: userBg,
+        userText: userText,
+        aiBg: aiBg,
+        aiText: aiText
+      };
+      
+      const root = document.documentElement;
+      root.style.setProperty('--cw-user-bg', colors.userBg);
+      root.style.setProperty('--cw-user-text', colors.userText);
+      root.style.setProperty('--cw-ai-bg', colors.aiBg);
+      root.style.setProperty('--cw-ai-text', colors.aiText);
+      root.style.setProperty('--cw-primary', colors.primary);
+      root.style.setProperty('--cw-secondary', colors.secondary);
+      root.style.setProperty('--cw-glow-1', colors.primary);
+      root.style.setProperty('--cw-glow-2', colors.secondary);
+    }
+
+    // Initialize colors on load (integrated from widget/index.html)
+    const initialColors = {
+      primary: document.getElementById('colorPrimary').value,
+      secondary: document.getElementById('colorSecondary').value,
+      userBg: document.getElementById('colorUserBg').value,
+      userText: document.getElementById('colorUserText').value,
+      aiBg: document.getElementById('colorAiBg').value,
+      aiText: document.getElementById('colorAiText').value
+    };
+    
+    const root = document.documentElement;
+    root.style.setProperty('--cw-user-bg', initialColors.userBg);
+    root.style.setProperty('--cw-user-text', initialColors.userText);
+    root.style.setProperty('--cw-ai-bg', initialColors.aiBg);
+    root.style.setProperty('--cw-ai-text', initialColors.aiText);
+    root.style.setProperty('--cw-primary', initialColors.primary);
+    root.style.setProperty('--cw-secondary', initialColors.secondary);
+    root.style.setProperty('--cw-glow-1', initialColors.primary);
+    root.style.setProperty('--cw-glow-2', initialColors.secondary);
+    
+    updatePreview();
+
+    async function validateUrl(url) {
+      if (!url) return { valid: false, message: 'URL vuoto' };
+      
+      try {
+        new URL(url);
+      } catch {
+        return { valid: false, message: 'URL non valido' };
+      }
+
+      try {
+        const response = await fetch(ApiConfig.get('validateUrl'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await response.json();
+        return {
+          valid: data.success && data.valid,
+          message: data.success ? 'URL valido' : (data.error || 'URL non raggiungibile')
+        };
+      } catch {
+        return { valid: false, message: 'Errore di rete: impossibile raggiungere il server API (/api/validate-url). Verifica che il backend Node sia in esecuzione e raggiungibile dalla stessa origine della pagina.' };
+      }
+    }
+
+    async function validateAllUrls() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchInputs = document.querySelectorAll('.search-url');
+      const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
+      
+      const results = [];
+      
+      // Validate client URL
+      if (clientUrl) {
+        const clientResult = await validateUrl(clientUrl);
+        results.push({ type: 'client', url: clientUrl, ...clientResult });
+      }
+      
+      // Validate search URLs
+      for (const url of searchUrls) {
+        const result = await validateUrl(url);
+        results.push({ type: 'search', url, ...result });
+      }
+      
+      return results;
+    }
+
+    async function createDemo() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
+      const instructions = document.getElementById('instructions').value.trim();
+      
+      // Collect colors
+      const colors = {
+        primary: document.getElementById('colorPrimary').value,
+        secondary: document.getElementById('colorSecondary').value,
+        userBg: document.getElementById('colorUserBg').value,
+        userText: document.getElementById('colorUserText').value,
+        aiBg: document.getElementById('colorAiBg').value,
+        aiText: document.getElementById('colorAiText').value
+      };
+      
+      const errEl = document.getElementById('alertError');
+      const sucEl = document.getElementById('alertSuccess');
+      errEl.className='alert'; sucEl.className='alert';
+
+      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
+      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+
+      // Validate all URLs before creating demo
+      const validationResults = await validateAllUrls();
+      const invalidUrls = validationResults.filter(r => !r.valid);
+      
+      if (invalidUrls.length > 0) {
+        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
+        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
+        errEl.className='alert error visible';
+        return;
+      }
+
+      const btn = document.getElementById('btnCrea');
+      btn.disabled=true; btn.classList.add('loading');
+
+      try {
+        const res = await fetch(ApiConfig.get('demos'), {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({clientUrl,searchUrls,instructions,colors})
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+        } else {
+          errEl.className='alert';
+          const kbId = (data.demo && data.demo.knowledgeBaseId) || null;
+          openProgressPopup(kbId, data.demoUrl, clientUrl);
+          loadDemos();
+        }
+      } catch {
+        errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+      } finally {
+        btn.disabled=false; btn.classList.remove('loading');
+      }
+    }
+
+    const DEMO_PAGE_SIZE = 8;
+    let allDemos = [];
+    let demoShowCount = DEMO_PAGE_SIZE;
+
+    function renderDemoList() {
+      const listEl = document.getElementById('demoList');
+      if (!allDemos.length) {
+        listEl.innerHTML = '<div class="empty-state">Nessuna demo ancora creata.</div>';
+        const moreEl = document.getElementById('demoShowMore');
+        if (moreEl) moreEl.remove();
+        return;
+      }
+      listEl.innerHTML = allDemos.slice(0, demoShowCount).map(d=>`
+        <div class="demo-card">
+          <div class="demo-card-left">
+            <div class="demo-card-url">${d.clientUrl}</div>
+            <div class="demo-card-meta">${new Date(d.createdAt).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${d.createdBy}</div>
+          </div>
+          <div class="demo-card-actions">
+            <a class="btn-open-demo" href="/demo.html?id=${d.id}" target="_blank">Apri ↗</a>
+            <button class="btn-delete-demo" title="Cancella demo" onclick="deleteDemo('${d.id}')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7zm2 2v11h8V9H8zm1-5h6l1 2H8l1-2zM4 6h16v2H4V6z"/></svg>
+            </button>
+          </div>
+        </div>`).join('');
+      renderShowMoreButton();
+    }
+
+    function renderShowMoreButton() {
+      const section = document.querySelector('.demos-section');
+      let moreEl = document.getElementById('demoShowMore');
+      const remaining = allDemos.length - demoShowCount;
+      if (remaining > 0) {
+        if (!moreEl) {
+          moreEl = document.createElement('button');
+          moreEl.id = 'demoShowMore';
+          moreEl.className = 'btn-show-more';
+          moreEl.onclick = () => { demoShowCount = allDemos.length; renderDemoList(); };
+          section.appendChild(moreEl);
+        }
+        moreEl.textContent = `Mostra altre ${remaining} demo`;
+      } else if (moreEl) {
+        moreEl.remove();
+      }
+    }
+
+    async function loadDemos() {
+      const listEl = document.getElementById('demoList');
+      try {
+        const res = await fetch(ApiConfig.get('demos'), { credentials: 'include' });
+        if (!res.ok) return;
+        allDemos = await res.json();
+        demoShowCount = DEMO_PAGE_SIZE;
+        renderDemoList();
+      } catch { listEl.innerHTML='<div class="empty-state">Errore nel caricamento.</div>'; }
+    }
+
+    async function deleteDemo(id) {
+      if (!confirm('Cancellare definitivamente questa demo? L\'operazione non è reversibile.')) return;
+      try {
+        const res = await fetch(ApiConfig.get('demos') + '/' + id, { method: 'DELETE', credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.error || 'Errore nella cancellazione della demo.');
+          return;
+        }
+        allDemos = allDemos.filter(d => d.id !== id);
+        if (demoShowCount > allDemos.length) demoShowCount = Math.max(DEMO_PAGE_SIZE, allDemos.length);
+        renderDemoList();
+      } catch { alert('Errore di connessione.'); }
+    }
+  </script>
+
+  <!-- Popup progresso creazione demo (crawling → ingest → index) -->
+  <div id="progressModal" class="pm-overlay" style="display:none">
+    <div class="pm-modal">
+      <div class="pm-header">
+        <div>
+          <div class="pm-title">Creazione Demo</div>
+          <div class="pm-sub" id="pmSub"></div>
+        </div>
+        <span class="pm-badge" id="pmBadge">in attesa…</span>
+      </div>
+      <div class="pm-body">
+        <div class="pm-stats" id="pmStats">
+          <div class="pm-stat"><div class="pm-stat-value" id="stFetched">0</div><div class="pm-stat-label">Pagine crawlate</div></div>
+          <div class="pm-stat"><div class="pm-stat-value" id="stDiscovered">0</div><div class="pm-stat-label">Pagine scoperte</div></div>
+          <div class="pm-stat"><div class="pm-stat-value" id="stFailed">0</div><div class="pm-stat-label">Fallite</div></div>
+          <div class="pm-stat"><div class="pm-stat-value" id="stChunks">0</div><div class="pm-stat-label">Contenuti indicizzati</div></div>
+        </div>
+        <div class="pm-message" id="pmMessage"></div>
+      </div>
+      <div class="pm-actions">
+        <button class="pm-btn pm-btn-ghost" id="pmClose">Chiudi</button>
+        <a class="pm-btn pm-btn-primary" id="pmOpen" target="_blank" style="pointer-events:none;opacity:.5">Apri Demo ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .pm-overlay{position:fixed;inset:0;background:rgba(15,23,20,.55);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px);font-family:inherit}
+    .pm-modal{width:min(680px,92vw);max-height:82vh;background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+    .pm-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid #e6efe9}
+    .pm-title{font-weight:700;font-size:17px;color:#163a2a}
+    .pm-sub{font-size:12.5px;color:#6b7c74;margin-top:2px;word-break:break-all}
+    .pm-badge{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;background:#e8f5ee;color:#1a8c5c;white-space:nowrap}
+    .pm-badge.ok{background:#1a8c5c;color:#fff}
+    .pm-badge.err{background:#fde8e8;color:#c0392b}
+    .pm-body{padding:22px;flex:1;overflow:auto;min-height:200px}
+    .pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .pm-stat{background:#f6faf8;border:1px solid #e6efe9;border-radius:14px;padding:14px 10px;text-align:center}
+    .pm-stat-value{font-size:26px;font-weight:700;color:#163a2a;font-variant-numeric:tabular-nums}
+    .pm-stat-label{font-size:11.5px;color:#6b7c74;margin-top:4px}
+    .pm-message{margin-top:18px;font-size:13px;color:#6b7c74;line-height:1.5}
+    .pm-message.err{color:#c0392b;font-weight:600}
+    .pm-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid #e6efe9}
+    .pm-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+    .pm-btn-ghost{background:#f1f5f3;color:#33403a}
+    .pm-btn-primary{background:#1a8c5c;color:#fff}
+  </style>
+
+  <script>
+    function openProgressPopup(kbId, demoUrl, clientUrl) {
+      const modal = document.getElementById('progressModal');
+      const badge = document.getElementById('pmBadge');
+      const sub = document.getElementById('pmSub');
+      const openBtn = document.getElementById('pmOpen');
+      const closeBtn = document.getElementById('pmClose');
+      const msgEl = document.getElementById('pmMessage');
+      const stFetched = document.getElementById('stFetched');
+      const stDiscovered = document.getElementById('stDiscovered');
+      const stFailed = document.getElementById('stFailed');
+      const stChunks = document.getElementById('stChunks');
+
+      sub.textContent = clientUrl || '';
+      openBtn.href = demoUrl || '#';
+      [stFetched, stDiscovered, stFailed, stChunks].forEach(el => el.textContent = '0');
+      modal.style.display = 'flex';
+
+      if (!kbId) {
+        // Nessuna knowledge base collegata (ingestion non attiva): la demo è
+        // già pronta subito, niente da attendere.
+        openBtn.style.pointerEvents = 'auto';
+        openBtn.style.opacity = '1';
+        badge.textContent = 'pronta';
+        badge.className = 'pm-badge ok';
+        msgEl.textContent = '';
+        msgEl.className = 'pm-message';
+      } else {
+        openBtn.style.pointerEvents = 'none';
+        openBtn.style.opacity = '.5';
+        badge.textContent = 'in attesa…';
+        badge.className = 'pm-badge';
+        msgEl.textContent = '';
+        msgEl.className = 'pm-message';
+      }
+
+      const STATUS_LABEL = {
+        legacy: 'nessuna knowledge base', pending: 'in coda…', running: 'avvio…',
+        crawling: 'crawling', embedding: 'indicizzazione', indexing: 'creazione indice',
+        ready: 'pronta', empty: 'nessun contenuto trovato', failed: 'errore'
+      };
+
+      function render(data) {
+        const phase = data.phase || 'pending';
+        badge.textContent = STATUS_LABEL[phase] || phase;
+        badge.className = 'pm-badge' + (phase === 'ready' ? ' ok' : (phase === 'failed' || phase === 'empty') ? ' err' : '');
+
+        const s = data.stats || {};
+        stFetched.textContent = s.fetchedUrls ?? 0;
+        stDiscovered.textContent = s.discoveredUrls ?? 0;
+        stFailed.textContent = s.failedUrls ?? 0;
+        stChunks.textContent = s.chunksIndexed ?? 0;
+
+        if (data.error) {
+          msgEl.textContent = data.error;
+          msgEl.className = 'pm-message err';
+        } else if (s.throughputPagesPerMin) {
+          msgEl.textContent = `${s.throughputPagesPerMin} pagine/min` + (s.etaMs ? ` · ETA ~${Math.ceil(s.etaMs / 1000)}s` : '');
+          msgEl.className = 'pm-message';
+        } else {
+          msgEl.textContent = '';
+        }
+
+        if (phase === 'ready') { openBtn.style.pointerEvents = 'auto'; openBtn.style.opacity = '1'; }
+      }
+
+      let es = null;
+      let pollTimer = null;
+      const stopPolling = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+      const pollState = async () => {
+        if (!kbId) return;
+        try {
+          const res = await fetch(ApiConfig.basePath + '/ingestion/' + kbId + '/state');
+          if (res.ok) render(await res.json());
+        } catch {}
+      };
+
+      if (kbId && window.EventSource) {
+        // The endpoint pushes a fresh snapshot each second and closes itself
+        // once the phase is terminal; the browser's own retry (see `retry:`
+        // in the SSE stream) handles reconnects, so no manual backoff needed.
+        es = new EventSource(ApiConfig.basePath + '/ingestion/' + kbId + '/progress');
+        es.addEventListener('update', e => { try { render(JSON.parse(e.data)); } catch {} });
+      } else if (kbId) {
+        pollTimer = setInterval(pollState, 2000);
+        pollState();
+      }
+
+      const onClose = () => { if (es) es.close(); stopPolling(); modal.style.display = 'none'; closeBtn.removeEventListener('click', onClose); };
+      closeBtn.addEventListener('click', onClose);
+    }
+  </script>
+</body>
+</html>

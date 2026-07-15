@@ -1,0 +1,8 @@
+.env
+.env.example
+*.md
+
+# Keep the /data folder structure but ignore its contents
+data/**
+!data/**/
+!data/**/.gitkeep

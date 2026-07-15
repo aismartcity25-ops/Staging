@@ -1,0 +1,374 @@
+[
+  {
+    "id": "84ee8514-170c-4624-966b-52c83223812d",
+    "createdAt": "2026-03-12T08:11:30.555Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.fiorano-modenese.mo.it/",
+    "searchUrls": [
+      "https://www.comune.fiorano-modenese.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    }
+  },
+  {
+    "id": "f70ed985-962e-4ebf-871e-e90985f81e3d",
+    "createdAt": "2026-03-12T08:21:51.346Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.fiorano-modenese.mo.it/",
+    "searchUrls": [
+      "https://www.comune.fiorano-modenese.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#a85dd0",
+      "secondary": "#e26136",
+      "userBg": "#4fdedb",
+      "userText": "#000000",
+      "aiBg": "#5d092d",
+      "aiText": "#ffffff"
+    }
+  },
+  {
+    "id": "fc5b0a05-c607-469b-86dd-db9144932759",
+    "createdAt": "2026-03-12T08:29:48.365Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ca7cd0",
+      "secondary": "#493df5",
+      "userBg": "#83072c",
+      "userText": "#ffffff",
+      "aiBg": "#1b5917",
+      "aiText": "#000000"
+    },
+    "updatedAt": "2026-03-12T16:36:39.748Z"
+  },
+  {
+    "id": "33483c56-e6bc-40ef-bab5-70511b6f2596",
+    "createdAt": "2026-03-12T08:34:45.329Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#843f8d",
+      "secondary": "#341d3f",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#5e0303",
+      "aiText": "#ffffff"
+    }
+  },
+  {
+    "id": "53abe1da-b6ba-421b-af8c-28f5fb3f0a10",
+    "createdAt": "2026-03-12T08:37:46.933Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#1ca66a",
+      "secondary": "#2f0b4c",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#ec092b",
+      "aiText": "#ffffff"
+    }
+  },
+  {
+    "id": "f30d80fa-af21-41d6-ac2e-1f788fa8af3f",
+    "createdAt": "2026-03-12T08:43:40.814Z",
+    "createdBy": "mario.rossi",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#1ca66a",
+      "secondary": "#030303",
+      "userBg": "#5cffde",
+      "userText": "#000000",
+      "aiBg": "#ec092b",
+      "aiText": "#ffffff"
+    }
+  },
+  {
+    "id": "0af689b7-be30-45d6-93ca-eb6fb2784770",
+    "createdAt": "2026-03-12T16:14:29.034Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.sassuolo.mo.it/",
+    "searchUrls": [
+      "https://www.comune.sassuolo.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#dc8add",
+      "secondary": "#f66151",
+      "userBg": "#57e389",
+      "userText": "#000000",
+      "aiBg": "#a51d2d",
+      "aiText": "#e5e7eb"
+    },
+    "updatedAt": "2026-03-12T16:17:26.892Z"
+  },
+  {
+    "id": "0b12ac15-50a3-419d-a94c-1bffac891d24",
+    "createdAt": "2026-03-12T16:17:39.164Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.sassuolo.mo.it/",
+    "searchUrls": [
+      "https://www.comune.sassuolo.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#dc8add",
+      "secondary": "#f66151",
+      "userBg": "#62a0ea",
+      "userText": "#000000",
+      "aiBg": "#a51d2d",
+      "aiText": "#e5e7eb"
+    },
+    "updatedAt": "2026-03-12T16:21:23.731Z"
+  },
+  {
+    "id": "cd9ccd35-c92f-43aa-b014-002cffcbc391",
+    "createdAt": "2026-03-12T16:21:26.552Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.sassuolo.mo.it/",
+    "searchUrls": [
+      "https://www.comune.sassuolo.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#dc8add",
+      "secondary": "#f66151",
+      "userBg": "#26a269",
+      "userText": "#000000",
+      "aiBg": "#b5835a",
+      "aiText": "#e5e7eb"
+    },
+    "updatedAt": "2026-03-12T16:29:32.015Z"
+  },
+  {
+    "id": "5a4c52ad-6b3e-474c-a876-94ed89b0b5c6",
+    "createdAt": "2026-03-12T16:29:33.056Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.sassuolo.mo.it/",
+    "searchUrls": [
+      "https://www.comune.sassuolo.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#dc8add",
+      "secondary": "#f66151",
+      "userBg": "#26a269",
+      "userText": "#000000",
+      "aiBg": "#b5835a",
+      "aiText": "#e5e7eb"
+    }
+  },
+  {
+    "id": "e98d6687-2665-40be-99ff-4e141f286570",
+    "createdAt": "2026-03-12T16:36:43.669Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ca7cd0",
+      "secondary": "#493df5",
+      "userBg": "#83072c",
+      "userText": "#ffffff",
+      "aiBg": "#1b5917",
+      "aiText": "#000000"
+    },
+    "updatedAt": "2026-03-12T16:38:56.262Z"
+  },
+  {
+    "id": "0329efc0-2d42-43fb-bf3f-8ea4a7e31fb1",
+    "createdAt": "2026-03-12T16:38:57.332Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ca7cd0",
+      "secondary": "#493df5",
+      "quickbuttonBg": "#f6d32d",
+      "quickbuttonText": "#000000",
+      "userBg": "#83072c",
+      "userText": "#ffffff",
+      "aiBg": "#1b5917",
+      "aiText": "#000000"
+    },
+    "updatedAt": "2026-03-12T16:44:41.559Z"
+  },
+  {
+    "id": "04da1617-9de4-454c-b6b6-70f88d552e2a",
+    "createdAt": "2026-03-12T16:44:42.933Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ca7cd0",
+      "secondary": "#493df5",
+      "quickbuttonBg": "#241f31",
+      "quickbuttonText": "#00b4ff",
+      "userBg": "#33d17a",
+      "userText": "#e01b24",
+      "aiBg": "#f6d32d",
+      "aiText": "#1b5917"
+    },
+    "updatedAt": "2026-03-12T16:47:18.493Z"
+  },
+  {
+    "id": "85b38799-a955-458e-8404-00120065c953",
+    "createdAt": "2026-03-12T16:47:20.819Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.comune.maranello.mo.it/",
+    "searchUrls": [
+      "https://www.comune.maranello.mo.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ca7cd0",
+      "secondary": "#493df5",
+      "quickbuttonBg": "#241f31",
+      "quickbuttonText": "#00b4ff",
+      "userBg": "#33d17a",
+      "userText": "#e01b24",
+      "aiBg": "#f6d32d",
+      "aiText": "#1b5917"
+    }
+  },
+  {
+    "id": "bb552697-67fb-4d92-8ba7-69afa4c449b9",
+    "createdAt": "2026-03-31T13:31:32.224Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.clinicacittadiparma.it/",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it/",
+      "https://www.fascicolosanitario.gov.it/portale/accedi-al-fascicolo",
+      "https://asugi.sanita.fvg.it/it/schede/s_dir_san/cup_tmp_criteri_priorita-codici_ubdp.html",
+      "https://www.ausl.mo.it/modulistica-aziendale/richiesta-cambio-medico-o-pediatra-per-cittadini-residenti/",
+      "https://www.aulss2.veneto.it/",
+      "https://www.aovr.veneto.it/",
+      "https://www.ausl.mo.it/azienda/dipartimenti-territoriali/dipartimento-cure-primarie/centro-assistenza-e-urgenza-cau/",
+      "https://www.ausl.mo.it/modulistica-aziendale/richiesta-copia-referti-verbali-pronto-soccorso-cartelle-ambulatoriali-o-domiciliari/",
+      "https://www.aou.mo.it/Policlinico_reparti",
+      "https://www.ausl.mo.it/servizi-online/cupweb/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "quickbuttonBg": "#00b4ff",
+      "quickbuttonText": "#ffffff",
+      "userBg": "#ffffff",
+      "userText": "#000000",
+      "aiBg": "#0066cc",
+      "aiText": "#e5e7eb"
+    }
+  },
+  {
+    "id": "172a5f56-eb5d-4095-9981-337743eba499",
+    "createdAt": "2026-04-02T08:27:48.999Z",
+    "createdBy": "admin",
+    "product": "tourism",
+    "clientUrl": "https://www.turismo.ra.it/en/",
+    "searchUrls": [
+      "https://www.turismo.ra.it/en/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ff6b6b",
+      "secondary": "#ffa500",
+      "quickbuttonBg": "#ff6b6b",
+      "quickbuttonText": "#ffffff",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    }
+  },
+  {
+    "id": "e8b84959-0616-4362-831b-c2508071ca7e",
+    "createdAt": "2026-04-02T08:28:21.670Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.turismo.ra.it/en/",
+    "searchUrls": [
+      "https://www.turismo.ra.it/en/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "quickbuttonBg": "#1a8c5c",
+      "quickbuttonText": "#ffffff",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    }
+  },
+  {
+    "id": "cd12d568-4ba0-4cd3-9cf5-c274eedae828",
+    "createdAt": "2026-04-20T07:58:35.140Z",
+    "createdBy": "admin",
+    "product": "tourism",
+    "clientUrl": "https://letsmarche.it/",
+    "searchUrls": [
+      "https://letsmarche.it/"
+    ],
+    "instructions": "",
+    "colors": {
+      "primary": "#ff6b6b",
+      "secondary": "#ffa500",
+      "quickbuttonBg": "#ff6b6b",
+      "quickbuttonText": "#ffffff",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    }
+  }
+]

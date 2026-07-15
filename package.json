@@ -1,0 +1,36 @@
+{
+  "name": "clean-staging-ai",
+  "version": "1.0.0",
+  "description": "Clean Staging AI Chatbot Platform",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.17.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build:widget": "npm --prefix widget-src run build:embed"
+  },
+  "dependencies": {
+    "@heygen/liveavatar-web-sdk": "^0.0.11",
+    "@sendgrid/mail": "^8.1.6",
+    "axios": "^1.13.6",
+    "bcryptjs": "^2.4.3",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "http-proxy-middleware": "^3.0.5",
+    "mammoth": "^1.12.0",
+    "multer": "^2.1.0",
+    "openai": "^6.25.0",
+    "pdf-parse": "^1.1.4",
+    "pdfkit": "^0.17.2",
+    "twilio": "^5.13.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

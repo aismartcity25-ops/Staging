@@ -1,0 +1,1406 @@
+  
+/* ComunicAI/MedicAI Widget - CSS Styles
+ * 
+ * Uses the exact liquid glass 3D effect from chatbot-bubble-glass-v2.html
+ * with theme support and enhanced effects.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --gray50: hsl(223 10% 95%);
+  --gray100: hsl(223 10% 90%);
+  --gray200: hsl(223 10% 80%);
+  --gray300: hsl(223 10% 70%);
+  --gray400: hsl(223 10% 60%);
+  --gray500: hsl(223 10% 50%);
+  --gray600: hsl(223 10% 40%);
+  --gray700: hsl(223 10% 30%);
+  --gray800: hsl(223 10% 20%);
+  --gray900: hsl(223 10% 10%);
+  --blue100: hsl(217 90% 90%);
+  --blue200: hsl(217 90% 80%);
+  --blue300: hsl(217 90% 70%);
+  --blue400: hsl(217 90% 60%);
+  --blue500: hsl(217 90% 50%);
+  --blue600: hsl(217 90% 40%);
+  --blue600-02: hsl(217 90% 40% / 0.2);
+  --blue700: hsl(217 90% 30%);
+  --blue800: hsl(217 90% 20%);
+  --purple350: hsl(252 90% 65%);
+  --purple350-02: hsl(252 90% 65% / 0.2);
+  --magenta300: hsl(292 90% 70%);
+  --magenta400: hsl(292 90% 60%);
+  --white: hsl(0 0% 100%);
+  --trans-dur: 0.3s;
+  
+  /* Theme colors - ComunicAI (green) default */
+  --cw-header-bg: #22c55e;
+  --cw-primary: #22c55e;
+  --cw-secondary: #16a34a;
+  --cw-glow-1: #22c55e;
+  --cw-glow-2: #16a34a;
+  --cw-glow-3: #22c55e;
+  color-scheme: light dark;
+
+  /* Liquid Glass controls - default values */
+  --cw-glass-blur: 24px;
+  --cw-glass-saturate: 200%;
+  --cw-glass-bg-opacity: 0.12;
+  --cw-glass-border-opacity: 0.25;
+  --cw-glass-glow-opacity: 0.65;
+  --cw-glass-highlight-opacity: 0.78;
+}
+
+/* MedicAI Theme (blue) */
+:root[data-product="medicai"] {
+  --cw-header-bg: #00b4ff;
+  --cw-primary: #00b4ff;
+  --cw-secondary: #0066cc;
+  --cw-glow-1: #00b4ff;
+  --cw-glow-2: #0066cc;
+  --cw-glow-3: #00b4ff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* PARTICLE CANVAS */
+#particle-canvas {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 4rem;
+  height: 4rem;
+  pointer-events: none;
+  z-index: 99998;
+}
+
+/* ─── BUBBLE WRAP ─── */
+.chatbot-bubble-button {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 70px;
+  height: 70px;
+  cursor: pointer;
+  z-index: 9999;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Ambient glow behind - uses theme colors */
+.chatbot-bubble-button::before {
+  content: '';
+  position: absolute;
+  inset: -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cw-glow-1) 0%, var(--cw-glow-2) 50%, transparent 70%);
+  filter: blur(16px);
+  animation: glow-pulse 3.8s ease-in-out infinite;
+  z-index: -1;
+  opacity: var(--cw-glass-glow-opacity);
+  /* Puramente decorativo: senza questo, l'area cliccabile del FAB si
+     estende 22px oltre il bordo visibile e intercetta i click destinati
+     al bottone invio (che nella finestra chat sta proprio in quella
+     zona, in basso a destra vicino al FAB). */
+  pointer-events: none;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.14); }
+}
+
+/* ─── MAIN ORB - ENHANCED LIQUID GLASS 3D EFFECT ─── */
+.chatbot-bubble-button .bubble-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,var(--cw-glass-highlight-opacity)) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(255,255,255,0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, var(--cw-glow-1) 0%, var(--cw-glow-2) 60%, var(--cw-glow-3) 100%);
+  backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  border: 1px solid rgba(255,255,255,var(--cw-glass-border-opacity));
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.6),
+    inset 0 -1.5px 0 rgba(255,255,255,0.15),
+    inset 1.5px 0 0 rgba(255,255,255,0.25),
+    inset -1px 0 0 rgba(255,255,255,0.1),
+    0 12px 40px rgba(0,0,0,0.5),
+    0 3px 10px rgba(0,0,0,0.35),
+    0 0 0 0.5px rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease, opacity 0.3s;
+  animation: float 5.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%  { transform: translateY(-6px) rotate(1.2deg); }
+  66%  { transform: translateY(-3px) rotate(-1deg); }
+}
+
+/* Top specular highlight */
+.chatbot-bubble-button .bubble-inner::before {
+  content: '';
+  position: absolute;
+  top: 9%; left: 14%;
+  width: 44%; height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 38%, rgba(255,255,255,var(--cw-glass-highlight-opacity)) 0%, rgba(255,255,255,0.18) 52%, transparent 100%);
+  filter: blur(1px);
+  transform: rotate(-25deg);
+}
+
+/* Secondary catchlight */
+.chatbot-bubble-button .bubble-inner::after {
+  content: '';
+  position: absolute;
+  bottom: 17%; right: 17%;
+  width: 15%; height: 9%;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.38);
+  filter: blur(2px);
+}
+
+/* Hover */
+.chatbot-bubble-button:hover .bubble-inner {
+  transform: scale(1.09) translateY(-5px);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.65),
+    inset 0 -1px 0 rgba(255,255,255,0.15),
+    0 18px 52px rgba(0,0,0,0.5),
+    0 0 44px var(--cw-glow-1);
+  animation-play-state: paused;
+}
+
+.chatbot-bubble-button:hover::before { animation-play-state: paused; }
+
+.chatbot-bubble-button svg {
+  width: 35%;
+  height: 35%;
+  fill: none;
+  stroke: rgba(255,255,255,0.88);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── SHATTER ANIMATIONS ─── */
+@keyframes shatter-orb {
+  0%   { transform: scale(1); opacity: 1; }
+  30%  { transform: scale(1.18); opacity: 0.9; }
+  100% { transform: scale(0.05); opacity: 0; }
+}
+
+@keyframes reassemble-orb {
+  0%   { transform: scale(0.05) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.12) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.chatbot-bubble-button.shatter .bubble-inner {
+  animation: shatter-orb 0.25s cubic-bezier(0.4,0,1,1) forwards !important;
+}
+.chatbot-bubble-button.reassemble .bubble-inner {
+  animation: reassemble-orb 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards !important;
+}
+
+/* ─── SHOCKWAVE ─── */
+.chatbot-bubble-shockwave {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 70px; height: 70px;
+  margin-left: -35px; margin-top: -35px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cw-glow-1);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+}
+.chatbot-bubble-shockwave.wave1 { animation: shock 0.7s ease-out forwards; }
+.chatbot-bubble-shockwave.wave2 { animation: shock 0.7s ease-out 0.08s forwards; border-color: var(--cw-glow-2); }
+.chatbot-bubble-shockwave.wave3 { animation: shock 0.7s ease-out 0.16s forwards; border-color: var(--cw-glow-3); opacity: 0.5; }
+
+@keyframes shock {
+  0%   { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(3.2); }
+}
+
+/* ─── FLASH ─── */
+.chatbot-bubble-flash {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220,210,255,0.95) 0%, var(--cw-glow-1) 40%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+  filter: blur(8px);
+}
+.chatbot-bubble-flash.active { animation: flash-burst 0.35s ease-out forwards; }
+
+@keyframes flash-burst {
+  0%   { opacity: 1; transform: scale(0.6); }
+  40%  { opacity: 0.85; transform: scale(1.3); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+/* ─── REFORM RING ─── */
+.chatbot-bubble-reform-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 70px; height: 70px;
+  margin-left: -35px; margin-top: -35px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 4;
+}
+.chatbot-bubble-reform-ring.active { animation: reform 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+@keyframes reform {
+  0%   { border-color: var(--cw-glow-1); transform: scale(1.8); opacity: 1; }
+  100% { border-color: transparent; transform: scale(1); opacity: 0; }
+}
+
+/* Chat Bubble Window - Enhanced liquid glass effect */
+.chatbot-bubble-window {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.5rem;
+  width: 460px;
+  height: 640px;
+  max-width: calc(100vw - 3rem);
+  max-height: calc(100vh - 7rem);
+  background: rgba(255, 255, 255, var(--cw-glass-bg-opacity));
+  backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  border: 1px solid rgba(255, 255, 255, var(--cw-glass-border-opacity));
+  border-radius: 1.5em;
+  box-shadow: 
+    0 2em 4em rgba(0,0,0,0.15),
+    0 0 0 0.5px rgba(255,255,255,0.1) inset,
+    0 1px 0 rgba(255,255,255,0.2) inset;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9998;
+  animation: bubble-appear 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot-bubble-window { 
+    background: rgba(20, 22, 35, var(--cw-glass-bg-opacity));
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+@keyframes bubble-appear {
+  from { opacity: 0; transform: translateY(1rem) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Resize Handles */
+.resize-handle {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray400);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chatbot-bubble-window:hover .resize-handle { opacity: 1; }
+
+.resize-handle-n, .resize-handle-s { left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle-n { top: 0; padding: 4px 20px; }
+.resize-handle-s { bottom: 0; padding: 4px 20px; }
+
+.resize-handle-e, .resize-handle-w { top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle-e { right: 0; padding: 20px 4px; }
+.resize-handle-w { left: 0; padding: 20px 4px; }
+
+.resize-handle-ne, .resize-handle-nw, .resize-handle-se, .resize-handle-sw { cursor: nwse-resize; padding: 8px; }
+.resize-handle-ne { top: 0; right: 0; }
+.resize-handle-nw { top: 0; left: 0; }
+.resize-handle-se { bottom: 0; right: 0; }
+.resize-handle-sw { bottom: 0; left: 0; }
+
+/* Header - Enhanced liquid glass effect with theme colors */
+.chatbot-bubble-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(255,255,255,0.15) 0%, transparent 40%),
+    linear-gradient(135deg, var(--cw-glow-1) 0%, var(--cw-glow-2) 50%, var(--cw-glow-3) 100%);
+  backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
+  color: var(--white);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.4),
+    inset 0 -1.5px 0 rgba(255,255,255,0.12),
+    0 2px 12px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.chatbot-bubble-header::before {
+  content: '';
+  position: absolute;
+  top: 9%; left: 14%;
+  width: 44%; height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 38%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 52%, transparent 100%);
+  filter: blur(1px);
+  transform: rotate(-25deg);
+  pointer-events: none;
+}
+
+.chatbot-bubble-header-icon {
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  flex-shrink: 0;
+}
+
+.chatbot-bubble-header-icon::before {
+  display: none;
+}
+
+.chatbot-bubble-header-icon img {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Make MedicAI icon white */
+:root[data-product="medicai"] .chatbot-bubble-header-icon img {
+  filter: brightness(0) invert(1);
+}
+
+.chatbot-bubble-header-icon svg {
+  color: white;
+  width: 1.5rem;
+  height: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.chatbot-bubble-header-title {
+  font-weight: 600;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Messages Area - White background */
+.chatbot-bubble-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #ffffff08;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot-bubble-messages { background: #ffffff05; }
+}
+
+/* Messages */
+.chatbot__message {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  align-items: flex-start;
+}
+
+.chatbot__message--user { flex-direction: row-reverse; }
+
+.chatbot__message-icon { flex-shrink: 0; }
+
+.chatbot__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chatbot__icon--gradient {
+  background: linear-gradient(135deg, var(--cw-glow-1) 0%, var(--cw-glow-2) 100%);
+  box-shadow: 0 0.75em 2em hsl(0 0% 0% / 0.3);
+  position: relative;
+}
+
+.chatbot__icon--gradient::before {
+  background: linear-gradient(hsl(0 0% 100% / 0.5), hsl(0 0% 0% / 0.2), hsl(0 0% 0% / 0) 50%);
+  border-radius: 50%;
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 10%;
+}
+
+.chatbot__icon svg { color: white; width: 50%; height: 50%; }
+
+.chatbot__message-content {
+  animation: message-appear var(--trans-dur) cubic-bezier(0.65, 0, 0.35, 1);
+  border-radius: 2em;
+  padding: 1em 1.25em;
+  position: relative;
+  min-width: 3.5em;
+  max-width: 80%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  /* Enhanced 3D glass effect */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.4),
+    inset 0 -1px 0 rgba(0,0,0,0.1),
+    0 4px 12px rgba(0,0,0,0.15);
+}
+
+@keyframes message-appear {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.chatbot__message--user .chatbot__message-content {
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.8) 100%);
+  color: var(--gray800);
+  backdrop-filter: blur(10px);
+}
+
+.chatbot__message--ai .chatbot__message-content {
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 50%),
+    linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2));
+  color: var(--white);
+  backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot__message--ai .chatbot__message-content { 
+    background: 
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+      linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2)); 
+    color: var(--white); 
+  }
+  .chatbot__message--user .chatbot__message-content { 
+    background: 
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      linear-gradient(135deg, rgba(80, 80, 100, 0.9) 0%, rgba(60, 60, 80, 0.8) 100%);
+    color: var(--gray100); 
+  }
+}
+
+.chatbot__message-content p { margin: 0; }
+.chatbot__message-content p + p { margin-top: 0.75em; }
+
+/* TTS Audio Button in messages — dentro chatbot__message-actions,
+   affiancato al pulsante Copia (posizionamento del contenitore condiviso
+   nella sezione FEATURE 2 piu' sotto). Stile a "pillola scura" coerente
+   con .chatbot__copy-btn cosi' che i due bottoni si leggano come coppia. */
+.chatbot__message-audio-btn {
+  background: rgba(15, 17, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255,255,255,0.08) inset;
+  transition: all 0.2s ease;
+}
+
+.chatbot__message-audio-btn:hover {
+  background: var(--cw-header-bg);
+  color: var(--white);
+}
+
+.chatbot__message-audio-btn.playing {
+  background: var(--cw-header-bg);
+  color: var(--white);
+  animation: pulse-audio 1s ease-in-out infinite;
+}
+
+@keyframes pulse-audio {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.chatbot__message-content a {
+  color: var(--blue600);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.25rem 0;
+  background: var(--blue100);
+  border-radius: 0.5rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* ── Contatti riconosciuti nel testo (email/telefono/indirizzo) ────────────
+   Ogni tipo ha un colore distinto e resta leggibile sia sul fondo colorato
+   della bubble AI sia su quello chiaro della bubble utente. ── */
+.chatbot__message-content a.chatbot__entity {
+  background: rgba(255, 255, 255, 0.92);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.chatbot__message-content a.chatbot__entity:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.chatbot__message-content a.chatbot__entity::before {
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.chatbot__message-content a.chatbot__entity--email {
+  color: #1d4ed8;
+}
+.chatbot__message-content a.chatbot__entity--email::before { content: '\2709'; }
+
+.chatbot__message-content a.chatbot__entity--phone {
+  color: #7c3aed;
+}
+.chatbot__message-content a.chatbot__entity--phone::before { content: '\260E'; }
+
+.chatbot__message-content a.chatbot__entity--address {
+  color: #dc2626;
+}
+.chatbot__message-content a.chatbot__entity--address::before { content: '\1F4CD'; }
+
+@media (prefers-color-scheme: dark) {
+  .chatbot__message-content a.chatbot__entity { background: rgba(20, 22, 35, 0.85); }
+  .chatbot__message-content a.chatbot__entity:hover { background: rgba(20, 22, 35, 0.98); }
+  .chatbot__message-content a.chatbot__entity--email { color: #93c5fd; }
+  .chatbot__message-content a.chatbot__entity--phone { color: #c4b5fd; }
+  .chatbot__message-content a.chatbot__entity--address { color: #fca5a5; }
+}
+
+/* ── Mini embed Google Maps per domande "come si raggiunge X" ──────────── */
+.chatbot__map-embed {
+  margin-top: 0.6rem;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  height: 160px;
+}
+
+.chatbot__map-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Input Area */
+.chatbot-bubble-input {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot-bubble-input { background: rgba(30, 30, 45, 0.5); border-top-color: rgba(255, 255, 255, 0.06); }
+}
+
+/* Allegato "in sospeso": mostrato vicino alla barra di testo prima dell'invio. */
+.chatbot-bubble-pending-attachment {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.chatbot-bubble-pending-attachment-thumb {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.chatbot-bubble-pending-attachment-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.chatbot-bubble-pending-attachment-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatbot-bubble-pending-attachment-remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.4rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.chatbot-bubble-pending-attachment-remove:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.chatbot-bubble-attachment-error {
+  font-size: 0.72rem;
+  color: #dc2626;
+  margin-bottom: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot-bubble-pending-attachment {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .chatbot-bubble-pending-attachment-icon { background: rgba(255, 255, 255, 0.12); }
+  .chatbot-bubble-pending-attachment-remove:hover { background: rgba(255, 255, 255, 0.14); }
+}
+
+.chatbot-bubble-suggestions {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin-bottom: 0.75em;
+}
+
+/* Chip bounce animations */
+@keyframes chip-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  50% {
+    transform: scale(1.08) translateY(-8px);
+  }
+  70% {
+    transform: scale(0.95) translateY(3px);
+  }
+  85% {
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes chip-bounce-hover {
+  0%, 100% {
+    transform: translateY(-2px) scale(1);
+  }
+  25% {
+    transform: translateY(-6px) scale(1.05);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.02);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.03);
+  }
+}
+
+@keyframes chip-bounce-click {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Default ComunicAI (green) */
+.chatbot-bubble-suggestion {
+  background: #22c55e;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.75em;
+  cursor: pointer;
+  padding: 0.5em 0.75em;
+  font-size: 0.875rem;
+  transition: all 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Chip entrance animation - plays once on load */
+.chatbot-bubble-suggestion.chip-animate {
+  animation: chip-bounce-in 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+/* Stagger animation delays for multiple chips */
+.chatbot-bubble-suggestion.chip-animate:nth-child(1) { animation-delay: 0.05s; }
+.chatbot-bubble-suggestion.chip-animate:nth-child(2) { animation-delay: 0.15s; }
+.chatbot-bubble-suggestion.chip-animate:nth-child(3) { animation-delay: 0.25s; }
+.chatbot-bubble-suggestion.chip-animate:nth-child(4) { animation-delay: 0.35s; }
+.chatbot-bubble-suggestion.chip-animate:nth-child(5) { animation-delay: 0.45s; }
+
+/* MedicAI (blue/azzurro) */
+:root[data-product="medicai"] .chatbot-bubble-suggestion {
+  background: #00b4ff;
+  color: #ffffff;
+  border: none;
+}
+
+.chatbot-bubble-suggestion:hover:not(:disabled) {
+  background: linear-gradient(90deg, var(--blue300), var(--blue500) 33%, var(--magenta300));
+  color: var(--white);
+  border-color: transparent;
+}
+
+.chatbot-bubble-suggestion:active:not(:disabled) {
+  animation: chip-bounce-click 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+  transform: scale(0.97);
+}
+
+.chatbot-bubble-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chatbot-bubble-input-btn {
+  background: linear-gradient(145deg, rgba(255,255,255,0.6), rgba(255,255,255,0.18));
+  border: 1px solid rgba(255,255,255,0.5);
+  color: var(--gray700);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.2s ease;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    inset 0 -1px 0 rgba(0,0,0,0.08),
+    0 2px 5px rgba(0,0,0,0.14),
+    0 1px 2px rgba(0,0,0,0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot-bubble-input-btn {
+    background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03));
+    border-color: rgba(255,255,255,0.14);
+    color: var(--gray200);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.14),
+      inset 0 -1px 0 rgba(0,0,0,0.4),
+      0 2px 6px rgba(0,0,0,0.35);
+  }
+}
+
+.chatbot-bubble-input-btn:hover:not(:disabled) {
+  background: var(--cw-header-bg);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 6px 16px rgba(0,0,0,0.22),
+    0 0 18px -4px var(--cw-glow-1);
+}
+
+.chatbot-bubble-input-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.92);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.25);
+}
+
+.chatbot-bubble-input-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.chatbot-bubble-input-btn--recording {
+  background: linear-gradient(145deg, #f87171, #dc2626);
+  border-color: rgba(255,255,255,0.4);
+  color: white;
+  animation: pulse-recording 1s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.chatbot-bubble-input-btn svg { width: 18px; height: 18px; }
+
+.chatbot-bubble-text-input {
+  flex: 1;
+  /* Senza min-width:0 un <input> flex non si restringe mai sotto la sua
+     larghezza intrinseca (~190px): su schermi stretti questo spinge il
+     bottone invio fuori dalla riga, tagliato via da overflow:hidden. */
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 1.5em;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  color: var(--gray800);
+}
+
+.chatbot-bubble-text-input:focus {
+  border-color: var(--cw-primary);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.chatbot-bubble-text-input::placeholder { color: #666666; }
+
+.chatbot-bubble-send {
+  background: linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2));
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ffffff;
+  transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.2s ease;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.55),
+    inset 0 -1.5px 0 rgba(0,0,0,0.18),
+    0 3px 10px rgba(0,0,0,0.28),
+    0 1px 3px rgba(0,0,0,0.18);
+}
+
+.chatbot-bubble-send:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.15),
+    0 8px 20px rgba(0,0,0,0.32),
+    0 0 20px -2px var(--cw-glow-1);
+}
+
+.chatbot-bubble-send:active:not(:disabled) {
+  transform: translateY(0) scale(0.92);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.35);
+}
+
+.chatbot-bubble-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.chatbot-bubble-send svg { width: 18px; height: 18px; }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 0.5rem;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE 1 — TRANSIZIONE DALL'ORB
+   La window nasce dalla posizione della bubble
+   espandendosi da cerchio a rettangolo
+═══════════════════════════════════════════ */
+
+/* APERTURA — parte piccola e circolare dal basso-destra */
+@keyframes window-from-orb {
+  0% {
+    opacity: 0;
+    transform: scale(0.08);
+    transform-origin: bottom right;
+    border-radius: 50%;
+    clip-path: circle(4% at 95% 95%);
+  }
+  30% {
+    opacity: 1;
+    clip-path: circle(25% at 88% 88%);
+    border-radius: 40%;
+  }
+  65% {
+    clip-path: circle(72% at 75% 82%);
+    border-radius: 20%;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: bottom right;
+    border-radius: 1.5rem;
+    clip-path: circle(150% at 88% 88%);
+  }
+}
+
+/* CHIUSURA — collassa verso basso-destra */
+@keyframes window-to-orb {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: bottom right;
+    border-radius: 1.5rem;
+    clip-path: circle(150% at 88% 88%);
+  }
+  40% {
+    clip-path: circle(55% at 88% 88%);
+    border-radius: 20%;
+  }
+  75% {
+    opacity: 0.8;
+    clip-path: circle(18% at 92% 92%);
+    border-radius: 40%;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.08);
+    transform-origin: bottom right;
+    border-radius: 50%;
+    clip-path: circle(0% at 95% 95%);
+  }
+}
+
+.chatbot-bubble-window.window--opening {
+  animation: window-from-orb 0.55s cubic-bezier(0.34, 1.15, 0.64, 1) forwards !important;
+}
+
+.chatbot-bubble-window.window--closing {
+  animation: window-to-orb 0.32s cubic-bezier(0.4, 0, 0.8, 0.6) forwards !important;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE 2 — HOVER COPY sui messaggi AI
+═══════════════════════════════════════════ */
+
+/* Wrapper relativo attorno alla bubble AI */
+.chatbot__message-bubble-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Contenitore condiviso Copia + Audio (TTS), in alto a destra sulla bubble
+   — affiancati cosi' da leggersi come un'unica coppia di azioni, invece
+   che sparsi (audio in basso, copia in alto) come in precedenza. Nascosto
+   a riposo, rivelato al hover sul wrapper della bubble. */
+.chatbot__message-actions {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0;
+  transform: translateY(4px) scale(0.9);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Reveal al hover sul wrapper, oppure mentre l'audio e' in riproduzione
+   (cosi' il bottone "ferma audio" resta raggiungibile anche senza hover). */
+.chatbot__message-bubble-wrap:hover .chatbot__message-actions,
+.chatbot__message-actions.force-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.chatbot__copy-btn {
+  background: rgba(15, 17, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 0.28rem 0.55rem;
+  font-family: var(--cw-font, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255,255,255,0.08) inset;
+  line-height: 1;
+}
+
+/* Stato "copiato" */
+.chatbot__copy-btn.copied {
+  background: rgba(22, 163, 74, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+/* Brighten sulla bubble AI al hover */
+.chatbot__message-bubble-wrap:hover .chatbot__message-content {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 8px 28px rgba(0,0,0,0.35),
+    0 0 36px -6px var(--cw-glow-1);
+  transition: filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE 3 — TIMESTAMP SOLO ALL'HOVER
+═══════════════════════════════════════════ */
+
+/* Il timestamp è sempre nel DOM ma invisibile a riposo */
+.message-time {
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.28rem;
+  text-align: right;
+  /* Nascosto di default */
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+  height: 14px; /* riserva spazio per evitare reflow */
+  line-height: 14px;
+}
+
+/* Reveal al hover sul messaggio */
+.chatbot__message:hover .message-time {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Timestamp user (a destra) */
+.chatbot__message--user .message-time {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+/* ═══════════════════════════════════════════
+   FEATURE 4 — AVATAR PULSANTE DURANTE TYPING
+═══════════════════════════════════════════ */
+
+/* Pulsazione del cerchio avatar */
+@keyframes icon-typing-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.35),
+      0 0 0 2px rgba(var(--cw-glow-rgb, 34, 197, 94), 0.3),
+      0 0 16px -4px var(--cw-glow-1);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.4),
+      0 0 0 3px rgba(var(--cw-glow-rgb, 34, 197, 94), 0.55),
+      0 0 28px -2px var(--cw-glow-1);
+  }
+}
+
+/* Ring esterno che irradia */
+@keyframes icon-typing-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.chatbot__icon--typing {
+  animation: icon-typing-pulse 1.4s ease-in-out infinite !important;
+  position: relative;
+}
+
+/* Ring animato via pseudo-element */
+.chatbot__icon--typing::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cw-glow-1);
+  animation: icon-typing-ring 1.4s ease-out infinite;
+  pointer-events: none;
+}
+
+/* ── Citation chips (roadmap #1 H) ─────────────────────────────────────── */
+.chatbot__citations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.chatbot__citation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--cw-glow-1, #22c55e);
+  background: color-mix(in srgb, var(--cw-glow-1, #22c55e) 12%, transparent);
+  color: var(--cw-secondary, #16a34a);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.chatbot__citation-chip:hover {
+  background: color-mix(in srgb, var(--cw-glow-1, #22c55e) 26%, transparent);
+  transform: translateY(-1px);
+}
+
+.chatbot__citation-icon { font-size: 0.8rem; line-height: 1; }
+
+.chatbot__citation-text {
+  color: var(--white, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 14rem;
+}
+
+/* ── Allegati (immagini/documenti) ──────────────────────────────────────── */
+.chatbot__attachment {
+  margin-bottom: 0.6rem;
+}
+
+.chatbot__attachment--image img {
+  display: block;
+  max-width: 100%;
+  max-height: 14rem;
+  border-radius: 0.9rem;
+  object-fit: cover;
+}
+
+.chatbot__attachment--document {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.chatbot__attachment-icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--cw-secondary, #16a34a);
+}
+
+.chatbot__attachment-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatbot__attachment-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatbot__attachment-desc {
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+
+.chatbot__attachment-download {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.chatbot__attachment-download:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chatbot__attachment--document {
+    background: rgba(20, 22, 35, 0.45);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+  .chatbot__attachment-icon,
+  .chatbot__attachment-download {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .chatbot__attachment-download:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+
+/* ── Confidence badge / graceful failure (roadmap #3 G) ────────────────── */
+.chatbot__confidence {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.chatbot__confidence.verified {
+  color: #16a34a;
+}
+
+.chatbot__confidence.indicative {
+  color: #b45309;
+}
+
+/* ── Collapse toggle per risposte AI lunghe ─────────────────────────────── */
+.chatbot__collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.chatbot__collapse-toggle:hover { opacity: 0.8; }
+
+.chatbot__collapse-icon {
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.chatbot__collapse-icon.is-open { transform: rotate(180deg); }
+
+/* ── Loading spinner (pulsante invio) ───────────────────────────────────── */
+.chatbot__spin { animation: chatbot-spin 0.9s linear infinite; }
+
+@keyframes chatbot-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Focus-visible per navigazione da tastiera ──────────────────────────── */
+.chatbot-bubble-button:focus-visible,
+.chatbot-bubble-input-btn:focus-visible,
+.chatbot-bubble-send:focus-visible,
+.chatbot-bubble-suggestion:focus-visible,
+.chatbot__copy-btn:focus-visible,
+.chatbot__message-audio-btn:focus-visible,
+.chatbot__citation-chip:focus-visible,
+.chatbot__collapse-toggle:focus-visible,
+.chatbot-bubble-text-input:focus-visible {
+  outline: 2px solid var(--cw-primary, #22c55e);
+  outline-offset: 2px;
+}
+
+/* ── Rifinitura hover sul pulsante audio dei messaggi ───────────────────── */
+.chatbot__message-audio-btn {
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.chatbot__message-audio-btn:hover {
+  transform: translateY(-1px);
+}
+

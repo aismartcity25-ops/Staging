@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourismAI — Configura Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #050d1a;
+      --bg2:      #eef5f1;
+      --panel:    #ffffff;
+      --border:   #d4e8dd;
+      --accent:   #ff6b6b;
+      --accent2:  #ffa500;
+      --light:    #fff3cd;
+      --text:     #ffffff;
+      --muted:    #7a9988;
+      --error:    #e05555;
+      --success:  #1a8c5c;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at -5% 50%, rgba(255,107,107,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 105% 50%, rgba(255,165,0,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,107,107,0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    header {
+      position: relative; z-index: 10;
+      background: rgba(255, 107, 107, 0.651);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 1px 12px rgba(255,107,107,0.06);
+    }
+
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark img { width: 24px; height: 24px; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.8); }
+
+    .logo-name { font-family:'Fraunces',serif; font-size:20px; font-weight:700; }
+    .logo-name span { color: var(--accent); }
+
+    .header-right { display:flex; align-items:center; gap:16px; }
+    .user-badge { font-size:13px; color:var(--muted); }
+    .user-badge strong { color:var(--text); }
+
+    .btn-logout {
+      padding:7px 16px; background:transparent;
+      border:1.5px solid var(--border); border-radius:8px;
+      color:var(--muted); font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; cursor:pointer; transition:all .2s;
+    }
+    .btn-logout:hover { color:var(--accent); border-color:var(--accent); }
+
+    main {
+      position:relative; z-index:1; flex:1;
+      display:flex; align-items:flex-start; justify-content:center;
+      padding:48px 24px;
+    }
+
+    .form-container {
+      width:100%; max-width:680px;
+      animation:fadeUp .5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(20px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+
+    .page-title {
+      font-family:'Fraunces',serif;
+      font-size:32px; font-weight:700; letter-spacing:-0.5px;
+      margin-bottom:8px;
+      color: white;
+    }
+
+    .page-subtitle {
+      color:white; font-size:15px; margin-bottom:40px; line-height:1.6;
+    }
+
+    .section {
+      background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,165,0,0.08)) !important;
+      background:var(--panel);
+      border:1.5px solid var(--border);
+      border-radius:20px; padding:28px; margin-bottom:14px;
+      box-shadow:0 2px 12px rgba(255,107,107,0.04);
+    }
+
+    .section-header {
+      display:flex; align-items:center; gap:12px; margin-bottom:20px;
+    }
+
+    .section-num {
+      width:30px; height:30px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:13px; font-weight:700; color:white; flex-shrink:0;
+    }
+
+    .section-title { font-size:15px; font-weight:700; color: white; }
+    .section-desc { font-size:13px; color:var(--muted); margin-left:auto; }
+
+    label {
+      display:block; font-size:12px; font-weight:600;
+      text-transform:uppercase; letter-spacing:.7px;
+      color:white; margin-bottom:8px;
+    }
+
+    input[type="url"], input[type="text"], textarea {
+      width:100%; padding:12px 14px;
+      background:var(--bg); border:1.5px solid var(--border);
+      border-radius:12px; color:var(--text);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:14.5px;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    input::placeholder, textarea::placeholder { color: white; }
+    input:focus, textarea:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(255,107,107,.09);
+    }
+    textarea { resize:vertical; min-height:100px; line-height:1.6; }
+
+    .url-list { display:flex; flex-direction:column; gap:8px; }
+
+    .url-row {
+      display:flex; gap:8px; align-items:center;
+      animation:fadeUp .25s ease both;
+    }
+    .url-row input { flex:1; }
+
+    .btn-icon {
+      width:40px; height:40px; flex-shrink:0;
+      border-radius:10px; border:1.5px solid var(--border);
+      background:transparent; cursor:pointer; color:var(--muted);
+      display:flex; align-items:center; justify-content:center;
+      transition:all .2s; font-size:18px; line-height:1;
+    }
+    .btn-icon:hover { color:var(--error); border-color:rgba(224,85,85,.4); background:rgba(224,85,85,.05); }
+
+    .btn-add {
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      margin-top:10px; padding:9px 14px;
+      background:var(--light); border:1.5px dashed rgba(255,107,107,.3);
+      border-radius:10px; color:var(--accent);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13.5px; font-weight:600;
+      cursor:pointer; transition:all .2s; width:100%;
+    }
+    .btn-add:hover { background:rgba(255,107,107,.12); border-color:var(--accent); }
+
+    .btn-crea {
+      width:100%; padding:15px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border:none; border-radius:14px;
+      color:white; font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:15px; font-weight:700; letter-spacing:.3px;
+      cursor:pointer; transition:all .2s;
+      box-shadow:0 4px 24px rgba(255,107,107,.3);
+      display:flex; align-items:center; justify-content:center; gap:10px;
+    }
+    .btn-crea:hover { transform:translateY(-1px); box-shadow:0 8px 32px rgba(255,107,107,.4); }
+    .btn-crea:active { transform:none; }
+    .btn-crea:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+    .btn-crea svg { width:20px; height:20px; fill:white; }
+    .spinner {
+      width:18px; height:18px;
+      border:2px solid rgba(255,255,255,.3); border-top-color:white;
+      border-radius:50%; animation:spin .7s linear infinite; display:none;
+    }
+    .loading .spinner { display:block; }
+    .loading .btn-text { opacity:.7; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    .alert {
+      padding:14px 18px; border-radius:12px;
+      font-size:14px; margin-bottom:16px; display:none; line-height:1.5;
+    }
+    .alert.error { background:#fef2f2; border:1.5px solid #fca5a5; color:#b91c1c; }
+    .alert.success { background:var(--light); border:1.5px solid rgba(255,107,107,.3); color:var(--accent); }
+    .alert.visible { display:block; animation:fadeUp .3s ease; }
+
+    .demos.section {
+      background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,165,0,0.08)) !important; margin-top:40px; }
+    .demos-title {
+      font-size:15px; font-weight:700; margin-bottom:16px;
+      color:var(--muted); display:flex; align-items:center; gap:8px;
+    }
+    .demo-list { display:flex; flex-direction:column; gap:8px; }
+    .demo-card {
+      background:var(--panel); border:1.5px solid var(--border2);
+      border-radius:14px; padding:14px 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      box-shadow:0 1px 6px rgba(255,107,107,.04);
+    }
+    .demo-card-left { min-width:0; }
+    .demo-card-url { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: #000000; }
+    .demo-card-meta { font-size:12px; color:#333333; margin-top:2px; }
+    .btn-open-demo {
+      padding:7px 14px; flex-shrink:0;
+      background:var(--light); border:1.5px solid rgba(255,107,107,.25);
+      border-radius:8px; color:var(--accent);
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600;
+      cursor:pointer; text-decoration:none; transition:all .2s;
+    }
+    .btn-open-demo:hover { background:rgba(255,107,107,.15); }
+
+    .btn-modifica {
+      padding:7px 14px; flex-shrink:0;
+      background:rgba(255,107,107,.08); border:1.5px solid rgba(255,107,107,.35);
+      border-radius:8px; color:#d97706;
+      font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:600;
+      cursor:pointer; transition:all .2s;
+    }
+    .btn-modifica:hover { background:rgba(255,107,107,.15); color:#b45309; }
+    .empty-state { color:var(--muted); font-size:14px; padding:16px 0; }
+
+    /* Color picker styles */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .color-field { margin-bottom: 0; }
+    .color-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      background: none;
+    }
+    .color-input-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+    .color-input-wrap input[type="color"]::-webkit-color-swatch { border-radius: 6px; border: none; }
+    .color-text {
+      flex: 1;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+    .color-preview {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .color-preview > span {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 12px;
+    }
+    .preview-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 280px;
+    }
+    .preview-ai-msg, .preview-user-msg {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      max-width: 85%;
+    }
+    .preview-ai-msg {
+      align-self: flex-start;
+      background: #e5e7eb;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+    }
+    .preview-user-msg {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+  </style>
+  <script src="/api-config.js"></script>
+</head>
+<body>
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-mark">
+        <img src="Loghi/comunicai_1.png" alt="TourismAI">
+      </div>
+      <div class="logo-name">Tourism<span>AI</span></div>
+    </a>
+    <div class="header-right">
+      <div class="user-badge">Ciao, <strong id="userName">—</strong></div>
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="form-container">
+      <div class="page-title">Configura la tua demo</div>
+      <div class="page-subtitle">Inserisci i dati del cliente per generare una demo interattiva con il chatbot TourismAI.</div>
+
+      <div class="alert error" id="alertError"></div>
+      <div class="alert success" id="alertSuccess"></div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">1</div>
+          <div class="section-title">Sito del cliente</div>
+        </div>
+        <label for="clientUrl">URL del sito da mostrare nella demo</label>
+        <input type="url" id="clientUrl" placeholder="https://www.hotel-esempio.it">
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">2</div>
+          <div class="section-title">Siti in cui cercare le informazioni</div>
+        </div>
+        <label>URL sorgente per il chatbot (uno o più)</label>
+        <div class="url-list" id="urlList">
+          <div class="url-row">
+            <input type="url" placeholder="https://www.hotel-esempio.it" class="search-url">
+            <button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>
+          </div>
+        </div>
+        <button class="btn-add" onclick="addUrl()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Aggiungi URL
+        </button>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">3</div>
+          <div class="section-title">Istruzioni aggiuntive</div>
+          <span class="section-desc">Opzionale</span>
+        </div>
+        <label for="instructions">Guida o limita le risposte del chatbot</label>
+        <textarea id="instructions" placeholder="Es: Rispondi solo a domande su camere, prenotazioni e servizi dell'hotel. Non fornire informazioni su prezzi non confermati. Indirizza sempre verso la prenotazione..."></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-num">4</div>
+          <div class="section-title">Colori del chatbot</div>
+          <span class="section-desc">Personalizza l'aspetto</span>
+        </div>
+        <div class="color-grid">
+          <div class="color-field">
+            <label for="colorPrimary">Colore principale</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorPrimary" value="#ff6b6b">
+              <input type="text" id="colorPrimaryText" value="#ff6b6b" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorSecondary">Colore secondario</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorSecondary" value="#ffa500">
+              <input type="text" id="colorSecondaryText" value="#ffa500" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorQuickbuttonBg">Colore quickbutton</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorQuickbuttonBg" value="#ff6b6b">
+              <input type="text" id="colorQuickbuttonBgText" value="#ff6b6b" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorQuickbuttonText">Testo quickbutton</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorQuickbuttonText" value="#ffffff">
+              <input type="text" id="colorQuickbuttonTextText" value="#ffffff" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorUserBg">Sfondo messaggi utente</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorUserBg" value="#3b82f6">
+              <input type="text" id="colorUserBgText" value="#3b82f6" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorUserText">Testo messaggi utente</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorUserText" value="#ffffff">
+              <input type="text" id="colorUserTextText" value="#ffffff" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorAiBg">Sfondo messaggi AI</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorAiBg" value="#e5e7eb">
+              <input type="text" id="colorAiBgText" value="#e5e7eb" class="color-text">
+            </div>
+          </div>
+          <div class="color-field">
+            <label for="colorAiText">Testo messaggi AI</label>
+            <div class="color-input-wrap">
+              <input type="color" id="colorAiText" value="#1f2937">
+              <input type="text" id="colorAiTextText" value="#1f2937" class="color-text">
+            </div>
+          </div>
+        </div>
+        <div class="color-preview">
+          <span>Anteprima:</span>
+          <div class="preview-chat">
+            <div class="preview-ai-msg" id="previewAiMsg">Ciao! Come posso aiutarti?</div>
+            <div class="preview-user-msg" id="previewUserMsg">Vorrei informazioni</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-area" style="margin-top:8px">
+        <button class="btn-crea" id="btnCrea" onclick="createDemo()">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+          <div class="spinner"></div>
+          <span class="btn-text">CREA DEMO</span>
+        </button>
+      </div>
+
+      <div class="demos-section">
+        <div class="demos-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+          Demo recenti
+        </div>
+        <div class="demo-list" id="demoList">
+          <div class="empty-state">Caricamento...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    // Auth check
+    (async () => {
+      console.log('🔄 config_tourism.html: Starting auth check...');
+      const user = await checkAuth('tourism');
+      if (!user) {
+        console.error('❌ Auth check returned null, redirecting to login');
+        window.location.href = '/login_tourism.html';
+        return;
+      }
+      console.log('✅ Auth successful, loading page for user:', user.username);
+      document.getElementById('userName').textContent = user.name;
+      loadDemos();
+    })();
+
+    function doLogout() {
+      logout('tourism');
+    }
+
+    function addUrl() {
+      const list = document.getElementById('urlList');
+      const row = document.createElement('div');
+      row.className = 'url-row';
+      row.innerHTML = `<input type="url" placeholder="https://..." class="search-url"><button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>`;
+      list.appendChild(row);
+      row.querySelector('input').focus();
+    }
+
+    function removeUrl(btn) {
+      if (document.querySelectorAll('.url-row').length <= 1) return;
+      btn.closest('.url-row').remove();
+    }
+
+    // Color picker sync
+    const colorFields = [
+      { color: 'colorPrimary', text: 'colorPrimaryText' },
+      { color: 'colorSecondary', text: 'colorSecondaryText' },
+      { color: 'colorUserBg', text: 'colorUserBgText' },
+      { color: 'colorUserText', text: 'colorUserTextText' },
+      { color: 'colorAiBg', text: 'colorAiBgText' },
+      { color: 'colorAiText', text: 'colorAiTextText' }
+    ];
+
+    colorFields.forEach(({ color, text }) => {
+      const colorInput = document.getElementById(color);
+      const textInput = document.getElementById(text);
+      
+      colorInput.addEventListener('input', () => {
+        textInput.value = colorInput.value;
+        updatePreview();
+      });
+      
+      textInput.addEventListener('input', () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
+          colorInput.value = textInput.value;
+          updatePreview();
+        }
+      });
+    });
+
+    function updatePreview() {
+      const userBg = document.getElementById('colorUserBg').value;
+      const userText = document.getElementById('colorUserText').value;
+      const aiBg = document.getElementById('colorAiBg').value;
+      const aiText = document.getElementById('colorAiText').value;
+      
+      const userMsg = document.getElementById('previewUserMsg');
+      const aiMsg = document.getElementById('previewAiMsg');
+      
+      userMsg.style.background = userBg;
+      userMsg.style.color = userText;
+      aiMsg.style.background = aiBg;
+      aiMsg.style.color = aiText;
+    }
+
+    async function validateUrl(url) {
+      if (!url) return { valid: false, message: 'URL vuoto' };
+      
+      try {
+        new URL(url);
+      } catch {
+        return { valid: false, message: 'URL non valido' };
+      }
+
+      try {
+        const response = await fetch(ApiConfig.get('validateUrl'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await response.json();
+        return {
+          valid: data.success && data.valid,
+          message: data.success ? 'URL valido' : (data.error || 'URL non raggiungibile')
+        };
+      } catch {
+        return { valid: false, message: 'Errore durante la verifica dell\'URL' };
+      }
+    }
+
+    async function validateAllUrls() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchInputs = document.querySelectorAll('.search-url');
+      const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
+      
+      const results = [];
+      
+      // Validate client URL
+      if (clientUrl) {
+        const clientResult = await validateUrl(clientUrl);
+        results.push({ type: 'client', url: clientUrl, ...clientResult });
+      }
+      
+      // Validate search URLs
+      for (const url of searchUrls) {
+        const result = await validateUrl(url);
+        results.push({ type: 'search', url, ...result });
+      }
+      
+      return results;
+    }
+
+async function createDemo() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
+      const instructions = document.getElementById('instructions').value.trim();
+      
+      // Collect colors
+      const colors = {
+        primary: document.getElementById('colorPrimary').value,
+        secondary: document.getElementById('colorSecondary').value,
+        quickbuttonBg: document.getElementById('colorQuickbuttonBg').value,
+        quickbuttonText: document.getElementById('colorQuickbuttonText').value,
+        userBg: document.getElementById('colorUserBg').value,
+        userText: document.getElementById('colorUserText').value,
+        aiBg: document.getElementById('colorAiBg').value,
+        aiText: document.getElementById('colorAiText').value
+      };
+      
+      const errEl = document.getElementById('alertError');
+      const sucEl = document.getElementById('alertSuccess');
+      errEl.className='alert'; sucEl.className='alert';
+
+      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
+      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+
+      // Validate all URLs before creating demo
+      const validationResults = await validateAllUrls();
+      const invalidUrls = validationResults.filter(r => !r.valid);
+      
+      if (invalidUrls.length > 0) {
+        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
+        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
+        errEl.className='alert error visible';
+        return;
+      }
+
+      const btn = document.getElementById('btnCrea');
+      btn.disabled=true; btn.classList.add('loading');
+
+      try {
+        const res = await fetch(ApiConfig.get('demos'), {
+          method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({clientUrl,searchUrls,instructions,colors})
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+        } else {
+          sucEl.textContent='Demo creata! Apertura in una nuova scheda...'; sucEl.className='alert success visible';
+          setTimeout(()=>window.open(data.demoUrl,'_blank'),600);
+          loadDemos();
+        }
+      } catch {
+        errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+      } finally {
+        btn.disabled=false; btn.classList.remove('loading');
+      }
+    }
+
+    async function loadDemos() {
+      const listEl = document.getElementById('demoList');
+      try {
+        const res = await fetch(ApiConfig.get('demos'), {
+          credentials: 'include',
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) return;
+        const demos = await res.json();
+        if (!demos.length) { listEl.innerHTML='<div class="empty-state">Nessuna demo ancora creata.</div>'; return; }
+        listEl.innerHTML = demos.slice(0,16).map(d=>`
+          <div class="demo-card">
+            <div class="demo-card-left">
+              <div class="demo-card-url">${d.clientUrl}</div>
+              <div class="demo-card-meta">${new Date(d.createdAt).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${d.createdBy}</div>
+            </div>
+            <div class="demo-actions">
+              <a class="btn-open-demo" href="demo.html?id=${d.id}" target="_blank">Apri ↗</a>
+              <button class="btn-modifica" onclick="editDemo('${d.id}')" title="Modifica configurazione">Modifica</button>
+            </div>
+          </div>`).join('');
+      } catch { listEl.innerHTML='<div class="empty-state">Errore nel caricamento.</div>'; }
+    }
+
+    async function editDemo(id) {
+      try {
+        const res = await fetch(ApiConfig.get('demos') + `/${id}`, {
+          credentials: 'include',
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error('Demo non trovata');
+        const demo = await res.json();
+        
+        // Fill form with demo data
+        document.getElementById('clientUrl').value = demo.clientUrl || '';
+        
+        // Clear existing URLs
+        const urlList = document.getElementById('urlList');
+        urlList.innerHTML = '';
+        demo.searchUrls.forEach((url, idx) => {
+          const row = document.createElement('div');
+          row.className = 'url-row';
+          row.innerHTML = `<input type="url" placeholder="https://..." class="search-url" value="${url}"><button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>`;
+          urlList.appendChild(row);
+        });
+        
+        document.getElementById('instructions').value = demo.instructions || '';
+        
+        // Set colors
+        const colors = demo.colors || {};
+        document.getElementById('colorPrimary').value = colors.primary || '#ff6b6b';
+        document.getElementById('colorSecondary').value = colors.secondary || '#ffa500';
+        document.getElementById('colorUserBg').value = colors.userBg || '#3b82f6';
+        document.getElementById('colorUserText').value = colors.userText || '#ffffff';
+        document.getElementById('colorAiBg').value = colors.aiBg || '#e5e7eb';
+        document.getElementById('colorAiText').value = colors.aiText || '#1f2937';
+        
+        // Sync text inputs
+        document.getElementById('colorPrimaryText').value = document.getElementById('colorPrimary').value;
+        document.getElementById('colorSecondaryText').value = document.getElementById('colorSecondary').value;
+        document.getElementById('colorUserBgText').value = document.getElementById('colorUserBg').value;
+        document.getElementById('colorUserTextText').value = document.getElementById('colorUserText').value;
+        document.getElementById('colorAiBgText').value = document.getElementById('colorAiBg').value;
+        document.getElementById('colorAiTextText').value = document.getElementById('colorAiText').value;
+        
+        updatePreview();
+        
+        // Scroll to top to show form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Change button text to "Aggiorna Demo"
+        const btn = document.getElementById('btnCrea');
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+          <div class="spinner"></div>
+          <span class="btn-text">AGGIORNA DEMO</span>
+        `;
+        btn.onclick = () => updateDemo(id);
+        
+      } catch (err) {
+        console.error('Errore caricamento demo:', err);
+        alert('Errore durante il caricamento della demo.');
+      }
+    }
+
+async function updateDemo(id) {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
+      const instructions = document.getElementById('instructions').value.trim();
+      
+      // Collect colors
+      const colors = {
+        primary: document.getElementById('colorPrimary').value,
+        secondary: document.getElementById('colorSecondary').value,
+        quickbuttonBg: document.getElementById('colorQuickbuttonBg').value,
+        quickbuttonText: document.getElementById('colorQuickbuttonText').value,
+        userBg: document.getElementById('colorUserBg').value,
+        userText: document.getElementById('colorUserText').value,
+        aiBg: document.getElementById('colorAiBg').value,
+        aiText: document.getElementById('colorAiText').value
+      };
+      
+      const errEl = document.getElementById('alertError');
+      const sucEl = document.getElementById('alertSuccess');
+      errEl.className='alert'; sucEl.className='alert';
+
+      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
+      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+
+      // Validate all URLs before updating demo
+      const validationResults = await validateAllUrls();
+      const invalidUrls = validationResults.filter(r => !r.valid);
+      
+      if (invalidUrls.length > 0) {
+        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
+        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
+        errEl.className='alert error visible';
+        return;
+      }
+
+      const btn = document.getElementById('btnCrea');
+      btn.disabled=true; btn.classList.add('loading');
+
+      try {
+        const res = await fetch(ApiConfig.get('demos') + `/${id}`, {
+          method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({clientUrl,searchUrls,instructions,colors})
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+        } else {
+          sucEl.textContent='Demo aggiornata!'; sucEl.className='alert success visible';
+          // Reset button to "Crea Demo"
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+            <div class="spinner"></div>
+            <span class="btn-text">CREA DEMO</span>
+          `;
+          btn.onclick = createDemo;
+          loadDemos();
+        }
+      } catch {
+        errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+      } finally {
+        btn.disabled=false; btn.classList.remove('loading');
+      }
+    }
+  </script>
+</body>
+</html>

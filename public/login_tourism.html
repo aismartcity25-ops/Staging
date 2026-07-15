@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourismAI — Accesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #050d1a;
+      --bg2:      #eef5f1;
+      --panel:    #ffffff;
+      --border:   #d4e8dd;
+      --accent:   #ff6b6b;
+      --accent2:  #ffa500;
+      --light:    #fff3cd;
+      --text:     #1a2e24;
+      --muted:    #7a9988;
+      --error:    #e05555;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Background pattern - organic circles */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 70% at -10% 50%, rgba(255,107,107,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 110% 50%, rgba(255,165,0,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 110%, rgba(255,107,107,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Dots pattern */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,107,107,0.12) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 460px;
+      padding: 24px;
+      animation: fadeUp 0.55s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .logo-area {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .logo-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 72px; height: 72px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(255,107,107,0.3);
+    }
+
+    .logo-mark img { width: 44px; height: 44px; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.8); }
+
+    .logo-name {
+      font-family: 'Fraunces', serif;
+      font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
+      color: white;
+    }
+    .logo-name span { color: var(--accent); }
+
+    .logo-tagline {
+      font-size: 14px; color: white;
+      margin-top: 5px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,165,0,0.08)) !important;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 4px 40px rgb(255, 255, 255), 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+      font-family: 'Fraunces', serif;
+      font-size: 22px; font-weight: 700;
+      margin-bottom: 6px;
+      color: white;
+    }
+
+    .card-subtitle {
+      font-size: 14px; color: white;
+      margin-bottom: 32px; line-height: 1.6;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    label {
+      display: block; font-size: 12.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      color: white; margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%; padding: 13px 16px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: white;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input::placeholder { color: white; }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(255,107,107,0.1);
+    }
+
+    .btn {
+      width: 100%; padding: 14px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border: none; border-radius: 12px;
+      color: white;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(255,107,107,0.3);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(255,107,107,0.4); }
+    .btn:active { transform: none; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-inner { display:flex; align-items:center; justify-content:center; gap:8px; }
+    .spinner {
+      width:16px; height:16px;
+      border:2px solid rgba(255,255,255,0.3);
+      border-top-color:white;
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+      display:none;
+    }
+    .loading .spinner { display:block; }
+    .loading .btn-text { opacity:.7; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    .alert {
+      padding:12px 16px; border-radius:10px;
+      font-size:13.5px; margin-bottom:20px; display:none; line-height:1.5;
+    }
+    .alert.error { background:#fef2f2; border:1.5px solid #fca5a5; color:#b91c1c; }
+    .alert.visible { display:block; animation:fadeUp .3s ease; }
+  </style>
+  <script src="/api-config.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-area">
+      <div class="logo-mark">
+        <img src="Loghi/comunicai_1.png" alt="TourismAI">
+      </div>
+      <div class="logo-name">Tourism<span>AI</span></div>
+      <div class="logo-tagline">Assistente AI per strutture turistiche e alberghiere</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Accesso riservato</div>
+      <div class="card-subtitle">Inserisci le tue credenziali per attivare una demo per un cliente TourismAI.</div>
+
+      <div class="alert error" id="alertError"></div>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="es. mario.rossi" autocomplete="username">
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn" id="btnLogin" onclick="doLogin()">
+        <div class="btn-inner">
+          <div class="spinner"></div>
+          <span class="btn-text">ENTRA</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      try {
+        const res = await fetch(ApiConfig.get('me'), {
+          credentials: 'include',
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user.currentProduct === 'tourism') {
+            window.location.href = '/config_tourism.html';
+          }
+        }
+      } catch {}
+    })();
+
+    async function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('btnLogin');
+      const alertEl = document.getElementById('alertError');
+
+      alertEl.className = 'alert';
+      if (!username || !password) {
+        alertEl.textContent = 'Inserisci username e password.';
+        alertEl.className = 'alert error visible'; return;
+      }
+
+      btn.disabled = true; btn.classList.add('loading');
+
+      try {
+        const res = await fetch(ApiConfig.get('login'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, product: 'tourism' })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alertEl.textContent = data.error || 'Errore di accesso.';
+          alertEl.className = 'alert error visible';
+        } else {
+          console.log('✅ Login OK, user:', data.user);
+          window.location.href = data.redirect;
+        }
+      } catch (err) {
+        console.error('❌ Login error:', err);
+        alertEl.textContent = 'Errore di connessione. Riprova.';
+        alertEl.className = 'alert error visible';
+      } finally {
+        btn.disabled = false; btn.classList.remove('loading');
+      }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  </script>
+</body>
+</html>

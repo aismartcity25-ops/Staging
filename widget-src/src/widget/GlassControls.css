@@ -1,0 +1,113 @@
+.glass-controls-panel {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 99999;
+  background: rgba(15, 17, 28, 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  color: #fff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.75rem;
+  width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: none;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+.glass-controls-panel.visible {
+  display: block;
+  animation: glass-panel-appear 0.3s ease;
+}
+@keyframes glass-panel-appear {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.glass-controls-panel h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.glass-controls-panel h3 button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.2s;
+}
+.glass-controls-panel h3 button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.glass-control-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.glass-control-row label {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.glass-control-row input[type='range'] {
+  width: 70px;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+}
+.glass-control-row input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22c55e;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+.glass-control-row .value {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.65rem;
+  width: 32px;
+  text-align: right;
+  font-family: 'DM Mono', monospace;
+}
+.glass-toggle-btn {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 99998;
+  background: rgba(15, 17, 28, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 1rem;
+  transition: transform 0.2s ease, background 0.2s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.glass-toggle-btn:hover {
+  transform: scale(1.1);
+  background: rgba(15, 17, 28, 0.95);
+}
