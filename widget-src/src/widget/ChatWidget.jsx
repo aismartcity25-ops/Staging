@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { THEMES, FALLBACK_SUGGESTIONS, FALLBACK_WELCOME, resolveTheme, getParticleHue } from './themes.js';
+import { THEMES, FALLBACK_SUGGESTIONS, FALLBACK_WELCOME, resolveTheme, resolveStyle, getParticleHue, SIZE_PRESETS } from './themes.js';
 import { Shard, Spark } from './particles.js';
 import Message, { TypingIndicator } from './Message.jsx';
 import { useResizableWindow } from './useResizableWindow.js';
@@ -32,10 +32,13 @@ let animationFrameId = null;
  * - product: 'comunicai' | 'medicai'
  * - demoId: id demo per caricare suggerimenti/welcome personalizzati dall'API
  * - colors: override colori custom { primary, secondary, userBg, userText, aiBg, aiText }
+ * - style: override stile custom { borderRadius, position, sizePreset, glass } (vedi themes.js#resolveStyle)
  * - apiEndpoint: endpoint per l'invio messaggi (default '/api/chat/message')
+ * - previewMode: se true, finestra aperta di default con messaggi statici, nessuna
+ *   chiamata di rete (usato da public/widget-preview.html per l'anteprima live admin)
  */
-export default function ChatWidget({ product = 'comunicai', demoId = '', colors = null, apiEndpoint = '/api/chat/message' }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ChatWidget({ product = 'comunicai', demoId = '', colors = null, style = null, apiEndpoint = '/api/chat/message', previewMode = false }) {
+  const [isOpen, setIsOpen] = useState(previewMode);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,10 +55,12 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   const [pendingAttachment, setPendingAttachment] = useState(null);
   const [attachmentError, setAttachmentError] = useState('');
 
-  const { dimensions, windowRef, startResize } = useResizableWindow();
+  const resolvedStyle = resolveStyle(style);
+  const { dimensions, windowRef, startResize } = useResizableWindow(SIZE_PRESETS[resolvedStyle.sizePreset]);
 
   const theme = resolveTheme(product, colors);
 
+  const rootRef = useRef(null);
   const messagesEndRef = useRef(null);
   const canvasCtxRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -67,30 +72,47 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   const silenceTimerRef = useRef(null);
   const silenceRafRef = useRef(null);
 
-  // Applica i colori custom come CSS variables.
+  // Applica colori e stile custom come CSS variables SCOPATE sul wrapper locale
+  // (non piu' su document.documentElement: evita collisioni tra piu' istanze sulla
+  // stessa pagina, es. l'anteprima live admin). Scrive sui nomi REALMENTE letti da
+  // ChatWidget.css (--cw-primary/--cw-secondary/--cw-header-bg/--cw-glow-1/2/3),
+  // non solo su --cw-user-bg/... come in precedenza (bug: quelle variabili non
+  // erano lette da nessuna regola CSS, quindi i colori configurati non si
+  // riflettevano mai nel widget reale).
   useEffect(() => {
-    if (colors) {
-      const root = document.documentElement;
-      if (colors.userBg) root.style.setProperty('--cw-user-bg', colors.userBg);
-      if (colors.userText) root.style.setProperty('--cw-user-text', colors.userText);
-      if (colors.aiBg) root.style.setProperty('--cw-ai-bg', colors.aiBg);
-      if (colors.aiText) root.style.setProperty('--cw-ai-text', colors.aiText);
-    }
-  }, [colors]);
+    const node = rootRef.current;
+    if (!node) return;
+    const resolved = resolveTheme(product, colors);
+    node.style.setProperty('--cw-primary', resolved.primary);
+    node.style.setProperty('--cw-secondary', resolved.secondary);
+    node.style.setProperty('--cw-header-bg', resolved.headerBg);
+    node.style.setProperty('--cw-glow-1', resolved.glowColor);
+    node.style.setProperty('--cw-glow-2', resolved.glowColorAlt);
+    node.style.setProperty('--cw-glow-3', resolved.glowColor);
+    node.style.setProperty('--cw-user-bg', resolved.userBg);
+    node.style.setProperty('--cw-user-text', resolved.userText);
+    node.style.setProperty('--cw-ai-bg', resolved.aiBg);
+    node.style.setProperty('--cw-ai-text', resolved.aiText);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-product', product);
-  }, [product]);
+    const s = resolveStyle(style);
+    node.style.setProperty('--cw-radius-window', `${s.borderRadius.window}px`);
+    node.style.setProperty('--cw-radius-bubble', `${s.borderRadius.bubble}px`);
+    node.style.setProperty('--cw-glass-blur', `${s.glass.blur}px`);
+    node.style.setProperty('--cw-glass-saturate', `${s.glass.saturate}%`);
+    node.style.setProperty('--cw-glass-bg-opacity', `${s.glass.opacity}`);
+    node.setAttribute('data-cw-position', s.position);
+  }, [product, colors, style]);
 
-  // Canvas per le particelle dello shatter, posizionato sopra la bolla.
+  // Canvas per le particelle dello shatter, posizionato sopra la bolla — figlio
+  // del wrapper locale (non piu' document.body) cosi' resta agganciato allo
+  // stesso contesto di scoping/posizionamento del resto del widget.
   useEffect(() => {
     let canvas = document.getElementById('particle-canvas');
     if (!canvas) {
       canvas = document.createElement('canvas');
       canvas.id = 'particle-canvas';
-      canvas.style.cssText =
-        'position:fixed;bottom:24px;right:24px;width:64px;height:64px;pointer-events:none;z-index:99998;';
-      document.body.appendChild(canvas);
+      canvas.style.cssText = 'position:fixed;width:64px;height:64px;pointer-events:none;z-index:99998;';
+      rootRef.current?.appendChild(canvas);
     }
     canvas.width = 64;
     canvas.height = 64;
@@ -103,6 +125,18 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
 
     const fallbackWelcome = FALLBACK_WELCOME[product] || FALLBACK_WELCOME.comunicai;
     setWelcomeText(fallbackWelcome);
+
+    if (previewMode) {
+      // Conversazione statica di esempio, per un'anteprima realistica senza
+      // alcuna chiamata di rete (usata da public/widget-preview.html).
+      setMessages([
+        { id: '1', type: 'ai', content: fallbackWelcome, timestamp: new Date() },
+        { id: '2', type: 'user', content: 'Quali sono gli orari di apertura?', timestamp: new Date() },
+        { id: '3', type: 'ai', content: 'Siamo aperti dal lunedì al venerdì, dalle 9:00 alle 13:00.', timestamp: new Date() }
+      ]);
+      return;
+    }
+
     setMessages([{ id: '1', type: 'ai', content: fallbackWelcome, timestamp: new Date() }]);
 
     // Carica i suggerimenti reali della demo, se disponibile un demoId.
@@ -121,7 +155,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
         .catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, demoId]);
+  }, [product, demoId, previewMode]);
 
   // Naviga l'iframe del sito nella demo verso la fonte citata.
   const openCitation = (url) => {
@@ -292,6 +326,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   };
 
   const handleSubmit = async (text) => {
+    if (previewMode) return; // nessuna chiamata di rete in anteprima
     const messageText = text || input;
     if ((!messageText.trim() && !pendingAttachment) || isLoading) return;
     if (pendingAttachment?.uploading) return;
@@ -320,7 +355,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   const handleFileUpload = async (e, type) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || isLoading) return;
+    if (!file || isLoading || previewMode) return;
 
     setAttachmentError('');
     const localPreviewUrl = type === 'image' ? URL.createObjectURL(file) : null;
@@ -415,6 +450,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   };
 
   const startVoiceInput = async () => {
+    if (previewMode) return; // nessun accesso al microfono in anteprima
     setAttachmentError('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -500,11 +536,10 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   };
 
   return (
-    <>
+    <div className="chatbot-widget-root" ref={rootRef} data-product={product}>
       <button
         className={`chatbot-bubble-button ${bubbleState}`}
         onClick={toggleChat}
-        style={{ '--cw-glow': theme.glowColor, '--cw-glow-alt': theme.glowColorAlt }}
       >
         <div className="bubble-inner">{isOpen ? <XIcon /> : <MessageCircle />}</div>
         {bubbleState === 'shatter' && (
@@ -563,7 +598,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
               msg.streaming && !msg.content ? (
                 <TypingIndicator key={msg.id} />
               ) : (
-                <Message key={msg.id} message={msg} onPlayAudio={handlePlayAudio} onOpenCitation={openCitation} />
+                <Message key={msg.id} message={msg} onPlayAudio={previewMode ? undefined : handlePlayAudio} onOpenCitation={openCitation} />
               )
             )}
             <div ref={messagesEndRef} />
@@ -616,7 +651,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
               <button
                 className="chatbot-bubble-input-btn"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading || !!pendingAttachment}
+                disabled={isLoading || !!pendingAttachment || previewMode}
                 title="Carica documento"
               >
                 <PaperclipIcon />
@@ -631,7 +666,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
               <button
                 className="chatbot-bubble-input-btn"
                 onClick={() => imageInputRef.current?.click()}
-                disabled={isLoading || !!pendingAttachment}
+                disabled={isLoading || !!pendingAttachment || previewMode}
                 title="Carica immagine"
               >
                 <ImageIcon />
@@ -650,12 +685,12 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={isLoading}
+                disabled={isLoading || previewMode}
               />
               <button
                 className={`chatbot-bubble-input-btn ${isRecording ? 'chatbot-bubble-input-btn--recording' : ''}`}
                 onClick={toggleVoiceInput}
-                disabled={isLoading || isTranscribing}
+                disabled={isLoading || isTranscribing || previewMode}
                 title={isTranscribing ? 'Trascrizione in corso…' : (isRecording ? 'Ferma registrazione' : 'Registra messaggio vocale')}
               >
                 {isTranscribing ? <LoaderIcon className="chatbot__spin" /> : (isRecording ? <MicOffIcon /> : <MicIcon />)}
@@ -663,7 +698,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
               <button
                 className="chatbot-bubble-send"
                 onClick={() => handleSubmit()}
-                disabled={(!input.trim() && !pendingAttachment) || isLoading || pendingAttachment?.uploading}
+                disabled={(!input.trim() && !pendingAttachment) || isLoading || pendingAttachment?.uploading || previewMode}
                 title={isLoading ? 'Invio in corso…' : 'Invia messaggio'}
               >
                 {isLoading ? <LoaderIcon className="chatbot__spin" /> : <SendIcon />}
@@ -672,7 +707,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

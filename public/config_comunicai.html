@@ -407,44 +407,76 @@
       font-family: monospace;
       text-transform: uppercase;
     }
-    .color-preview {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border2);
+    /* Step 4 — layout a due colonne: controlli a sinistra, anteprima live
+       (widget reale in iframe) fissa a destra. Breakout rispetto alla
+       larghezza stretta (680px) del resto del form, solo per questa sezione. */
+    .section--step4 {
+      max-width: 1040px;
+      margin-left: calc((680px - 1040px) / 2);
+      margin-right: calc((680px - 1040px) / 2);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      gap: 24px;
+      align-items: start;
     }
-    .color-preview > span {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
+    .step4-controls { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .step4-preview-col { position: sticky; top: 24px; }
+    .step4-preview-frame {
+      width: 100%; height: 720px; border: 0; border-radius: 16px;
+      background: #eef1f5;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    @media (max-width: 1180px) {
+      .section--step4 {
+        max-width: none; margin-left: 0; margin-right: 0;
+        grid-template-columns: 1fr;
+      }
+      .step4-preview-col { position: static; }
+      .step4-preview-frame { height: 560px; }
+    }
+
+    /* Sotto-sezioni collassabili (Colori / Forma & bordi / Posizione & dimensioni / Effetti glass) */
+    .style-subsection {
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.5);
+    }
+    .style-subsection > summary {
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      list-style: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .style-subsection > summary::-webkit-details-marker { display: none; }
+    .style-subsection > summary::before {
+      content: '▸';
+      font-size: 11px;
       color: var(--muted);
-      display: block;
-      margin-bottom: 12px;
+      transition: transform 0.15s;
     }
-    .preview-chat {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-width: 280px;
+    .style-subsection[open] > summary::before { transform: rotate(90deg); }
+    .style-subsection > summary ~ * { margin-top: 14px; }
+    .style-subsection .color-grid { margin-top: 14px; }
+
+    .style-field { margin-bottom: 14px; }
+    .style-field:last-child { margin-bottom: 0; }
+    .style-field label {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
     }
-    .preview-ai-msg, .preview-user-msg {
-      padding: 10px 14px;
-      border-radius: 16px;
-      font-size: 13px;
-      max-width: 85%;
+    .style-field .style-field-value { color: var(--text); font-weight: 600; text-transform: none; letter-spacing: 0; }
+    .style-field input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .style-field select {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
     }
-    .preview-ai-msg {
-      align-self: flex-start;
-      background: #e5e7eb;
-      color: #1f2937;
-      border-bottom-left-radius: 4px;
-    }
-    .preview-user-msg {
-      align-self: flex-end;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
+    .style-field-row { display: flex; gap: 10px; }
+    .style-field-row .style-field { flex: 1; }
 
     /* Analisi sito */
     .btn-analyze { margin-top: 16px; }
@@ -617,63 +649,117 @@
         <textarea id="instructions" placeholder="Es: Rispondi solo in italiano formale. Non fornire informazioni su orari degli uffici privati. Concentrati sui servizi comunali..."></textarea>
       </div>
 
-      <!-- Step 4 - Color customization -->
-      <div class="section">
-        <div class="section-header">
-          <div class="section-num">4</div>
-          <div class="section-title">Colori del chatbot</div>
-          <span class="section-desc">Personalizza l'aspetto</span>
+      <!-- Step 4 - Personalizzazione estetica del chatbot -->
+      <div class="section section--step4">
+        <div class="step4-controls">
+          <div class="section-header" style="margin-bottom:4px">
+            <div class="section-num">4</div>
+            <div class="section-title">Aspetto del chatbot</div>
+            <span class="section-desc">Personalizza colori, forma, posizione ed effetti</span>
+          </div>
+
+          <details class="style-subsection" open>
+            <summary>🎨 Colori</summary>
+            <div class="color-grid">
+              <div class="color-field">
+                <label for="colorPrimary">Colore principale</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorPrimary" value="#1a8c5c">
+                  <input type="text" id="colorPrimaryText" value="#1a8c5c" class="color-text">
+                </div>
+              </div>
+              <div class="color-field">
+                <label for="colorSecondary">Colore secondario</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorSecondary" value="#13a06a">
+                  <input type="text" id="colorSecondaryText" value="#13a06a" class="color-text">
+                </div>
+              </div>
+              <div class="color-field">
+                <label for="colorUserBg">Sfondo messaggi utente</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorUserBg" value="#3b82f6">
+                  <input type="text" id="colorUserBgText" value="#3b82f6" class="color-text">
+                </div>
+              </div>
+              <div class="color-field">
+                <label for="colorUserText">Testo messaggi utente</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorUserText" value="#ffffff">
+                  <input type="text" id="colorUserTextText" value="#ffffff" class="color-text">
+                </div>
+              </div>
+              <div class="color-field">
+                <label for="colorAiBg">Sfondo messaggi AI</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorAiBg" value="#e5e7eb">
+                  <input type="text" id="colorAiBgText" value="#e5e7eb" class="color-text">
+                </div>
+              </div>
+              <div class="color-field">
+                <label for="colorAiText">Testo messaggi AI</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="colorAiText" value="#1f2937">
+                  <input type="text" id="colorAiTextText" value="#1f2937" class="color-text">
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="style-subsection">
+            <summary>◻️ Forma &amp; bordi</summary>
+            <div class="style-field">
+              <label for="radiusWindow">Angolarità finestra <span class="style-field-value" id="radiusWindowValue">24px</span></label>
+              <input type="range" id="radiusWindow" min="0" max="32" step="1" value="24">
+            </div>
+            <div class="style-field">
+              <label for="radiusBubble">Angolarità bolle messaggio <span class="style-field-value" id="radiusBubbleValue">32px</span></label>
+              <input type="range" id="radiusBubble" min="0" max="32" step="1" value="32">
+            </div>
+          </details>
+
+          <details class="style-subsection">
+            <summary>📍 Posizione &amp; dimensioni</summary>
+            <div class="style-field-row">
+              <div class="style-field">
+                <label for="widgetPosition">Angolo schermo</label>
+                <select id="widgetPosition">
+                  <option value="bottom-right" selected>In basso a destra</option>
+                  <option value="bottom-left">In basso a sinistra</option>
+                  <option value="top-right">In alto a destra</option>
+                  <option value="top-left">In alto a sinistra</option>
+                </select>
+              </div>
+              <div class="style-field">
+                <label for="sizePreset">Dimensione finestra</label>
+                <select id="sizePreset">
+                  <option value="compact">Compatta</option>
+                  <option value="standard" selected>Standard</option>
+                  <option value="large">Grande</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <details class="style-subsection">
+            <summary>🪟 Effetti "liquid glass"</summary>
+            <div class="style-field">
+              <label for="glassBlur">Sfocatura (blur) <span class="style-field-value" id="glassBlurValue">24px</span></label>
+              <input type="range" id="glassBlur" min="0" max="40" step="1" value="24">
+            </div>
+            <div class="style-field">
+              <label for="glassSaturate">Saturazione <span class="style-field-value" id="glassSaturateValue">200%</span></label>
+              <input type="range" id="glassSaturate" min="100" max="300" step="5" value="200">
+            </div>
+            <div class="style-field">
+              <label for="glassOpacity">Opacità <span class="style-field-value" id="glassOpacityValue">0.12</span></label>
+              <input type="range" id="glassOpacity" min="0" max="0.4" step="0.01" value="0.12">
+            </div>
+          </details>
         </div>
-        <div class="color-grid">
-          <div class="color-field">
-            <label for="colorPrimary">Colore principale</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorPrimary" value="#1a8c5c">
-              <input type="text" id="colorPrimaryText" value="#1a8c5c" class="color-text">
-            </div>
-          </div>
-          <div class="color-field">
-            <label for="colorSecondary">Colore secondario</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorSecondary" value="#13a06a">
-              <input type="text" id="colorSecondaryText" value="#13a06a" class="color-text">
-            </div>
-          </div>
-          <div class="color-field">
-            <label for="colorUserBg">Sfondo messaggi utente</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorUserBg" value="#3b82f6">
-              <input type="text" id="colorUserBgText" value="#3b82f6" class="color-text">
-            </div>
-          </div>
-          <div class="color-field">
-            <label for="colorUserText">Testo messaggi utente</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorUserText" value="#ffffff">
-              <input type="text" id="colorUserTextText" value="#ffffff" class="color-text">
-            </div>
-          </div>
-          <div class="color-field">
-            <label for="colorAiBg">Sfondo messaggi AI</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorAiBg" value="#e5e7eb">
-              <input type="text" id="colorAiBgText" value="#e5e7eb" class="color-text">
-            </div>
-          </div>
-          <div class="color-field">
-            <label for="colorAiText">Testo messaggi AI</label>
-            <div class="color-input-wrap">
-              <input type="color" id="colorAiText" value="#1f2937">
-              <input type="text" id="colorAiTextText" value="#1f2937" class="color-text">
-            </div>
-          </div>
-        </div>
-        <div class="color-preview">
-          <span>Anteprima:</span>
-          <div class="preview-chat">
-            <div class="preview-ai-msg" id="previewAiMsg">Ciao! Come posso aiutarti?</div>
-            <div class="preview-user-msg" id="previewUserMsg">Vorrei informazioni</div>
-          </div>
+
+        <div class="step4-preview-col">
+          <iframe id="previewFrame" class="step4-preview-frame" title="Anteprima chatbot" src="/widget-preview.html"></iframe>
         </div>
       </div>
 
@@ -973,79 +1059,129 @@
     colorFields.forEach(({ color, text }) => {
       const colorInput = document.getElementById(color);
       const textInput = document.getElementById(text);
-      
+
       colorInput.addEventListener('input', () => {
         textInput.value = colorInput.value;
-        updatePreview();
+        sendPreviewUpdate();
       });
-      
+
       textInput.addEventListener('input', () => {
         if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
           colorInput.value = textInput.value;
-          updatePreview();
+          sendPreviewUpdate();
         }
       });
     });
 
-    function updatePreview() {
-      const userBg = document.getElementById('colorUserBg').value;
-      const userText = document.getElementById('colorUserText').value;
-      const aiBg = document.getElementById('colorAiBg').value;
-      const aiText = document.getElementById('colorAiText').value;
-      
-      const userMsg = document.getElementById('previewUserMsg');
-      const aiMsg = document.getElementById('previewAiMsg');
-      
-      if (userMsg) {
-        userMsg.style.background = userBg;
-        userMsg.style.color = userText;
-      }
-      if (aiMsg) {
-        aiMsg.style.background = aiBg;
-        aiMsg.style.color = aiText;
-      }
-      
+    // Colori di default (= valori "value" iniziali degli input color nell'HTML sopra).
+    const DEFAULT_COLORS_JS = {
+      primary: '#1a8c5c', secondary: '#13a06a',
+      userBg: '#3b82f6', userText: '#ffffff',
+      aiBg: '#e5e7eb', aiText: '#1f2937'
+    };
+
+    // Default = valori hardcoded ATTUALI del widget (vedi widget-src/src/widget/themes.js
+    // #DEFAULT_STYLE) — duplicato qui intenzionalmente: questa pagina è HTML statico,
+    // themes.js è un modulo ESM del progetto widget-src separato (build Vite).
+    const DEFAULT_STYLE_JS = {
+      borderRadius: { window: 24, bubble: 32 },
+      position: 'bottom-right',
+      sizePreset: 'standard',
+      glass: { blur: 24, saturate: 200, opacity: 0.12 }
+    };
+
+    // Etichette live sui valori degli slider
+    const styleRangeLabels = [
+      { id: 'radiusWindow', valueId: 'radiusWindowValue', suffix: 'px' },
+      { id: 'radiusBubble', valueId: 'radiusBubbleValue', suffix: 'px' },
+      { id: 'glassBlur', valueId: 'glassBlurValue', suffix: 'px' },
+      { id: 'glassSaturate', valueId: 'glassSaturateValue', suffix: '%' },
+      { id: 'glassOpacity', valueId: 'glassOpacityValue', suffix: '' }
+    ];
+    styleRangeLabels.forEach(({ id, valueId }) => {
+      document.getElementById(id).addEventListener('input', () => updateStyleFieldLabels());
+    });
+
+    function updateStyleFieldLabels() {
+      styleRangeLabels.forEach(({ id, valueId, suffix }) => {
+        document.getElementById(valueId).textContent = document.getElementById(id).value + suffix;
+      });
+    }
+    updateStyleFieldLabels();
+
+    // Tutti i controlli Step 4 (colori + forma/bordi + posizione/dimensione + glass)
+    // aggiornano l'anteprima live nell'iframe.
+    ['radiusWindow', 'radiusBubble', 'widgetPosition', 'sizePreset', 'glassBlur', 'glassSaturate', 'glassOpacity']
+      .forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', sendPreviewUpdate);
+        el.addEventListener('change', sendPreviewUpdate);
+      });
+
+    function collectStyleAndColors() {
       const colors = {
         primary: document.getElementById('colorPrimary').value,
         secondary: document.getElementById('colorSecondary').value,
-        userBg: userBg,
-        userText: userText,
-        aiBg: aiBg,
-        aiText: aiText
+        userBg: document.getElementById('colorUserBg').value,
+        userText: document.getElementById('colorUserText').value,
+        aiBg: document.getElementById('colorAiBg').value,
+        aiText: document.getElementById('colorAiText').value
       };
-      
-      const root = document.documentElement;
-      root.style.setProperty('--cw-user-bg', colors.userBg);
-      root.style.setProperty('--cw-user-text', colors.userText);
-      root.style.setProperty('--cw-ai-bg', colors.aiBg);
-      root.style.setProperty('--cw-ai-text', colors.aiText);
-      root.style.setProperty('--cw-primary', colors.primary);
-      root.style.setProperty('--cw-secondary', colors.secondary);
-      root.style.setProperty('--cw-glow-1', colors.primary);
-      root.style.setProperty('--cw-glow-2', colors.secondary);
+      const style = {
+        borderRadius: {
+          window: Number(document.getElementById('radiusWindow').value),
+          bubble: Number(document.getElementById('radiusBubble').value)
+        },
+        position: document.getElementById('widgetPosition').value,
+        sizePreset: document.getElementById('sizePreset').value,
+        glass: {
+          blur: Number(document.getElementById('glassBlur').value),
+          saturate: Number(document.getElementById('glassSaturate').value),
+          opacity: Number(document.getElementById('glassOpacity').value)
+        }
+      };
+      return { colors, style };
     }
 
-    // Initialize colors on load (integrated from widget/index.html)
-    const initialColors = {
-      primary: document.getElementById('colorPrimary').value,
-      secondary: document.getElementById('colorSecondary').value,
-      userBg: document.getElementById('colorUserBg').value,
-      userText: document.getElementById('colorUserText').value,
-      aiBg: document.getElementById('colorAiBg').value,
-      aiText: document.getElementById('colorAiText').value
-    };
-    
-    const root = document.documentElement;
-    root.style.setProperty('--cw-user-bg', initialColors.userBg);
-    root.style.setProperty('--cw-user-text', initialColors.userText);
-    root.style.setProperty('--cw-ai-bg', initialColors.aiBg);
-    root.style.setProperty('--cw-ai-text', initialColors.aiText);
-    root.style.setProperty('--cw-primary', initialColors.primary);
-    root.style.setProperty('--cw-secondary', initialColors.secondary);
-    root.style.setProperty('--cw-glow-1', initialColors.primary);
-    root.style.setProperty('--cw-glow-2', initialColors.secondary);
-    
-    updatePreview();
+    function applyStyleToControls(style) {
+      const s = style || DEFAULT_STYLE_JS;
+      document.getElementById('radiusWindow').value = s.borderRadius?.window ?? DEFAULT_STYLE_JS.borderRadius.window;
+      document.getElementById('radiusBubble').value = s.borderRadius?.bubble ?? DEFAULT_STYLE_JS.borderRadius.bubble;
+      document.getElementById('widgetPosition').value = s.position || DEFAULT_STYLE_JS.position;
+      document.getElementById('sizePreset').value = s.sizePreset || DEFAULT_STYLE_JS.sizePreset;
+      document.getElementById('glassBlur').value = s.glass?.blur ?? DEFAULT_STYLE_JS.glass.blur;
+      document.getElementById('glassSaturate').value = s.glass?.saturate ?? DEFAULT_STYLE_JS.glass.saturate;
+      document.getElementById('glassOpacity').value = s.glass?.opacity ?? DEFAULT_STYLE_JS.glass.opacity;
+      updateStyleFieldLabels();
+    }
+
+    // ── Anteprima live (iframe con il widget reale) ─────────────────────────
+    // Il widget reale gestisce colori/stile tramite le STESSE CSS custom
+    // properties usate in produzione (vedi ChatWidget.jsx): niente mock
+    // parallelo, quindi l'anteprima non può mai divergere da come apparirà
+    // davvero la demo.
+    let previewReady = false;
+    let previewDebounce = null;
+
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type !== 'cw-preview-ready') return;
+      previewReady = true;
+      sendPreviewUpdate();
+    });
+
+    function sendPreviewUpdate() {
+      if (!previewReady) return;
+      clearTimeout(previewDebounce);
+      previewDebounce = setTimeout(() => {
+        const { colors, style } = collectStyleAndColors();
+        const frame = document.getElementById('previewFrame');
+        frame.contentWindow?.postMessage(
+          { type: 'cw-preview-update', payload: { product: 'comunicai', colors, style } },
+          window.location.origin
+        );
+      }, 100);
+    }
 
     async function validateUrl(url) {
       if (!url) return { valid: false, message: 'URL vuoto' };
@@ -1124,7 +1260,8 @@
         document.getElementById('color' + field).value = value;
         document.getElementById('color' + field + 'Text').value = value;
       });
-      updatePreview();
+      applyStyleToControls(demo.style);
+      sendPreviewUpdate();
 
       setSearchMode(demo.searchMode === 'crawling' ? 'live' : (demo.searchMode || 'live'));
 
@@ -1148,10 +1285,11 @@
 
       ['Primary', 'Secondary', 'UserBg', 'UserText', 'AiBg', 'AiText'].forEach(field => {
         const key = field.charAt(0).toLowerCase() + field.slice(1);
-        document.getElementById('color' + field).value = initialColors[key];
-        document.getElementById('color' + field + 'Text').value = initialColors[key];
+        document.getElementById('color' + field).value = DEFAULT_COLORS_JS[key];
+        document.getElementById('color' + field + 'Text').value = DEFAULT_COLORS_JS[key];
       });
-      updatePreview();
+      applyStyleToControls(null);
+      sendPreviewUpdate();
 
       setSearchMode('live');
 
@@ -1165,15 +1303,7 @@
       const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
       const instructions = document.getElementById('instructions').value.trim();
 
-      // Collect colors
-      const colors = {
-        primary: document.getElementById('colorPrimary').value,
-        secondary: document.getElementById('colorSecondary').value,
-        userBg: document.getElementById('colorUserBg').value,
-        userText: document.getElementById('colorUserText').value,
-        aiBg: document.getElementById('colorAiBg').value,
-        aiText: document.getElementById('colorAiText').value
-      };
+      const { colors, style } = collectStyleAndColors();
 
       const errEl = document.getElementById('alertError');
       const sucEl = document.getElementById('alertSuccess');
@@ -1208,7 +1338,7 @@
       try {
         const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
           method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, searchMode })
+          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, style, searchMode })
         });
         const data = await res.json();
 

@@ -370,5 +370,25 @@
       "aiBg": "#e5e7eb",
       "aiText": "#1f2937"
     }
+  },
+  {
+    "id": "1e729602-9172-4f82-9f1d-fc5de5b5f464",
+    "createdAt": "2026-07-16T07:04:39.033Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://comune.scampitella.av.it/",
+    "searchUrls": [
+      "https://comune.scampitella.av.it/"
+    ],
+    "searchMode": "live",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    }
   }
 ]

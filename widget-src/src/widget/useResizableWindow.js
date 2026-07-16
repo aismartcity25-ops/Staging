@@ -15,6 +15,15 @@ export function useResizableWindow(initial = { width: 460, height: 640 }) {
     setResizeDirection(direction);
   };
 
+  // useState(initial) legge `initial` solo al primo render: se il preset di
+  // dimensione cambia dopo il mount (es. anteprima live aggiornata via
+  // update() senza remount), le dimensioni non si aggiornerebbero da sole
+  // senza questo effetto.
+  useEffect(() => {
+    setDimensions(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial.width, initial.height]);
+
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing || !windowRef.current) return;

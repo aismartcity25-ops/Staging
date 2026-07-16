@@ -26,7 +26,7 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'search_configured_sites',
-      description: 'Search the indexed knowledge base for this client\'s website(s). Use this when the user asks about services, information, or content covered by the indexed knowledge base (built from the configured source URLs). This tool queries only the knowledge base produced by the ingestion pipeline.',
+      description: 'Search this client\'s configured website(s) live, on-demand — performs a real-time crawl of the configured source URLs at the moment of the request (there is no pre-built index). Use this when the user asks about services, information, or content covered by the configured website(s).',
       parameters: {
         type: 'object',
         properties: {

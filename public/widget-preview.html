@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anteprima chatbot</title>
+
+  <!-- Stesso bundle compilato usato dalle demo reali (public/demo.html): garanzia
+       strutturale che l'anteprima non possa mai divergere dal widget vero, dato
+       che gira lo stesso codice attraverso lo stesso percorso CSS-variable. -->
+  <link rel="stylesheet" href="/widget-src/dist-embed/chat-widget.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Sfondo con texture reale (mesh di colori + blocchi "contenuto") dietro al
+       widget: senza dettaglio visivo alle spalle, l'effetto vetro (blur/
+       saturazione) del widget non ha nulla da sfocare ed è impercettibile —
+       uno sfondo piatto rendeva i controlli "Effetti liquid glass" invisibili
+       anche quando applicati correttamente. */
+    #mock-page {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(circle at 15% 20%, #ff6b6b 0%, transparent 35%),
+        radial-gradient(circle at 85% 15%, #4facfe 0%, transparent 40%),
+        radial-gradient(circle at 25% 80%, #a855f7 0%, transparent 38%),
+        radial-gradient(circle at 80% 75%, #fbbf24 0%, transparent 35%),
+        linear-gradient(135deg, #f3f5f9 0%, #e6e9f0 100%);
+    }
+    #mock-page .mock-block {
+      position: absolute;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.55);
+      box-shadow: 0 4px 16px rgba(15,23,42,0.08);
+    }
+    #mock-page .mock-line {
+      position: absolute;
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(15,23,42,0.18);
+    }
+  </style>
+</head>
+<body>
+  <div id="mock-page">
+    <div class="mock-block" style="top:8%; left:6%; width:22%; height:14%;"></div>
+    <div class="mock-block" style="top:8%; left:32%; width:22%; height:14%;"></div>
+    <div class="mock-block" style="top:8%; left:58%; width:22%; height:14%;"></div>
+    <div class="mock-line" style="top:30%; left:6%; width:40%;"></div>
+    <div class="mock-line" style="top:36%; left:6%; width:28%;"></div>
+    <div class="mock-block" style="top:46%; left:6%; width:50%; height:30%;"></div>
+    <div class="mock-line" style="top:82%; left:6%; width:20%;"></div>
+    <div class="mock-line" style="top:88%; left:6%; width:15%;"></div>
+  </div>
+  <script src="/widget-src/dist-embed/chat-widget.js"></script>
+  <script>
+    // Nessuna fetch viene mai eseguita da questa pagina: apiEndpoint punta ad
+    // 'about:blank' come rete di sicurezza aggiuntiva (previewMode:true nel
+    // widget disabilita comunque ogni chiamata, vedi ChatWidget.jsx).
+    ChatWidget.init({
+      product: 'comunicai',
+      demoId: '',
+      colors: null,
+      style: null,
+      apiEndpoint: 'about:blank',
+      previewMode: true
+    });
+
+    // Segnala al parent (pagina di configurazione) che il widget e' montato e
+    // pronto a ricevere aggiornamenti — evita che il primo postMessage del
+    // parent arrivi prima che questo listener sia attaccato e vada perso.
+    window.parent.postMessage({ type: 'cw-preview-ready' }, window.location.origin);
+
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin) return;
+      if (!e.data || e.data.type !== 'cw-preview-update') return;
+      const { product, colors, style } = e.data.payload || {};
+      window.ChatWidget.instance?.update({ product, colors, style });
+    });
+  </script>
+</body>
+</html>

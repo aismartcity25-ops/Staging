@@ -26,15 +26,26 @@ class ChatWidgetController {
   }
 
   render() {
-    this.root = ReactDOM.createRoot(this.container);
+    this.root = this.root || ReactDOM.createRoot(this.container);
     this.root.render(
       <ChatWidget
         product={this.config.product}
         demoId={this.config.demoId}
         colors={this.config.colors}
+        style={this.config.style}
         apiEndpoint={this.config.apiEndpoint}
+        previewMode={!!this.config.previewMode}
       />
     );
+  }
+
+  // Aggiorna la config esistente e ri-renderizza SENZA remount (a differenza di
+  // init(), che distrugge e ricrea): preserva stato (finestra aperta, animazioni)
+  // tra un aggiornamento e l'altro. Usato dall'anteprima live nella pagina admin
+  // per applicare in tempo reale le modifiche a colori/stile non ancora salvate.
+  update(partialConfig) {
+    this.config = { ...this.config, ...partialConfig };
+    this.render();
   }
 
   destroy() {

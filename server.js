@@ -398,6 +398,43 @@ apiRouter.post('/validate-url', async (req, res) => {
 // usato durante la chat) né con il knowledge-engine (ancora scollegato).
 const SITE_ANALYSIS_VALID_MODES = new Set(['live', 'crawling']);
 
+// ── Sanitizzazione campo "style" delle demo (personalizzazione estetica del
+// chatbot: forma/bordi, posizione, dimensione, effetti "liquid glass") ───────
+// Duplica intenzionalmente la stessa whitelist/clamp di
+// widget-src/src/widget/themes.js#resolveStyle: server.js è CommonJS,
+// widget-src è un package ESM/Vite separato, condividerlo richiederebbe un
+// build step in più per un helper di poche righe. Nessuna validazione di
+// questo tipo esisteva finora nemmeno per "colors", ma è stata aggiunta qui
+// dato che il campo è nuovo e scritto direttamente in demos.json senza schema.
+const STYLE_POSITIONS = new Set(['bottom-right', 'bottom-left', 'top-right', 'top-left']);
+const STYLE_SIZE_PRESETS = new Set(['compact', 'standard', 'large']);
+
+function clampStyleNum(value, min, max, fallback) {
+  if (value === null || value === undefined || value === '') return fallback;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+function sanitizeStyle(style) {
+  const s = style || {};
+  const br = s.borderRadius || {};
+  const glass = s.glass || {};
+  return {
+    borderRadius: {
+      window: clampStyleNum(br.window, 0, 32, 24),
+      bubble: clampStyleNum(br.bubble, 0, 32, 32)
+    },
+    position: STYLE_POSITIONS.has(s.position) ? s.position : 'bottom-right',
+    sizePreset: STYLE_SIZE_PRESETS.has(s.sizePreset) ? s.sizePreset : 'standard',
+    glass: {
+      blur: clampStyleNum(glass.blur, 0, 40, 24),
+      saturate: clampStyleNum(glass.saturate, 100, 300, 200),
+      opacity: clampStyleNum(glass.opacity, 0, 0.4, 0.12)
+    }
+  };
+}
+
 apiRouter.post('/site-analysis', requireAuth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ success: false, error: 'URL richiesto' });
@@ -415,7 +452,7 @@ apiRouter.post('/site-analysis', requireAuth, async (req, res) => {
 
 // ── Demos CRUD ───────────────────────────────────────────────────────────────
 apiRouter.post('/demos', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, searchMode } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode } = req.body;
 
   if (!clientUrl || !searchUrls || !Array.isArray(searchUrls) || searchUrls.length === 0)
     return res.status(400).json({ error: 'Dati mancanti o non validi' });
@@ -435,7 +472,8 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
     // decidiamo insieme come attivare l'indicizzazione.
     searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : 'live',
     instructions: instructions || '',
-    colors: colors || { primary:'#00b4ff', secondary:'#0066cc', userBg:'#3b82f6', userText:'#ffffff', aiBg:'#e5e7eb', aiText:'#1f2937' }
+    colors: colors || { primary:'#00b4ff', secondary:'#0066cc', userBg:'#3b82f6', userText:'#ffffff', aiBg:'#e5e7eb', aiText:'#1f2937' },
+    style: sanitizeStyle(style)
   };
 
   const demos = loadDemos();
@@ -445,7 +483,7 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
 });
 
 apiRouter.put('/demos/:id', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, searchMode } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode } = req.body;
   const demoId = req.params.id;
 
   if (!demoId) return res.status(400).json({ error: 'ID demo richiesto' });
@@ -471,6 +509,7 @@ apiRouter.put('/demos/:id', requireAuth, (req, res) => {
     searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : (demos[idx].searchMode || 'live'),
     instructions: instructions || '',
     colors: colors || demos[idx].colors,
+    style: style ? sanitizeStyle(style) : (demos[idx].style || sanitizeStyle(null)),
     updatedAt: new Date().toISOString()
   };
 
@@ -583,19 +622,21 @@ apiRouter.post('/chat/tts', async (req, res) => {
 });
 
 // ── Debug ─────────────────────────────────────────────────────────────────────
+// NOTA: deep-search-engine.js restituisce contesto grezzo strutturato (non una
+// risposta finale scritta da un AI): `result.content` qui sotto è quel contesto
+// grezzo, utile per ispezionare cosa il crawler ha effettivamente trovato/estratto
+// dal sito, non una risposta pronta per l'utente (quella si ottiene solo passando
+// per l'endpoint di chat, dove viene sintetizzata a valle).
 apiRouter.post('/debug/medicai-search', async (req, res) => {
   const { query, urls } = req.body;
   if (!query || !urls || !Array.isArray(urls) || urls.length === 0)
     return res.status(400).json({ success: false, error: 'Query e URLs richiesti' });
 
-  const client = getOpenAI();
-  if (!client) return res.status(503).json({ success: false, error: 'OpenAI non disponibile' });
-
   try {
-    const start  = Date.now();
-    const answer = await deepSearchConfiguredSites(query, urls, 'medicai', client);
-    const ms     = Date.now() - start;
-    res.json({ success: true, query, urls, duration: ms, result: { success: true, content: answer }, timestamp: new Date().toISOString() });
+    const start   = Date.now();
+    const context = await deepSearchConfiguredSites(query, urls, 'medicai');
+    const ms      = Date.now() - start;
+    res.json({ success: true, query, urls, duration: ms, result: { success: true, content: context }, timestamp: new Date().toISOString() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, query, urls, timestamp: new Date().toISOString() });
   }

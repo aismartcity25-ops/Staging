@@ -21,10 +21,14 @@
  * vettoriale) non e' ancora collegato in questo progetto, quindi qui NON si
  * usa ragAgent — si interroga dal vivo il/i sito/i configurati sulla demo
  * tramite deep-search-engine.js (stesso motore gia' in uso in produzione).
- * Nessuna citazione/confidence reale e' disponibile con questo motore:
- * `empty: true` nel meta.retrieval evita di innescare il qa-agent (che
- * altrimenti farebbe una chiamata a vuoto senza un vero contesto da
- * valutare) — il testo della risposta arriva comunque al modello.
+ * deep-search-engine.js restituisce contesto grezzo strutturato (non una
+ * risposta gia' scritta): la sintesi finale avviene una sola volta, nel
+ * secondo `copywriter.streamTurn` dell'orchestrator, cosi' da non passare
+ * per due sintesi AI in sequenza. Nessuna citazione/confidence reale e'
+ * disponibile con questo motore: `empty: true` nel meta.retrieval evita di
+ * innescare il qa-agent (che altrimenti farebbe una chiamata a vuoto senza
+ * un vero contesto strutturato da valutare) — il testo arriva comunque al
+ * modello.
  */
 
 const { sendSMS, sendEmail } = require('../lib/notify');
@@ -90,7 +94,7 @@ function createToolExecutorAgent({ openai, ragAgent } = {}) {
             text = `[SYSTEM NOTE — not user-facing text: no source URLs are configured for this demo. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information is available.]`;
           } else {
             try {
-              text = await deepSearchConfiguredSites(parsedArgs.query, urls, product, openai);
+              text = await deepSearchConfiguredSites(parsedArgs.query, urls, product);
             } catch (err) {
               console.error('deep-search-engine error:', err.message);
               text = `[SYSTEM NOTE — not user-facing text: the site search failed. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information could be found.]`;

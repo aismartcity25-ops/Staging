@@ -52,8 +52,9 @@
   --cw-glass-highlight-opacity: 0.78;
 }
 
-/* MedicAI Theme (blue) */
-:root[data-product="medicai"] {
+/* MedicAI Theme (blue) — scopato al wrapper del widget (non piu' :root globale)
+   cosi' piu' istanze (es. anteprima live admin) non si influenzano a vicenda. */
+.chatbot-widget-root[data-product="medicai"] {
   --cw-header-bg: #00b4ff;
   --cw-primary: #00b4ff;
   --cw-secondary: #0066cc;
@@ -64,11 +65,11 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+.chatbot-widget-root { --cw-edge-gap: 1.5rem; }
+
 /* PARTICLE CANVAS */
 #particle-canvas {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
   width: 4rem;
   height: 4rem;
   pointer-events: none;
@@ -78,8 +79,6 @@
 /* ─── BUBBLE WRAP ─── */
 .chatbot-bubble-button {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
   width: 70px;
   height: 70px;
   cursor: pointer;
@@ -88,6 +87,23 @@
   border: none;
   padding: 0;
 }
+
+/* Posizione (angolo schermo), pilotata da [data-cw-position] sul wrapper. */
+[data-cw-position="bottom-right"] .chatbot-bubble-button,
+[data-cw-position="bottom-right"] #particle-canvas { bottom: var(--cw-edge-gap); right: var(--cw-edge-gap); top: auto; left: auto; }
+[data-cw-position="bottom-right"] .chatbot-bubble-window { bottom: calc(var(--cw-edge-gap) + 4rem); right: var(--cw-edge-gap); top: auto; left: auto; }
+
+[data-cw-position="bottom-left"] .chatbot-bubble-button,
+[data-cw-position="bottom-left"] #particle-canvas { bottom: var(--cw-edge-gap); left: var(--cw-edge-gap); top: auto; right: auto; }
+[data-cw-position="bottom-left"] .chatbot-bubble-window { bottom: calc(var(--cw-edge-gap) + 4rem); left: var(--cw-edge-gap); top: auto; right: auto; }
+
+[data-cw-position="top-right"] .chatbot-bubble-button,
+[data-cw-position="top-right"] #particle-canvas { top: var(--cw-edge-gap); right: var(--cw-edge-gap); bottom: auto; left: auto; }
+[data-cw-position="top-right"] .chatbot-bubble-window { top: calc(var(--cw-edge-gap) + 4rem); right: var(--cw-edge-gap); bottom: auto; left: auto; }
+
+[data-cw-position="top-left"] .chatbot-bubble-button,
+[data-cw-position="top-left"] #particle-canvas { top: var(--cw-edge-gap); left: var(--cw-edge-gap); bottom: auto; right: auto; }
+[data-cw-position="top-left"] .chatbot-bubble-window { top: calc(var(--cw-edge-gap) + 4rem); left: var(--cw-edge-gap); bottom: auto; right: auto; }
 
 /* Ambient glow behind - uses theme colors */
 .chatbot-bubble-button::before {
@@ -278,8 +294,6 @@
 /* Chat Bubble Window - Enhanced liquid glass effect */
 .chatbot-bubble-window {
   position: fixed;
-  bottom: 5.5rem;
-  right: 1.5rem;
   width: 460px;
   height: 640px;
   max-width: calc(100vw - 3rem);
@@ -288,7 +302,7 @@
   backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
   -webkit-backdrop-filter: blur(var(--cw-glass-blur)) saturate(var(--cw-glass-saturate));
   border: 1px solid rgba(255, 255, 255, var(--cw-glass-border-opacity));
-  border-radius: 1.5em;
+  border-radius: var(--cw-radius-window, 1.5em);
   box-shadow: 
     0 2em 4em rgba(0,0,0,0.15),
     0 0 0 0.5px rgba(255,255,255,0.1) inset,
@@ -405,7 +419,7 @@
 }
 
 /* Make MedicAI icon white */
-:root[data-product="medicai"] .chatbot-bubble-header-icon img {
+.chatbot-widget-root[data-product="medicai"] .chatbot-bubble-header-icon img {
   filter: brightness(0) invert(1);
 }
 
@@ -476,7 +490,7 @@
 
 .chatbot__message-content {
   animation: message-appear var(--trans-dur) cubic-bezier(0.65, 0, 0.35, 1);
-  border-radius: 2em;
+  border-radius: var(--cw-radius-bubble, 2em);
   padding: 1em 1.25em;
   position: relative;
   min-width: 3.5em;
@@ -495,35 +509,25 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+/* Sfondo/testo configurabili via --cw-user-bg/--cw-user-text/--cw-ai-bg/--cw-ai-text
+   (impostate da ChatWidget.jsx in base ai colori scelti nella demo). Il radial-gradient
+   resta come sottile highlight "glossy" sopra il colore configurato, per non perdere
+   l'effetto vetro esistente. Bug precedente: queste variabili venivano impostate da
+   ChatWidget.jsx ma nessuna regola le leggeva — i colori configurati non si vedevano mai. */
 .chatbot__message--user .chatbot__message-content {
-  background: 
+  background:
     radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
-    linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.8) 100%);
-  color: var(--gray800);
+    var(--cw-user-bg, linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,240,0.8) 100%));
+  color: var(--cw-user-text, var(--gray800));
   backdrop-filter: blur(10px);
 }
 
 .chatbot__message--ai .chatbot__message-content {
-  background: 
+  background:
     radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 50%),
-    linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2));
-  color: var(--white);
+    var(--cw-ai-bg, linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2)));
+  color: var(--cw-ai-text, var(--white));
   backdrop-filter: blur(10px);
-}
-
-@media (prefers-color-scheme: dark) {
-  .chatbot__message--ai .chatbot__message-content { 
-    background: 
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
-      linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2)); 
-    color: var(--white); 
-  }
-  .chatbot__message--user .chatbot__message-content { 
-    background: 
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-      linear-gradient(135deg, rgba(80, 80, 100, 0.9) 0%, rgba(60, 60, 80, 0.8) 100%);
-    color: var(--gray100); 
-  }
 }
 
 .chatbot__message-content p { margin: 0; }
@@ -789,9 +793,11 @@
   }
 }
 
-/* Default ComunicAI (green) */
+/* Segue colore principale/secondario configurati (--cw-glow-1/2, vedi ChatWidget.jsx),
+   non più fisso per prodotto: prima restava sempre verde/blu a prescindere da
+   quali colori sceglieva l'admin nella pagina di configurazione. */
 .chatbot-bubble-suggestion {
-  background: #22c55e;
+  background: linear-gradient(135deg, var(--cw-glow-1), var(--cw-glow-2));
   color: #ffffff;
   border: none;
   border-radius: 0.75em;
@@ -812,13 +818,6 @@
 .chatbot-bubble-suggestion.chip-animate:nth-child(3) { animation-delay: 0.25s; }
 .chatbot-bubble-suggestion.chip-animate:nth-child(4) { animation-delay: 0.35s; }
 .chatbot-bubble-suggestion.chip-animate:nth-child(5) { animation-delay: 0.45s; }
-
-/* MedicAI (blue/azzurro) */
-:root[data-product="medicai"] .chatbot-bubble-suggestion {
-  background: #00b4ff;
-  color: #ffffff;
-  border: none;
-}
 
 .chatbot-bubble-suggestion:hover:not(:disabled) {
   background: linear-gradient(90deg, var(--blue300), var(--blue500) 33%, var(--magenta300));

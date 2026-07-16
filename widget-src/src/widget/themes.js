@@ -8,8 +8,57 @@ export const DEFAULT_CONFIG = {
   demoId: '',
   apiEndpoint: '/api/chat/message',
   theme: 'auto',
-  colors: null // Colori custom: { primary, secondary, userBg, userText, aiBg, aiText }
+  colors: null, // Colori custom: { primary, secondary, userBg, userText, aiBg, aiText }
+  style: null // Stile custom: { borderRadius, position, sizePreset, glass } — vedi resolveStyle()
 };
+
+// Default = valori hardcoded ATTUALI del CSS, cosi' le demo esistenti senza
+// campo `style` restano visivamente identiche a prima di questa estensione.
+export const DEFAULT_STYLE = {
+  borderRadius: { window: 24, bubble: 32 }, // px — window: 1.5em@16px, bubble: 2em@16px
+  position: 'bottom-right', // 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  sizePreset: 'standard', // 'compact' | 'standard' | 'large'
+  glass: { blur: 24, saturate: 200, opacity: 0.12 } // px, %, 0-1 — = --cw-glass-blur/-saturate/-bg-opacity di default
+};
+
+export const SIZE_PRESETS = {
+  compact: { width: 380, height: 560 },
+  standard: { width: 460, height: 640 }, // = default attuale in useResizableWindow.js
+  large: { width: 540, height: 760 }
+};
+
+const POSITIONS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+
+function clampNum(value, min, max, fallback) {
+  if (value === null || value === undefined || value === '') return fallback;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * Calcola lo stile effettivo unendo i default con eventuali override custom
+ * passati via props. Difensivo: qualunque campo mancante/malformato ricade
+ * sempre sul default, mai NaN/undefined propagato a runtime.
+ */
+export function resolveStyle(style) {
+  const s = style || {};
+  const br = s.borderRadius || {};
+  const glass = s.glass || {};
+  return {
+    borderRadius: {
+      window: clampNum(br.window, 0, 32, DEFAULT_STYLE.borderRadius.window),
+      bubble: clampNum(br.bubble, 0, 32, DEFAULT_STYLE.borderRadius.bubble)
+    },
+    position: POSITIONS.includes(s.position) ? s.position : DEFAULT_STYLE.position,
+    sizePreset: SIZE_PRESETS[s.sizePreset] ? s.sizePreset : DEFAULT_STYLE.sizePreset,
+    glass: {
+      blur: clampNum(glass.blur, 0, 40, DEFAULT_STYLE.glass.blur),
+      saturate: clampNum(glass.saturate, 100, 300, DEFAULT_STYLE.glass.saturate),
+      opacity: clampNum(glass.opacity, 0, 0.4, DEFAULT_STYLE.glass.opacity)
+    }
+  };
+}
 
 export const THEMES = {
   comunicai: {
