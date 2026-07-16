@@ -178,6 +178,7 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
 
   const { tools: availableTools } = router.route({ demo });
 
+  console.log('FLOW LOG: starting first AI call for user request');
   try {
     const first = await copywriter.streamTurn({
       messages: messagesForAPI,
@@ -186,9 +187,12 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
     });
 
     if (first.finishReason === 'tool_calls' && first.toolCalls.length) {
+      console.log('FLOW LOG: first AI call returned tool_calls:', first.toolCalls.map(tc => tc.function.name));
       const assistantMessage = { role: 'assistant', content: first.text || null, tool_calls: first.toolCalls };
+      console.log('FLOW LOG: invoking tool executor for selected tool calls');
       const { toolResults, retrieval, attachment: generatedAttachment } = await toolExecutor.execute(first.toolCalls, { demo, languageHintLabel });
 
+      console.log('FLOW LOG: tool executor returned results:', toolResults.map(tr => ({ name: tr.name, length: String(tr.content?.length) })));
       const messagesForSecondCall = [...messagesForAPI, assistantMessage, ...toolResults];
 
       // Se e' stato generato un documento, il testo va sanificato (rimuovendo
@@ -204,6 +208,7 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
         onChunk: bufferOnly ? undefined : (text) => sendEvent({ type: 'chunk', text })
       });
       finalText = second.text;
+      console.log('FLOW LOG: completed second AI call after tool execution');
 
       if (bufferOnly) {
         finalText = guardrail.checkOutput(finalText, { hasAttachment: true });
@@ -220,6 +225,7 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
       sendEvent({ type: 'done', ...built });
       return res.end();
     } else {
+      console.log('FLOW LOG: direct response path used, no tool invocation');
       memory.append(sid, { role: 'assistant', content: first.text });
       const built = buildChatResponse(first.text, sid, {}, null).data;
       sendEvent({ type: 'done', ...built });

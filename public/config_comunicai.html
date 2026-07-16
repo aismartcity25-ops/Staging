@@ -1094,6 +1094,61 @@
       return results;
     }
 
+    let validationPromiseResolver = null;
+
+    function formatValidationRow(result) {
+      return `
+        <div class="validation-row ${result.valid ? 'ok' : 'err'}">
+          <div class="validation-icon">${result.valid ? '✔' : '✕'}</div>
+          <div class="validation-content">
+            <div class="validation-url">${result.url}</div>
+            <div class="validation-message">${result.message}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openValidationPopup(results) {
+      const modal = document.getElementById('validationModal');
+      const list = document.getElementById('validationList');
+      const status = document.getElementById('validationStatus');
+      const summary = document.getElementById('validationSummary');
+      const action = document.getElementById('validationAction');
+      const hidden = document.getElementById('validationCanProceed');
+
+      const invalidUrls = results.filter(r => !r.valid);
+      const allValid = invalidUrls.length === 0;
+
+      list.innerHTML = results.map(formatValidationRow).join('');
+      status.textContent = allValid ? 'Validazione completata' : 'Validazione interrotta';
+      status.className = `validation-status ${allValid ? 'ok' : 'err'}`;
+      summary.textContent = allValid
+        ? 'Tutti i link sono validi. Procedo con la creazione della demo.'
+        : 'Alcuni link non sono validi. Correggi i link evidenziati e riprova.';
+      action.textContent = allValid ? 'Prosegui' : 'Chiudi e correggi';
+      hidden.value = allValid ? '1' : '0';
+      modal.style.display = 'flex';
+
+      return new Promise((resolve) => {
+        validationPromiseResolver = resolve;
+      });
+    }
+
+    function closeValidationPopup(result = false) {
+      const modal = document.getElementById('validationModal');
+      modal.style.display = 'none';
+      if (validationPromiseResolver) {
+        validationPromiseResolver(result);
+        validationPromiseResolver = null;
+      }
+    }
+
+    function handleValidationAction() {
+      const canProceed = document.getElementById('validationCanProceed').value === '1';
+      closeValidationPopup(canProceed);
+      return canProceed;
+    }
+
     let editingDemoId = null;
 
     function editDemo(id) {
@@ -1190,12 +1245,8 @@
 
       // Validate all URLs before creating demo
       const validationResults = await validateAllUrls();
-      const invalidUrls = validationResults.filter(r => !r.valid);
-
-      if (invalidUrls.length > 0) {
-        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
-        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
-        errEl.className = 'alert error visible';
+      const canProceed = await openValidationPopup(validationResults);
+      if (!canProceed) {
         return;
       }
 
@@ -1326,6 +1377,26 @@
   </script>
 
   <!-- Popup progresso creazione demo (crawling → ingest → index) -->
+  <div id="validationModal" class="validation-overlay" style="display:none">
+    <div class="validation-modal">
+      <div class="validation-header">
+        <div>
+          <div class="validation-title">Validazione link</div>
+          <div class="validation-status" id="validationStatus">In attesa...</div>
+        </div>
+      </div>
+      <div class="validation-body">
+        <div class="validation-summary" id="validationSummary"></div>
+        <div class="validation-list" id="validationList"></div>
+      </div>
+      <div class="validation-actions">
+        <button class="validation-btn validation-btn-ghost" type="button" onclick="closeValidationPopup()">Chiudi</button>
+        <button id="validationAction" class="validation-btn validation-btn-primary" type="button" onclick="handleValidationAction()">Prosegui</button>
+      </div>
+      <input type="hidden" id="validationCanProceed" value="0">
+    </div>
+  </div>
+
   <div id="progressModal" class="pm-overlay" style="display:none">
     <div class="pm-modal">
       <div class="pm-header">
@@ -1371,6 +1442,26 @@
     .pm-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:12px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid transparent}
     .pm-btn-ghost{background:#f1f5f3;color:#33403a}
     .pm-btn-primary{background:#1a8c5c;color:#fff}
+    .validation-overlay{position:fixed;inset:0;background:rgba(15,23,20,.6);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);font-family:inherit}
+    .validation-modal{width:min(640px,92vw);max-height:80vh;background:#fff;border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
+    .validation-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #e6efe9}
+    .validation-title{font-weight:700;font-size:18px;color:#0f5132}
+    .validation-status{font-size:13px;font-weight:700;color:#1a8c5c;white-space:nowrap}
+    .validation-status.err{color:#c0392b}
+    .validation-body{padding:18px 22px;flex:1;overflow:auto;min-height:160px}
+    .validation-summary{margin-bottom:14px;font-size:14px;color:#33403a;line-height:1.6}
+    .validation-list{display:grid;gap:10px}
+    .validation-row{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:14px 16px;border:1px solid #e6efe9;border-radius:14px;background:#f9fdfb}
+    .validation-row.err{border-color:#fde8e8;background:#fff1f1}
+    .validation-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:999px;font-size:16px;font-weight:700;color:#fff;background:#1a8c5c}
+    .validation-row.err .validation-icon{background:#c0392b}
+    .validation-content{display:flex;flex-direction:column;gap:4px}
+    .validation-url{font-size:13.5px;color:#0f3d2e;word-break:break-all}
+    .validation-message{font-size:12.5px;color:#556d67}
+    .validation-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid #e6efe9;background:#fbfdfb}
+    .validation-btn{padding:10px 16px;border-radius:12px;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid transparent}
+    .validation-btn-ghost{background:#f1f5f3;color:#33403a}
+    .validation-btn-primary{background:#1a8c5c;color:#fff}
   </style>
 
   <script>

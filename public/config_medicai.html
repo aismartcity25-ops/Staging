@@ -219,6 +219,52 @@
     .alert.success { background:var(--light); border:1.5px solid rgba(0,102,204,.3); color:var(--accent); }
     .alert.visible { display:block; animation:fadeUp .3s ease; }
 
+    .validation-overlay {
+      position: fixed; inset: 0; z-index: 1100;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(5, 13, 26, 0.75);
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+    .validation-modal {
+      width: min(700px, 100%); max-height: 90vh;
+      background: #fff; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+      display: flex; flex-direction: column;
+    }
+    .validation-header { padding: 20px 24px 16px; border-bottom: 1px solid #e8f3ed; }
+    .validation-title { font-size: 18px; font-weight: 700; color: #163a2a; margin-bottom: 8px; }
+    .validation-status { font-size: 14px; color: #4b5563; }
+    .validation-status.ok { color: #1a8c5c; }
+    .validation-status.err { color: #c0392b; }
+    .validation-body { padding: 0 24px 20px; overflow: auto; }
+    .validation-summary { margin-bottom: 16px; font-size: 14px; color: #475569; }
+    .validation-list { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow: auto; }
+    .validation-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border-radius: 14px; background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .validation-row.loading { background: #eff6ff; border-color: #bfdbfe; }
+    .validation-row.ok { background: #ecfdf5; border-color: #a7f3d0; }
+    .validation-row.err { background: #fef2f2; border-color: #fecaca; }
+    .validation-icon {
+      width: 34px; min-width: 34px; height: 34px;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      background: #e2e8f0; font-size: 16px; color: #334155;
+      flex-shrink: 0;
+    }
+    .validation-row.ok .validation-icon { background: #d1fae5; color: #166534; }
+    .validation-row.err .validation-icon { background: #fee2e2; color: #991b1b; }
+    .validation-row.loading .validation-icon { background: #dbeafe; color: #1d4ed8; }
+    .validation-content { min-width: 0; }
+    .validation-url { font-size: 14px; font-weight: 700; color: #0f172a; word-break: break-all; }
+    .validation-message { margin-top: 4px; font-size: 13px; color: #475569; }
+    .validation-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 24px 20px; background: #f8fafc; }
+    .validation-btn { min-width: 120px; padding: 12px 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700; font-size: 13px; }
+    .validation-btn-primary { background: #0f766e; color: #fff; }
+    .validation-btn-ghost { background: transparent; border: 1px solid #cbd5e1; color: #334155; }
+
     .demos.section {
       background: linear-gradient(135deg, rgba(0,102,204,0.15), rgba(0,180,255,0.08)) !important; margin-top:40px; }
     .demos-title {
@@ -666,9 +712,15 @@
         return;
       }
 
+      // MODIFICATO: Aggiunto bottone per importare direttamente tutti gli URL trovati
       el.innerHTML = `
         <div class="analysis-summary">${badges}</div>
-        <div class="analysis-expand-hint">🔍 Clicca per visualizzare la struttura gerarchica completa (${data.pages.length} pagine)</div>
+        <div class="analysis-expand-hint" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <span onclick="openAnalysisModal()">🔍 Visualizza struttura gerarchica completa (${data.pages.length} pagine)</span>
+          <button type="button" class="tree-toolbar-btn" style="background: var(--accent); color: white; border: none; padding: 6px 12px; margin: 0;" onclick="event.stopPropagation(); importAnalyzedUrls();">
+            📥 Importa tutti gli URL (${data.pages.length})
+          </button>
+        </div>
       `;
     }
 
@@ -715,9 +767,15 @@
       const treeHtml = `<ul class="tree-root">${tree.map(renderTreeNode).join('')}</ul>`;
       return `
         <div class="analysis-summary">${badges}</div>
-        <div class="tree-toolbar">
-          <button type="button" class="tree-toolbar-btn" onclick="expandAllTree()">Espandi tutto</button>
-          <button type="button" class="tree-toolbar-btn" onclick="collapseAllTree()">Comprimi tutto</button>
+        <div class="tree-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <button type="button" class="tree-toolbar-btn" onclick="expandAllTree()">Espandi tutto</button>
+            <button type="button" class="tree-toolbar-btn" onclick="collapseAllTree()">Comprimi tutto</button>
+          </div>
+          <!-- MODIFICATO: Pulsante di importazione rapida anche nel Modal -->
+          <button type="button" class="tree-toolbar-btn" style="background: #1a8c5c; color: white; border: none;" onclick="importAnalyzedUrls(); closeAnalysisModal();">
+            📥 Importa tutti gli URL nel Chatbot
+          </button>
         </div>
         <div class="tree-container">${treeHtml}</div>
       `;
@@ -915,26 +973,192 @@
       }
     }
 
-    async function validateAllUrls() {
+    async function validateAllUrlsWithProgress() {
       const clientUrl = document.getElementById('clientUrl').value.trim();
       const searchInputs = document.querySelectorAll('.search-url');
       const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
-      
       const results = [];
-      
-      // Validate client URL
+      const allUrlsToValidate = [];
+
       if (clientUrl) {
-        const clientResult = await validateUrl(clientUrl);
-        results.push({ type: 'client', url: clientUrl, ...clientResult });
+        allUrlsToValidate.push({ type: 'client', url: clientUrl });
       }
-      
-      // Validate search URLs
-      for (const url of searchUrls) {
-        const result = await validateUrl(url);
-        results.push({ type: 'search', url, ...result });
+      searchUrls.forEach(url => {
+        allUrlsToValidate.push({ type: 'search', url });
+      });
+
+      openValidationLoading(allUrlsToValidate);
+
+      for (const item of allUrlsToValidate) {
+        updateValidationRowStatus(item.url, 'loading', 'Validazione in corso...');
+        const result = await validateUrl(item.url);
+        results.push({ type: item.type, url: item.url, ...result });
+        updateValidationRowStatus(item.url, result.valid ? 'ok' : 'err', result.message);
       }
-      
-      return results;
+
+      return finalizeValidationPopup(results);
+    }
+
+    function getValidationRowId(url) {
+      return 'val-row-' + btoa(url).replace(/=/g, '');
+    }
+
+    function openValidationLoading(urls) {
+      const modal = document.getElementById('validationModal');
+      const list = document.getElementById('validationList');
+      const status = document.getElementById('validationStatus');
+      const summary = document.getElementById('validationSummary');
+      const action = document.getElementById('validationAction');
+      const hidden = document.getElementById('validationCanProceed');
+
+      status.textContent = 'Validazione url in corso...';
+      status.className = 'validation-status';
+      summary.textContent = 'Stiamo verificando che tutti gli indirizzi inseriti siano raggiungibili.';
+
+      action.disabled = true;
+      action.textContent = 'Attendi...';
+      action.style.opacity = '0.5';
+      action.style.pointerEvents = 'none';
+      hidden.value = '0';
+
+      list.innerHTML = urls.map(item => `
+        <div class="validation-row loading" id="${getValidationRowId(item.url)}">
+          <div class="validation-icon">⏳</div>
+          <div class="validation-content">
+            <div class="validation-url">${item.url}</div>
+            <div class="validation-message">In attesa di verifica...</div>
+          </div>
+        </div>
+      `).join('');
+
+      modal.style.display = 'flex';
+    }
+
+    function updateValidationRowStatus(url, status, message) {
+      const row = document.getElementById(getValidationRowId(url));
+      if (!row) return;
+
+      const iconEl = row.querySelector('.validation-icon');
+      const msgEl = row.querySelector('.validation-message');
+      row.className = `validation-row ${status}`;
+
+      if (status === 'loading') {
+        iconEl.textContent = '🔄';
+        msgEl.textContent = message;
+      } else if (status === 'ok') {
+        iconEl.textContent = '✔';
+        msgEl.textContent = message;
+      } else {
+        iconEl.textContent = '✕';
+        msgEl.textContent = message;
+      }
+    }
+
+    function finalizeValidationPopup(results) {
+      const status = document.getElementById('validationStatus');
+      const summary = document.getElementById('validationSummary');
+      const action = document.getElementById('validationAction');
+      const hidden = document.getElementById('validationCanProceed');
+
+      const invalidUrls = results.filter(r => !r.valid);
+      const allValid = invalidUrls.length === 0;
+
+      status.textContent = allValid ? 'Validazione completata' : 'Validazione interrotta';
+      status.className = `validation-status ${allValid ? 'ok' : 'err'}`;
+      summary.textContent = allValid
+        ? 'Tutti i link sono validi. Puoi procedere con la creazione della demo.'
+        : 'Alcuni link non sono validi o non rispondono. Correggi i link evidenziati e riprova.';
+
+      action.disabled = false;
+      action.style.opacity = '1';
+      action.style.pointerEvents = 'auto';
+      action.textContent = allValid ? 'Prosegui' : 'Chiudi e correggi';
+      hidden.value = allValid ? '1' : '0';
+
+      return new Promise((resolve) => {
+        validationPromiseResolver = resolve;
+      });
+    }
+
+    let validationPromiseResolver = null;
+
+    function closeValidationPopup(result = false) {
+      const modal = document.getElementById('validationModal');
+      modal.style.display = 'none';
+      if (validationPromiseResolver) {
+        validationPromiseResolver(result);
+        validationPromiseResolver = null;
+      }
+    }
+
+    function handleValidationAction() {
+      const canProceed = document.getElementById('validationCanProceed').value === '1';
+      closeValidationPopup(canProceed);
+      return canProceed;
+    }
+
+    async function createDemo() {
+      const clientUrl = document.getElementById('clientUrl').value.trim();
+      const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
+      const instructions = document.getElementById('instructions').value.trim();
+
+      const colors = {
+        primary: document.getElementById('colorPrimary').value,
+        secondary: document.getElementById('colorSecondary').value,
+        userBg: document.getElementById('colorUserBg').value,
+        userText: document.getElementById('colorUserText').value,
+        aiBg: document.getElementById('colorAiBg').value,
+        aiText: document.getElementById('colorAiText').value
+      };
+
+      const errEl = document.getElementById('alertError');
+      const sucEl = document.getElementById('alertSuccess');
+      errEl.className='alert'; sucEl.className='alert';
+
+      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
+      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+
+      const btn = document.getElementById('btnCrea');
+      btn.disabled = true; btn.classList.add('loading');
+
+      const canProceed = await validateAllUrlsWithProgress();
+      if (!canProceed) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        return;
+      }
+
+      const searchMode = document.getElementById('searchMode').value;
+      const isEditing = !!editingDemoId;
+
+      try {
+        const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
+          method: isEditing ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({clientUrl,searchUrls,instructions,colors,searchMode})
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+        } else if (isEditing) {
+          cancelEdit();
+          sucEl.textContent='Demo aggiornata con successo.'; sucEl.className='alert success visible';
+          loadDemos();
+        } else {
+          errEl.className='alert';
+          const kbId = (data.demo && data.demo.knowledgeBaseId) || null;
+          if (kbId) {
+            openProgressPopup(kbId, data.demoUrl, clientUrl);
+          } else {
+            sucEl.textContent='Demo creata con successo! Apertura in una nuova scheda...'; sucEl.className='alert success visible';
+            setTimeout(() => window.open(data.demoUrl, '_blank'), 600);
+          }
+          loadDemos();
+        }
+      } catch {
+        errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+      } finally {
+        btn.disabled=false; btn.classList.remove('loading');
+      }
     }
 
     let editingDemoId = null;
@@ -1000,79 +1224,6 @@
 
       document.getElementById('btnCrea').querySelector('.btn-text').textContent = 'CREA DEMO';
       document.getElementById('btnCancelEdit').style.display = 'none';
-    }
-
-    async function createDemo() {
-      const clientUrl = document.getElementById('clientUrl').value.trim();
-      const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
-      const instructions = document.getElementById('instructions').value.trim();
-
-      // Collect colors
-      const colors = {
-        primary: document.getElementById('colorPrimary').value,
-        secondary: document.getElementById('colorSecondary').value,
-        userBg: document.getElementById('colorUserBg').value,
-        userText: document.getElementById('colorUserText').value,
-        aiBg: document.getElementById('colorAiBg').value,
-        aiText: document.getElementById('colorAiText').value
-      };
-
-      const errEl = document.getElementById('alertError');
-      const sucEl = document.getElementById('alertSuccess');
-      errEl.className='alert'; sucEl.className='alert';
-
-      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
-      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
-
-      // Validate all URLs before creating demo
-      const validationResults = await validateAllUrls();
-      const invalidUrls = validationResults.filter(r => !r.valid);
-
-      if (invalidUrls.length > 0) {
-        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
-        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
-        errEl.className='alert error visible';
-        return;
-      }
-
-      const btn = document.getElementById('btnCrea');
-      btn.disabled=true; btn.classList.add('loading');
-
-      const searchMode = document.getElementById('searchMode').value;
-      const isEditing = !!editingDemoId;
-
-      try {
-        const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
-          method: isEditing ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({clientUrl,searchUrls,instructions,colors,searchMode})
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
-        } else if (isEditing) {
-          cancelEdit();
-          sucEl.textContent='Demo aggiornata con successo.'; sucEl.className='alert success visible';
-          loadDemos();
-        } else {
-          errEl.className='alert';
-          const kbId = (data.demo && data.demo.knowledgeBaseId) || null;
-          if (kbId) {
-            // Solo se la demo ha una knowledge base collegata (crawling attivo)
-            // ha senso mostrare l'avanzamento dell'indicizzazione.
-            openProgressPopup(kbId, data.demoUrl, clientUrl);
-          } else {
-            // Nessun crawling da attendere (modalità live, deep-search-engine.js):
-            // la demo è già pronta, si apre subito senza popup di avanzamento.
-            sucEl.textContent='Demo creata con successo! Apertura in una nuova scheda...'; sucEl.className='alert success visible';
-            setTimeout(() => window.open(data.demoUrl, '_blank'), 600);
-          }
-          loadDemos();
-        }
-      } catch {
-        errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
-      } finally {
-        btn.disabled=false; btn.classList.remove('loading');
-      }
     }
 
     const DEMO_PAGE_SIZE = 8;
@@ -1149,9 +1300,80 @@
         renderDemoList();
       } catch { alert('Errore di connessione.'); }
     }
-  </script>
 
+  // NUOVA FUNZIONE: Importa automaticamente tutti gli URL analizzati nella lista dei sorgenti
+    function importAnalyzedUrls() {
+      if (!lastAnalysisData || !lastAnalysisData.success || !lastAnalysisData.pages || lastAnalysisData.pages.length === 0) {
+        alert("Nessun URL da importare. Esegui prima l'analisi del sito.");
+        return;
+      }
+
+      const list = document.getElementById('urlList');
+      
+      // Chiediamo conferma all'utente dato che l'operazione potrebbe aggiungere molte righe
+      if (!confirm(`Stai per aggiungere ${lastAnalysisData.pages.length} URL alla lista dei siti in cui cercare le informazioni. Vuoi procedere?`)) {
+        return;
+      }
+
+      // Puliamo la lista attuale se l'unico campo presente è vuoto
+      const existingRows = list.querySelectorAll('.url-row');
+      if (existingRows.length === 1) {
+        const firstInput = existingRows[0].querySelector('.search-url');
+        if (!firstInput.value.trim()) {
+          existingRows[0].remove();
+        }
+      }
+
+      // Estraiamo tutti gli URL unici dall'analisi
+      const urlsToImport = lastAnalysisData.pages.map(p => p.url);
+
+      urlsToImport.forEach(url => {
+        // Controlliamo se l'URL è già presente per evitare duplicati
+        const existingInputs = Array.from(list.querySelectorAll('.search-url')).map(i => i.value.trim());
+        if (existingInputs.includes(url)) return;
+
+        const row = document.createElement('div');
+        row.className = 'url-row';
+        row.innerHTML = `
+          <input type="url" placeholder="https://..." class="search-url" value="${escapeHtml(url)}">
+          <button class="btn-icon" title="Rimuovi" onclick="removeUrl(this)">×</button>
+        `;
+        list.appendChild(row);
+      });
+
+      // Mostra un feedback all'utente
+      const sucEl = document.getElementById('alertSuccess');
+      sucEl.textContent = `Importati con successo ${urlsToImport.length} URL nella sorgente del chatbot!`;
+      sucEl.className = 'alert success visible';
+      
+      // Nascondi automaticamente l'alert dopo 4 secondi
+      setTimeout(() => {
+        sucEl.className = 'alert';
+      }, 4000);
+    }
+  </script>
+  
   <!-- Popup progresso creazione demo (crawling → ingest → index) -->
+  <div id="validationModal" class="validation-overlay" style="display:none">
+    <div class="validation-modal">
+      <div class="validation-header">
+        <div>
+          <div class="validation-title">Validazione link</div>
+          <div class="validation-status" id="validationStatus">In attesa...</div>
+        </div>
+      </div>
+      <div class="validation-body">
+        <div class="validation-summary" id="validationSummary"></div>
+        <div class="validation-list" id="validationList"></div>
+      </div>
+      <div class="validation-actions">
+        <button class="validation-btn validation-btn-ghost" type="button" onclick="closeValidationPopup()">Chiudi</button>
+        <button id="validationAction" class="validation-btn validation-btn-primary" type="button" onclick="handleValidationAction()">Prosegui</button>
+      </div>
+      <input type="hidden" id="validationCanProceed" value="0">
+    </div>
+  </div>
+
   <div id="progressModal" class="pm-overlay" style="display:none">
     <div class="pm-modal">
       <div class="pm-header">

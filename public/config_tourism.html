@@ -880,6 +880,61 @@
       return results;
     }
 
+    function formatValidationRow(result) {
+      return `
+        <div class="validation-row ${result.valid ? 'ok' : 'err'}">
+          <div class="validation-icon">${result.valid ? '✔' : '✕'}</div>
+          <div class="validation-content">
+            <div class="validation-url">${result.url}</div>
+            <div class="validation-message">${result.message}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let validationPromiseResolver = null;
+
+    function openValidationPopup(results) {
+      const modal = document.getElementById('validationModal');
+      const list = document.getElementById('validationList');
+      const status = document.getElementById('validationStatus');
+      const summary = document.getElementById('validationSummary');
+      const action = document.getElementById('validationAction');
+      const hidden = document.getElementById('validationCanProceed');
+
+      const invalidUrls = results.filter(r => !r.valid);
+      const allValid = invalidUrls.length === 0;
+
+      list.innerHTML = results.map(formatValidationRow).join('');
+      status.textContent = allValid ? 'Validazione completata' : 'Validazione interrotta';
+      status.className = `validation-status ${allValid ? 'ok' : 'err'}`;
+      summary.textContent = allValid
+        ? 'Tutti i link sono validi. Procedo con la creazione della demo.'
+        : 'Alcuni link non sono validi. Correggi i link evidenziati e riprova.';
+      action.textContent = allValid ? 'Prosegui' : 'Chiudi e correggi';
+      hidden.value = allValid ? '1' : '0';
+      modal.style.display = 'flex';
+
+      return new Promise((resolve) => {
+        validationPromiseResolver = resolve;
+      });
+    }
+
+    function closeValidationPopup(result = false) {
+      const modal = document.getElementById('validationModal');
+      modal.style.display = 'none';
+      if (validationPromiseResolver) {
+        validationPromiseResolver(result);
+        validationPromiseResolver = null;
+      }
+    }
+
+    function handleValidationAction() {
+      const canProceed = document.getElementById('validationCanProceed').value === '1';
+      closeValidationPopup(canProceed);
+      return canProceed;
+    }
+
 async function createDemo() {
       const clientUrl = document.getElementById('clientUrl').value.trim();
       const searchUrls = Array.from(document.querySelectorAll('.search-url')).map(i => i.value.trim()).filter(Boolean);
@@ -906,12 +961,8 @@ async function createDemo() {
 
       // Validate all URLs before creating demo
       const validationResults = await validateAllUrls();
-      const invalidUrls = validationResults.filter(r => !r.valid);
-      
-      if (invalidUrls.length > 0) {
-        const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
-        errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
-        errEl.className='alert error visible';
+      const canProceed = await openValidationPopup(validationResults);
+      if (!canProceed) {
         return;
       }
 

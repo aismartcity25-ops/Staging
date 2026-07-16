@@ -43,14 +43,14 @@ const cheerio = require('cheerio');
 
 // ─── Costanti configurabili ───────────────────────────────────────────────────
 
-const MAX_PAGES_PER_SITE   = 60;   // Massimo pagine da visitare per sito
-const MAX_DEPTH            = 5;    // Profondità massima crawling (root=0, figlio=1, nipote=2, bis=3, tris=4, quad=5)
-const PAGE_TIMEOUT_MS      = 8000; // Timeout per ogni fetch
-const CONCURRENCY          = 4;    // Richieste HTTP parallele
-const MAX_CONTEXT_CHARS    = 14000; // Massimo caratteri di contesto da passare all'AI
-const CACHE_TTL_MS         = 15 * 60 * 1000; // Cache 15 minuti
-const EARLY_STOP_CHARS     = 3000; // Caratteri minimi per fermarsi
-const MAX_TOTAL_TIME_MS    = 30000; // Tempo massimo totale per la ricerca
+const MAX_PAGES_PER_SITE   = 20;   // Massimo pagine da visitare per sito (era 60 - ridotto per velocità)
+const MAX_DEPTH            = 2;    // Profondità massima crawling (era 5 - ridotto drasticamente)
+const PAGE_TIMEOUT_MS      = 4000; // Timeout per ogni fetch (era 8000 - dimezzato)
+const CONCURRENCY          = 6;    // Richieste HTTP parallele (era 4 - aumentato)
+const MAX_CONTEXT_CHARS    = 10000; // Massimo caratteri di contesto da passare all'AI (era 14000)
+const CACHE_TTL_MS         = 60 * 60 * 1000; // Cache 1 ora (era 15min - aumentata 4x)
+const EARLY_STOP_CHARS     = 2000; // Caratteri minimi per fermarsi (era 3000 - più aggressivo)
+const MAX_TOTAL_TIME_MS    = 12000; // Tempo massimo totale per la ricerca (era 30sec - ridotto a 12sec)
 const QUERY_TIMEOUT_MS     = 5000; // Timeout per analisi query
 
 // ─── Cache in-memory ─────────────────────────────────────────────────────────
@@ -180,48 +180,50 @@ function extractPageData(html, pageUrl) {
     if (bodyText) textParts.push(bodyText);
   }
 
-  const rawText = textParts.join(' ').substring(0, 8000);
+  const rawText = textParts.join(' ').substring(0, 4000); // Ridotto da 8000 per velocità
 
   // Estrai headings significativi (struttura della pagina)
   const headings = [];
   $('h1, h2, h3').each((i, el) => {
-    if (i > 30) return;
+    if (i > 15) return; // Ridotto da 30 per velocità
     const t = $(el).text().trim();
     if (t.length > 3) headings.push(t);
   });
 
-// Estrai link interni (per il crawler)
+// Estrai link interni CON anchor text (per filtro intelligente)
 const links = [];
-$('a[href]').each((_, el) => {
+$('a[href]').each((idx, el) => {
+  if (idx > 40) return; // Limita a 40 link invece di tutti
   const href = $(el).attr('href');
+  const anchorText = $(el).text().trim().toLowerCase();
   const resolved = normalizeUrl(pageUrl, href);
   if (resolved && isSameDomain(resolved, pageUrl)) {
-    links.push(resolved); // Restituisci solo l'URL nudo
+    links.push({ url: resolved, anchor: anchorText }); // Salva URL + anchor text
   }
 });
 
-  // Estrai contatti
-  const fullText = rawText + ' ' + $('body').text();
+  // Estrai contatti (ottimizzato - solo se rilevante)
+  const fullText = rawText + ' ' + $('header, main, .contact, .contatti').text(); // Solo sezioni rilevanti
 
   const phones = [...new Set(
     (fullText.match(/(?:\+39[\s.-]?)?(?:0\d{1,4}[\s.-]?\d{5,8}|3\d{2}[\s.-]?\d{6,7}|800[\s.-]?\d{5,6})/g) || [])
       .map(p => p.replace(/\s+/g, '').trim())
       .filter(p => p.replace(/\D/g,'').length >= 9)
-  )].slice(0, 10);
+  )].slice(0, 5); // Ridotto da 10 a 5
 
   const emails = [...new Set(
     (fullText.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [])
-  )].slice(0, 10);
+  )].slice(0, 5); // Ridotto da 10 a 5
 
   const addresses = [...new Set(
     (fullText.match(/(?:Via|Piazza|Corso|Viale|Strada|Largo|Vicolo)\s+[A-Za-zÀ-ú\s']+\s*,?\s*\d+[a-zA-Z]?,?\s*\d{5}/gi) || [])
       .map(a => a.trim())
-  )].slice(0, 5);
+  )].slice(0, 3); // Ridotto da 5 a 3
 
 // Link con testo (per output utile all'utente)
 const namedLinks = [];
 $('a[href]').each((i, el) => {
-  if (i > 60) return;
+  if (i > 30) return; // Ridotto da 60 per velocità
   const href = $(el).attr('href');
   const text = $(el).text().trim();
   const resolved = normalizeUrl(pageUrl, href);
@@ -233,6 +235,22 @@ $('a[href]').each((i, el) => {
 }
 
 // ─── FASE 1: Ricerca Adattiva ─────────────────────────────────────────────────
+
+function scorePageRelevance(page, queryTokens) {
+  const text = [page.title, page.metaDesc, page.headings.join(' '), page.rawText]
+    .join(' ')
+    .toLowerCase();
+
+  let score = 0;
+  for (const token of queryTokens) {
+    const count = (text.split(token).length - 1);
+    score += count;
+    // Bonus se il token è nel titolo o headings
+    if (page.title.toLowerCase().includes(token)) score += 5;
+    if (page.headings.join(' ').toLowerCase().includes(token)) score += 3;
+  }
+  return score;
+}
 
 /**
  * Ricerca adattiva che inizia con strategia mirata e aumenta la depth solo se necessario.
@@ -266,6 +284,11 @@ async function adaptiveSearch(rootUrl, queryAnalysis, maxTime = MAX_TOTAL_TIME_M
       if (!item || visited.has(item.url)) continue;
       // Salta risorse binarie o non-HTML
       if (item.url.match(/\.(jpg|jpeg|png|gif|pdf|docx|xlsx|zip|ico|css|js|woff|woff2|ttf|svg|mp4|mp3|webp)(\?.*)?$/i)) continue;
+      // 🚀 Salta URL irrilevanti (privacy, cookie, login, etc.)
+      if (shouldSkipUrl(item.url)) {
+        console.log(`  ⏩ Skipping irrelevant URL: ${item.url}`);
+        continue;
+      }
       visited.add(item.url);
       batch.push(item);
     }
@@ -322,24 +345,51 @@ async function adaptiveSearch(rootUrl, queryAnalysis, maxTime = MAX_TOTAL_TIME_M
         });
       }
       if (pageData.links && pageData.links.length > 0) {
-        console.log(`   Found ${pageData.links.length} raw links (total internal links)`);
+        console.log(`   Found ${pageData.links.length} internal links (with anchor text for smart filtering)`);
       }
       // ─────────────────────────────────────────────────────────────────────────
 
-      // Early stopping se abbiamo trovato informazioni sufficienti
-      if (pageData.rawText.length > EARLY_STOP_CHARS && queryAnalysis.isSimpleQuestion) {
+      // Early stopping se abbiamo trovato informazioni sufficienti e la pagina è rilevante
+      const relevance = scorePageRelevance(pageData, queryAnalysis.tokens);
+      if (relevance > 0 && pageData.rawText.length > EARLY_STOP_CHARS && queryAnalysis.isSimpleQuestion) {
         foundEnough = true;
-        console.log(`  🎯 Early stopping: found enough information (${pageData.rawText.length} chars)`);
+        console.log(`  🎯 Early stopping: found enough relevant info (${pageData.rawText.length} chars, relevance=${relevance})`);
         break;
       }
 
       // Accoda i link figli se non abbiamo raggiunto MAX_DEPTH e la strategia lo permette
       if (depth < MAX_DEPTH && !foundEnough) {
         const nextStrategy = strategies[depth + 1] || 'expanded';
-        for (const link of pageData.links) {
-          if (!visited.has(link.url) && isSameDomain(link.url, rootUrl)) {
-            queue.push({ url: link.url, depth: depth + 1, strategy: nextStrategy });
-          }
+        
+        // 🚀 FILTRO INTELLIGENTE: prioritizza link rilevanti PRIMA di visitarli
+        // Considera sia URL che anchor text per decidere cosa crawlare
+        const candidateLinks = pageData.links
+          .filter(linkObj => {
+            const url = linkObj.url || linkObj; // Supporta sia {url, anchor} che string
+            return !visited.has(url) && isSameDomain(url, rootUrl) && !shouldSkipUrl(url);
+          })
+          .map(linkObj => {
+            const url = linkObj.url || linkObj;
+            return { 
+              url, 
+              score: scoreUrlRelevance(linkObj, queryAnalysis.tokens),
+              anchor: linkObj.anchor || ''
+            };
+          })
+          .filter(({ score }) => score > 0)
+          .sort((a, b) => b.score - a.score) // Priorità ai più rilevanti
+          .slice(0, 15); // Max 15 link per livello (invece di tutti)
+        
+        // Debug log per vedere cosa viene prioritizzato
+        if (candidateLinks.length > 0) {
+          console.log(`  🎯 Top ${Math.min(3, candidateLinks.length)} prioritized links for depth ${depth + 1}:`);
+          candidateLinks.slice(0, 3).forEach(l => {
+            console.log(`     [score=${l.score}] "${l.anchor}" → ${l.url}`);
+          });
+        }
+        
+        for (const { url } of candidateLinks) {
+          queue.push({ url, depth: depth + 1, strategy: nextStrategy });
         }
       }
     }
@@ -424,6 +474,54 @@ function scorePageRelevance(page, queryTokens) {
   return score;
 }
 
+// ─── URL Pre-filtering: filtra URL PRIMA di visitarli ─────────────────────────
+// Evita di crawlare pagine irrilevanti (privacy, cookie, login, etc.)
+// e prioritizza URL che contengono keyword della query
+
+function shouldSkipUrl(url) {
+  const urlLower = url.toLowerCase();
+  const skipPatterns = [
+    '/privacy', '/cookie', '/termini', '/terms', '/legal',
+    '/login', '/logout', '/signin', '/signup', '/register',
+    '/cart', '/carrello', '/checkout', '/payment',
+    '/search', '/cerca', '/ricerca',
+    '/feed', '/rss', '/sitemap',
+    '/admin', '/dashboard', '/wp-admin', '/wp-login'
+  ];
+  return skipPatterns.some(pattern => urlLower.includes(pattern));
+}
+
+function scoreUrlRelevance(linkObj, queryTokens) {
+  // linkObj può essere string (vecchio) o {url, anchor} (nuovo)
+  const url = typeof linkObj === 'string' ? linkObj : linkObj.url;
+  const anchor = typeof linkObj === 'string' ? '' : (linkObj.anchor || '');
+  
+  const urlLower = url.toLowerCase();
+  const anchorLower = anchor.toLowerCase();
+  let score = 0;
+  
+  // 🎯 PRIORITÀ MASSIMA: anchor text contiene keyword della query
+  for (const token of queryTokens) {
+    if (anchorLower.includes(token)) score += 20; // Anchor text match = molto rilevante!
+    if (urlLower.includes(token)) score += 10;    // URL match = abbastanza rilevante
+  }
+  
+  // Bonus per anchor text comuni utili (organizzazione, contatti, etc.)
+  if (anchorLower.includes('chi siamo') || anchorLower.includes('organizzazione')) score += 8;
+  if (anchorLower.includes('contatt') || anchorLower.includes('dove')) score += 7;
+  if (anchorLower.includes('serviz') || anchorLower.includes('info')) score += 5;
+  if (anchorLower.includes('orari') || anchorLower.includes('prenota')) score += 5;
+  
+  // Bonus per URL utili
+  if (urlLower.includes('/serviz')) score += 5;
+  if (urlLower.includes('/contatt')) score += 5;
+  if (urlLower.includes('/info')) score += 3;
+  if (urlLower.includes('/orari')) score += 3;
+  if (urlLower.includes('/dove')) score += 3;
+  
+  return score;
+}
+
 function tokenize(query) {
   return query
     .toLowerCase()
@@ -444,19 +542,20 @@ function buildContext(crawledPages, serpResults, query, configuredUrls) {
 
   const lines = [];
 
-  // Inserisci prima le pagine più rilevanti
+  // Inserisci prima le pagine più rilevanti (ridotto per velocità)
   let charCount = 0;
-  for (const page of scored) {
+  const maxPages = 10; // Ridotto: max 10 pagine invece di tutte
+  for (const page of scored.slice(0, maxPages)) {
     if (charCount >= MAX_CONTEXT_CHARS) break;
     const block = [
       `### Pagina: ${page.title || page.pageUrl}`,
       `URL: ${page.pageUrl}`,
       page.metaDesc ? `Descrizione: ${page.metaDesc}` : '',
-      page.headings.length > 0 ? `Sezioni: ${page.headings.slice(0,8).join(' | ')}` : '',
+      page.headings.length > 0 ? `Sezioni: ${page.headings.slice(0,5).join(' | ')}` : '', // Ridotto da 8 a 5
       page.phones.length > 0  ? `Telefoni: ${page.phones.join(', ')}` : '',
       page.emails.length > 0  ? `Email: ${page.emails.join(', ')}` : '',
       page.addresses.length > 0 ? `Indirizzi: ${page.addresses.join('; ')}` : '',
-      `Contenuto:\n${page.rawText.substring(0, 1200)}`,
+      `Contenuto:\n${page.rawText.substring(0, 800)}`, // Ridotto da 1200 a 800
       ''
     ].filter(Boolean).join('\n');
 
@@ -464,28 +563,28 @@ function buildContext(crawledPages, serpResults, query, configuredUrls) {
     charCount += block.length;
   }
 
-  // Aggiungi risultati SERPApi
+  // Aggiungi risultati SERPApi (ridotto)
   if (serpResults.length > 0) {
     lines.push('\n### Risultati Google (SERPApi):');
-    for (const r of serpResults.slice(0, 6)) {
+    for (const r of serpResults.slice(0, 3)) { // Ridotto da 6 a 3
       lines.push(`- [${r.title}](${r.url})\n  ${r.snippet}`);
     }
   }
 
-  // Aggiungi lista URL crawlati (utile per l'AI per citare link reali)
+  // Aggiungi lista URL crawlati (utile per l'AI per citare link reali) - ridotto
   if (crawledPages.length > 0) {
     lines.push('\n### Tutte le pagine indicizzate del sito:');
-    for (const p of crawledPages.slice(0, 40)) {
+    for (const p of crawledPages.slice(0, 20)) { // Ridotto da 40 a 20
       lines.push(`- ${p.pageUrl} → "${p.title}"`);
     }
   }
 
-  // Aggiungi link con testo (per output utile all'utente)
+  // Aggiungi link con testo (per output utile all'utente) - ridotto
   if (crawledPages.length > 0) {
     lines.push('\n### Link utili trovati sul sito:');
-    for (const p of crawledPages.slice(0, 10)) {
+    for (const p of crawledPages.slice(0, 5)) { // Ridotto da 10 a 5
       if (p.namedLinks && p.namedLinks.length > 0) {
-        for (const link of p.namedLinks.slice(0, 3)) {
+        for (const link of p.namedLinks.slice(0, 2)) { // Ridotto da 3 a 2
           const cleanedUrl = cleanUrlForContext(link.url);
           if (cleanedUrl) {
             lines.push(`- [${link.text}](${cleanedUrl})`);
@@ -499,8 +598,7 @@ function buildContext(crawledPages, serpResults, query, configuredUrls) {
 
 // ─── FASE 3: AI Synthesis ─────────────────────────────────────────────────────
 
-async function synthesizeWithAI(query, context, configuredUrls, product, openaiClient) {
-  const siteList = configuredUrls.join(', ');
+async function synthesizeWithAI(query, context, configuredUrls, product, openaiClient) {  console.log('FLOW LOG: deep-search engine AI synthesis started');  const siteList = configuredUrls.join(', ');
 
   const systemPrompt = `Sei un assistente esperto e sempre utile per il sito: ${siteList}
 Hai a disposizione il contenuto COMPLETO di tutte le pagine del sito, estratto da un crawling in profondità.
@@ -587,9 +685,9 @@ async function searchConfiguredSites(query, configuredUrls, product = 'comunicai
   // ── FASE 2: SERPApi mirato per ogni dominio ─────────────────────────────────
   console.log(`\n[FASE 2] SERPApi site-targeted search...`);
   const allSerpResults = [];
+  const uniqueHostnames = [...new Set(configuredUrls.map(getHostname))];
 
-  for (const rootUrl of configuredUrls) {
-    const hostname = getHostname(rootUrl);
+  for (const hostname of uniqueHostnames) {
     const serpResults = await serpApiSearch(query, hostname);
     allSerpResults.push(...serpResults);
   }
@@ -610,6 +708,7 @@ async function searchConfiguredSites(query, configuredUrls, product = 'comunicai
   }
 
   console.log(`  📄 Context size: ${context.length} chars`);
+  console.log('FLOW LOG: deep-search will call OpenAI with the built site context');
 
   // ─────────────────────────────────────────────────────────────────────────
   // 📌 CONSOLE.LOG: Links/URLs inviati a OpenAI (prima della chiamata)

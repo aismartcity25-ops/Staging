@@ -78,6 +78,7 @@ function createToolExecutorAgent({ openai, ragAgent } = {}) {
     const { function: fn } = toolCall;
     let outcome;
 
+    console.log('FLOW LOG: executing tool', fn.name, 'with args:', fn.arguments);
     try {
       const parsedArgs = JSON.parse(fn.arguments);
 
@@ -85,6 +86,7 @@ function createToolExecutorAgent({ openai, ragAgent } = {}) {
         case 'search_configured_sites': {
           const urls = (ctx.demo && Array.isArray(ctx.demo.searchUrls)) ? ctx.demo.searchUrls : [];
           const product = (ctx.demo && ctx.demo.product) || 'comunicai';
+          console.log(`FLOW LOG: invoking deepSearchConfiguredSites for product=${product} query=${parsedArgs.query}`);
           let text;
           if (urls.length === 0) {
             text = `[SYSTEM NOTE — not user-facing text: no source URLs are configured for this demo. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information is available.]`;
