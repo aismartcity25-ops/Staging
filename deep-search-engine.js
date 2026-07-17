@@ -59,6 +59,24 @@
 
 const axios  = require('axios');
 const cheerio = require('cheerio');
+const http = require('http');
+const https = require('https');
+
+// Client HTTP dedicato con connessioni keep-alive, scoped a questo file (non
+// tocca `axios.defaults` globale, usato da altri moduli del progetto). Di
+// default Node NON riusa la connessione TCP/TLS tra due axios.get() separate,
+// nemmeno verso lo stesso host: ognuna paga il proprio handshake da zero. In
+// un crawl che fa decine di richieste allo stesso sito (fino a MAX_PAGES_PER_SITE)
+// e in SERPApi (chiamato più volte per sessione di chat sullo stesso host
+// serpapi.com), riusare le connessioni evita handshake TCP+TLS ripetuti.
+// maxSockets un po' sopra CONCURRENCY per non introdurre code interne
+// all'agent; keepAliveMsecs più lungo del default (1000ms) per sopravvivere
+// anche tra un messaggio di chat e il successivo sullo stesso sito.
+const keepAliveAgentOpts = { keepAlive: true, keepAliveMsecs: 30000, maxSockets: 16 };
+const httpClient = axios.create({
+  httpAgent:  new http.Agent(keepAliveAgentOpts),
+  httpsAgent: new https.Agent(keepAliveAgentOpts)
+});
 
 // ─── Costanti configurabili ───────────────────────────────────────────────────
 
@@ -367,7 +385,7 @@ async function adaptiveSearch(rootUrl, queryAnalysis, maxTime = 15000) {
         if (cachedPage) return { pageData: cachedPage, url, depth, strategy };
 
         try {
-          const resp = await axios.get(url, {
+          const resp = await httpClient.get(url, {
             // Floor a 1000ms come rete di sicurezza: mai passare ad axios un
             // timeout <= 0 (vedi nota sopra).
             timeout: Math.max(1000, Math.min(PAGE_TIMEOUT_MS, maxTime - (Date.now() - startTime))),
@@ -539,7 +557,7 @@ async function serpApiSearch(query, siteHostname, maxTime = PAGE_TIMEOUT_MS) {
 
   const settled = await Promise.allSettled(queries.map(q => {
     console.log(`  🔍 SERPApi query: "${q}"`);
-    return axios.get('https://serpapi.com/search', {
+    return httpClient.get('https://serpapi.com/search', {
       params: {
         q,
         api_key:  apiKey,
@@ -622,7 +640,7 @@ function scoreLinkCandidate(linkText, url, queryTokens) {
 async function discoverSitemapUrls(origin) {
   const candidates = [`${origin}/sitemap.xml`];
   try {
-    const robots = await axios.get(`${origin}/robots.txt`, { timeout: SITEMAP_TIMEOUT_MS, validateStatus: s => s === 200 });
+    const robots = await httpClient.get(`${origin}/robots.txt`, { timeout: SITEMAP_TIMEOUT_MS, validateStatus: s => s === 200 });
     const matches = String(robots.data).match(/^Sitemap:\s*(\S+)/gim) || [];
     for (const line of matches) {
       const url = line.replace(/^Sitemap:\s*/i, '').trim();
@@ -632,7 +650,7 @@ async function discoverSitemapUrls(origin) {
 
   for (const sitemapUrl of candidates) {
     try {
-      const resp = await axios.get(sitemapUrl, {
+      const resp = await httpClient.get(sitemapUrl, {
         timeout: SITEMAP_TIMEOUT_MS,
         validateStatus: s => s === 200,
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SiteAssistantBot/2.0)' }
@@ -648,7 +666,7 @@ async function discoverSitemapUrls(origin) {
       if (childSitemaps.length > 0) {
         for (const childUrl of childSitemaps.slice(0, 2)) {
           try {
-            const childResp = await axios.get(childUrl, { timeout: SITEMAP_TIMEOUT_MS, validateStatus: s => s === 200 });
+            const childResp = await httpClient.get(childUrl, { timeout: SITEMAP_TIMEOUT_MS, validateStatus: s => s === 200 });
             const $$ = cheerio.load(childResp.data, { xmlMode: true });
             $$('urlset > url > loc').each((_, el) => {
               const u = normalizeUrl(origin, $$(el).text().trim());
