@@ -22,7 +22,7 @@ const TOOLS = [
       }
     }
   },
-  {
+  /*{
     type: 'function',
     function: {
       name: 'search_configured_sites',
@@ -35,7 +35,35 @@ const TOOLS = [
         required: ['query']
       }
     }
-  },
+  },*/
+  {
+  type: 'function',
+  function: {
+    name: 'search_configured_sites',
+    description: `Search the client's configured websites in real-time by crawling them live. Use this tool when:
+- The user asks about services, information, contacts, or content from the client's website(s)
+- The user asks about something specific to this organization (e.g., "your services", "your opening hours", "how to book an appointment")
+- You need current, up-to-date information that may have changed recently
+- The user refers to documents, forms, or procedures available on the website
+
+Do NOT use this tool for:
+- General knowledge questions (history, science, geography, etc.)
+- Questions about other organizations or websites
+- Greetings, small talk, or casual conversation
+
+This tool performs a live web search and page fetch, so it may take a few seconds.`,
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { 
+          type: 'string', 
+          description: 'A concise search query in the same language as the user\'s message, focused on finding the specific information needed from the configured websites' 
+        }
+      },
+      required: ['query']
+    }
+  }
+},
   {
     type: 'function',
     function: {
