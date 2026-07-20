@@ -23,6 +23,7 @@ const { resolveUploadPath } = require('./lib/uploads');
 const { extractDocumentText, imageToDataUrl } = require('./lib/attachments');
 const { filterHistoryForAPI } = require('./lib/chat');
 const { detectLanguage } = require('./lib/tts');
+const { prefetchRootPages } = require('../deep-search-engine');
 
 // Rinforzo deterministico (euristico, no LLM) all'istruzione di lingua nel
 // system prompt: gpt-4o-mini non segue sempre in modo affidabile "rispondi
@@ -126,6 +127,22 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
     customInstructions = demo.instructions || '';
     demoProduct = demo.product || product;
     console.log(`✅ Demo loaded: ${demoId}`, { product: demoProduct, kbId: demo.knowledgeBaseId });
+  }
+
+  // Prefetch speculativo delle root URL configurate, SENZA await: per la
+  // stragrande maggioranza dei messaggi su una demo con searchUrls la prima
+  // chiamata copywriter (sotto) finisce comunque per chiedere
+  // search_configured_sites, il cui primo fetch è quasi sempre proprio la
+  // root URL — anticiparlo qui, in parallelo alla decisione del modello (e
+  // al resto della costruzione del prompt sotto), elimina quella
+  // sequenzialità "prima decide, poi cerca" nel caso comune. Usa la stessa
+  // cache di deep-search-engine.js, quindi se il tool viene poi chiamato
+  // davvero la trova già pronta; se non viene chiamato il lavoro sprecato è
+  // minimo (una sola pagina). Best-effort per design (mai deve far fallire
+  // la richiesta di chat): eventuali errori sono già intercettati dentro
+  // prefetchRootPages, il .catch() qui è solo una rete di sicurezza extra.
+  if (demo && Array.isArray(demo.searchUrls) && demo.searchUrls.length > 0) {
+    prefetchRootPages(demo.searchUrls).catch(() => {});
   }
 
   let systemPrompt = buildSystemPrompt(demoProduct, customInstructions);

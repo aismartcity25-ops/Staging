@@ -387,8 +387,25 @@
       "secondary": "#13a06a",
       "userBg": "#3b82f6",
       "userText": "#ffffff",
-      "aiBg": "#e5e7eb",
-      "aiText": "#1f2937"
-    }
+      "aiBg": "#4d0000",
+      "aiText": "#ffffff"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "updatedAt": "2026-07-20T08:32:01.463Z",
+    "welcome": "",
+    "questions": [],
+    "logo": ""
   }
 ]

@@ -17,18 +17,19 @@
  * chat-service.js): l'aggregazione finale (citations/confidence/attachment)
  * avviene qui, alla fine di execute().
  *
- * NOTA search_configured_sites: il knowledge-engine (crawl + indice
- * vettoriale) non e' ancora collegato in questo progetto, quindi qui NON si
- * usa ragAgent — si interroga dal vivo il/i sito/i configurati sulla demo
- * tramite deep-search-engine.js (stesso motore gia' in uso in produzione).
- * deep-search-engine.js restituisce contesto grezzo strutturato (non una
- * risposta gia' scritta): la sintesi finale avviene una sola volta, nel
- * secondo `copywriter.streamTurn` dell'orchestrator, cosi' da non passare
- * per due sintesi AI in sequenza. Nessuna citazione/confidence reale e'
- * disponibile con questo motore: `empty: true` nel meta.retrieval evita di
- * innescare il qa-agent (che altrimenti farebbe una chiamata a vuoto senza
- * un vero contesto strutturato da valutare) — il testo arriva comunque al
- * modello.
+ * NOTA search_configured_sites: per una demo in modalità 'crawling' con una
+ * knowledge base collegata (demo.knowledgeBaseId), si interroga prima
+ * ragAgent (retrieval sull'indice vettoriale prodotto da knowledge-engine).
+ * Solo se il RAG non ha nulla (KB non ancora pronta o nessun match) si
+ * ricade sulla ricerca dal vivo via deep-search-engine.js — che resta anche
+ * l'UNICO motore per le demo in modalità 'live' (default). deep-search-engine.js
+ * restituisce contesto grezzo strutturato (non una risposta già scritta): la
+ * sintesi finale avviene una sola volta, nel secondo `copywriter.streamTurn`
+ * dell'orchestrator, così da non passare per due sintesi AI in sequenza.
+ * Nessuna citazione/confidence reale è disponibile con questo motore:
+ * `empty: true` nel meta.retrieval evita di innescare il qa-agent (che
+ * altrimenti farebbe una chiamata a vuoto senza un vero contesto strutturato
+ * da valutare) — il testo arriva comunque al modello.
  */
 
 const { sendSMS, sendEmail } = require('../lib/notify');
@@ -89,21 +90,36 @@ function createToolExecutorAgent({ openai, ragAgent } = {}) {
         case 'search_configured_sites': {
           const urls = (ctx.demo && Array.isArray(ctx.demo.searchUrls)) ? ctx.demo.searchUrls : [];
           const product = (ctx.demo && ctx.demo.product) || 'comunicai';
-          let text;
-          if (urls.length === 0) {
-            text = `[SYSTEM NOTE — not user-facing text: no source URLs are configured for this demo. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information is available.]`;
-          } else {
-            try {
-              text = await deepSearchConfiguredSites(parsedArgs.query, urls, product);
-            } catch (err) {
-              console.error('deep-search-engine error:', err.message);
-              text = `[SYSTEM NOTE — not user-facing text: the site search failed. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information could be found.]`;
+          const useRag = !!(ctx.demo && ctx.demo.searchMode === 'crawling' && ctx.demo.knowledgeBaseId);
+
+          let text, retrieval;
+
+          if (useRag) {
+            const ragResult = await ragAgent.search(parsedArgs.query, ctx.demo, ctx.languageHintLabel);
+            if (!ragResult.empty) {
+              text = ragResult.text;
+              retrieval = { citations: ragResult.citations, confidence: ragResult.confidence, empty: false, context: ragResult.context };
             }
           }
-          outcome = {
-            content: text,
-            meta: { retrieval: { citations: [], confidence: 0, empty: true, context: text } }
-          };
+
+          // Fallback live (deep-search-engine.js): nessuna KB collegata, KB
+          // ancora vuota/in indicizzazione, RAG senza match, o demo in
+          // modalità 'live' (comportamento invariato).
+          if (text === undefined) {
+            if (urls.length === 0) {
+              text = `[SYSTEM NOTE — not user-facing text: no source URLs are configured for this demo. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information is available.]`;
+            } else {
+              try {
+                text = await deepSearchConfiguredSites(parsedArgs.query, urls, product);
+              } catch (err) {
+                console.error('deep-search-engine error:', err.message);
+                text = `[SYSTEM NOTE — not user-facing text: the site search failed. Tell the user${ctx.languageHintLabel ? ` in ${ctx.languageHintLabel}` : ', in the same language they used in their message,'} that no information could be found.]`;
+              }
+            }
+            retrieval = { citations: [], confidence: 0, empty: true, context: text };
+          }
+
+          outcome = { content: text, meta: { retrieval } };
           break;
         }
         case 'search_websites':

@@ -2,10 +2,10 @@
  * ============================================================
  * DEEP SEARCH ENGINE — v2.0
  * Motore di ricerca completo con crawling ricorsivo guidato dalla
- * rilevanza della query, scraping HTML, SERPApi mirato.
+ * rilevanza della query, scraping HTML, ricerca mirata via Firecrawl.
  *
  * Compatibile con ComunicAI e MedicAI.
- * Usa solo: axios, cheerio (già installati nel progetto).
+ * Usa: axios, cheerio, firecrawl (SDK Node ufficiale).
  * ============================================================
  *
  * ARCHITETTURA:
@@ -30,12 +30,13 @@
  *       │    Budget per root URL: ≤ queryAnalysis.estimatedTime
  *       │    (5-15s, vedi analyzeQuery).
  *       │
- *       │    SERPApi (se configurata) — query site:dominio.it +
- *       │    query branded, eseguite in parallelo tra loro. Timeout
- *       │    per query allineato al budget della query (≤ PAGE_TIMEOUT_MS,
- *       │    floor 3000ms) invece di un fisso 10s scollegato dal budget
- *       │    del crawl — dati supplementari, non devono dettare loro la
- *       │    latenza totale della richiesta.
+ *       │    Firecrawl (se configurato) — ricerca mirata sul dominio
+ *       │    (includeDomains) con scraping incluso delle pagine trovate
+ *       │    (scrapeOptions: markdown): risultati arricchiti con
+ *       │    contenuto reale, non solo snippet. Timeout allineato al
+ *       │    budget della query (5-15s), non al timeout di singola
+ *       │    pagina — una ricerca che scrapa più pagine richiede più
+ *       │    tempo di un semplice fetch.
  *       │
  *       ├─ FASE 3: Context Assembly
  *       │    Assembla tutto il testo raccolto in un contesto
@@ -49,7 +50,7 @@
  *       │    e una risposta finale "riscritta due volte".
  *       │
  *       └─ GARANTITO: non restituisce mai un contesto vuoto. Se il
- *                     crawl e SERPApi falliscono entrambi, restituisce
+ *                     crawl e Firecrawl falliscono entrambi, restituisce
  *                     comunque una stringa esplicativa così l'AI a
  *                     valle può rispondere con conoscenza generale +
  *                     link al sito, invece di una risposta vuota.
@@ -61,22 +62,35 @@ const axios  = require('axios');
 const cheerio = require('cheerio');
 const http = require('http');
 const https = require('https');
+const { Firecrawl } = require('firecrawl');
 
 // Client HTTP dedicato con connessioni keep-alive, scoped a questo file (non
 // tocca `axios.defaults` globale, usato da altri moduli del progetto). Di
 // default Node NON riusa la connessione TCP/TLS tra due axios.get() separate,
 // nemmeno verso lo stesso host: ognuna paga il proprio handshake da zero. In
 // un crawl che fa decine di richieste allo stesso sito (fino a MAX_PAGES_PER_SITE)
-// e in SERPApi (chiamato più volte per sessione di chat sullo stesso host
-// serpapi.com), riusare le connessioni evita handshake TCP+TLS ripetuti.
-// maxSockets un po' sopra CONCURRENCY per non introdurre code interne
-// all'agent; keepAliveMsecs più lungo del default (1000ms) per sopravvivere
-// anche tra un messaggio di chat e il successivo sullo stesso sito.
+// riusare le connessioni evita handshake TCP+TLS ripetuti. maxSockets un po'
+// sopra CONCURRENCY per non introdurre code interne all'agent; keepAliveMsecs
+// più lungo del default (1000ms) per sopravvivere anche tra un messaggio di
+// chat e il successivo sullo stesso sito.
+//
+// NOTA: è stato provato anche un DNS caching lato client (`cacheable-lookup`,
+// resolver basato su c-ares con cache). Scartato dopo un test diretto: fallisce
+// con ESERVFAIL proprio su un dominio reale usato nei test (comune.maranello.mo.it),
+// mentre la risoluzione DNS nativa del sistema operativo funziona senza problemi
+// sullo stesso host. Dato che questo motore deve girare su siti client arbitrari
+// con configurazioni DNS imprevedibili, il rischio di rompere una demo per un
+// problema di risoluzione supera il guadagno di latenza — non vale la pena.
 const keepAliveAgentOpts = { keepAlive: true, keepAliveMsecs: 30000, maxSockets: 16 };
 const httpClient = axios.create({
   httpAgent:  new http.Agent(keepAliveAgentOpts),
   httpsAgent: new https.Agent(keepAliveAgentOpts)
 });
+
+// Client Firecrawl per FASE 2 (ricerca supplementare) — sostituisce SerpAPI,
+// rivelatasi inaffidabile nei test (timeout frequenti su entrambe le query).
+// Usa il proprio client HTTP interno all'SDK, non il keep-alive sopra.
+const firecrawl = new Firecrawl({ apiKey: process.env.FIRECRAWL_API_KEY });
 
 // ─── Costanti configurabili ───────────────────────────────────────────────────
 
@@ -85,7 +99,7 @@ const MAX_DEPTH            = 5;    // Profondità massima crawling (root=0, figl
 const PAGE_TIMEOUT_MS      = 8000; // Timeout per ogni fetch
 const CONCURRENCY          = 6;    // Richieste HTTP parallele per batch (più pagine valutate nello stesso budget di tempo, senza ridurre l'ampiezza del crawl)
 const MAX_CONTEXT_CHARS    = 14000; // Massimo caratteri di contesto da passare all'AI
-const CACHE_TTL_MS         = 15 * 60 * 1000; // Cache 15 minuti
+const CACHE_TTL_MS         = 60 * 60 * 1000; // Cache pagine/sitemap 1 ora (era 15 min): l'uso tipico è un commerciale che mostra la stessa demo più volte nell'arco della giornata — un TTL più lungo taglia drasticamente la latenza delle demo ripetute, con rischio di contenuto stantio trascurabile per siti istituzionali (comunque azzerata ad ogni riavvio del server, non è un indice persistente)
 const RELEVANCE_EARLY_STOP_SCORE = 10; // Punteggio scorePageRelevance oltre il quale una pagina è considerata "trovata"
 const MIN_CONTENT_CHARS    = 300;  // Guardia minima di contenuto per l'early-stop (evita pagine cortissime keyword-stuffed)
 const EARLY_STOP_CONVERGING_HITS = 3; // Domande non semplici (ma non "comprehensive"): quante pagine devono superare RELEVANCE_EARLY_STOP_SCORE prima di potersi fermare — richiede evidenza convergente da più pagine, non basta la prima corrispondenza, per non perdere in completezza rispetto all'early-stop "a una pagina" delle domande semplici
@@ -197,11 +211,15 @@ function isSameDomain(urlA, urlB) {
 function extractPageData(html, pageUrl) {
   const $ = cheerio.load(html);
 
-  // Cattura il testo di nav/footer PRIMA di rimuoverli: sui siti istituzionali
-  // telefono/email/orari vivono spesso lì. Va usato SOLO per l'estrazione
-  // contatti (fullText più sotto), non per rawText/scoring, per non introdurre
-  // rumore di navigazione nel contenuto principale.
-  const navFooterText = $('nav, footer').text().replace(/\s+/g, ' ').trim();
+  // Cattura il testo di nav/footer/header/aside PRIMA di rimuoverli: sui siti
+  // istituzionali telefono/email/orari vivono spesso lì (anche in header o
+  // in un widget di sidebar). Va usato SOLO per l'estrazione contatti
+  // (fullText più sotto), non per rawText/scoring, per non introdurre
+  // rumore di navigazione nel contenuto principale. header/aside sono stati
+  // aggiunti qui insieme all'estensione della lista di rimozione sotto —
+  // senza catturarli prima, un contatto messo in un header/sidebar sarebbe
+  // sparito anche da fullText, non solo da rawText.
+  const navFooterText = $('nav, footer, header, aside').text().replace(/\s+/g, ' ').trim();
 
   // Estrai link interni (per il crawler) PRIMA di rimuovere nav/footer: su molti
   // siti istituzionali il menu principale (es. "Servizi" → "Anagrafe e stato
@@ -231,18 +249,38 @@ function extractPageData(html, pageUrl) {
     }
   });
 
-  // Rimuovi elementi non utili (solo dal testo/scoring: link e contatti sono già estratti sopra)
-  $('script, style, noscript, iframe, svg, img, video, audio, nav, footer, .cookie-banner, #cookie, .popup').remove();
-
-  // Titolo pagina
+  // Titolo/meta description PRIMA della rimozione sotto: alcuni siti mettono
+  // l'unico <h1> di pagina dentro un <header> semantico (non solo il nav del
+  // sito), quindi estrarli dopo aver rimosso `header` (vedi lista estesa
+  // sotto) rischierebbe di lasciare title vuoto su quei siti.
   const title = $('title').first().text().trim() || $('h1').first().text().trim() || '';
-
-  // Meta description
   const metaDesc = $('meta[name="description"]').attr('content') || '';
 
-  // Estrai tutti i testi dalle sezioni principali
+  // Rimuovi elementi non utili (solo dal testo/scoring: link, contatti e
+  // title/meta sono già estratti sopra). Lista estesa rispetto alla versione
+  // precedente (solo `.cookie-banner, #cookie, .popup`): sui siti
+  // istituzionali il rumore da banner cookie/breadcrumb/social/sidebar aveva
+  // un peso enorme sul testo grezzo — osservato direttamente nei test, dove
+  // frasi come "Quanto sono chiare le informazioni su questa pagina? Valuta
+  // da 1 a 5 stelle..." finivano ripetute più volte nel contesto mandato
+  // all'AI, a scapito di contenuto utile entro MAX_CONTEXT_CHARS.
+  $([
+    'script', 'style', 'noscript', 'iframe', 'svg', 'img', 'video', 'audio',
+    'nav', 'footer', 'header', 'aside',
+    '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]',
+    '.cookie-banner', '#cookie', '.popup', '.cookie', '.cookies', '.cookie-consent',
+    '.breadcrumb', '.breadcrumbs', '.social-share', '.share-buttons',
+    '.ads', '.advertisement'
+  ].join(', ')).remove();
+
+  // Estrai tutti i testi dalle sezioni principali. NOTA: `body` non va nella
+  // stessa selezione di `main, article, section...` — body contiene per
+  // definizione anche il testo già catturato da quei tag più specifici, e
+  // includerlo qui duplicava il contenuto (stesso paragrafo ripetuto due
+  // volte nel rawText, osservato nei test). `body` resta solo come fallback
+  // sotto, per le pagine senza contenitori semantici riconoscibili.
   const textParts = [];
-  $('main, article, section, .content, #content, .main-content, [role="main"], body').each((_, el) => {
+  $('main, article, section, .content, #content, .main-content, [role="main"]').each((_, el) => {
     const t = $(el).text().replace(/\s+/g, ' ').trim();
     if (t.length > 50) textParts.push(t);
   });
@@ -289,7 +327,78 @@ function extractPageData(html, pageUrl) {
       .map(a => a.trim())
   )].slice(0, 5);
 
-  return { title, metaDesc, rawText, headings, links, namedLinks, phones, emails, addresses, pageUrl };
+  // Estrazione orari di apertura: pattern euristico, non un parser di orari
+  // completo (stessa filosofia delle regex sopra) — cattura da un giorno
+  // della settimana fino alla prima fascia oraria che segue. Tre varianti,
+  // verificate su siti reali (municipale e ospedaliero) durante lo sviluppo,
+  // dove le prime due da sole mancavano sistematicamente il formato "prosa"
+  // molto comune sui siti sanitari:
+  //   1. "lunedì... 8:30-13:00"              (trattino ASCII, stile comunale)
+  //   2. "lunedì... dalle ore 8:00 alle ore 18:00" (prosa, stile ospedaliero)
+  //   3. "lunedì – venerdì, 10:30 – 20:00"    (trattino tipografico – / —)
+  // Nessun contesto extra dopo la fascia oraria: un giorno con doppia fascia
+  // (mattina+pomeriggio) cattura solo la prima — limite noto, preferibile a
+  // uno snippet troncato a metà numero (il "." è anche il separatore
+  // ore/minuti nel formato italiano "8.30", quindi non si può usare "fino al
+  // prossimo punto" come terminatore senza tagliare a metà orari come
+  // "sabato: 8.30-12.30"). Quantificatori tutti delimitati ({0,N}) per
+  // restare lineari anche su input patologico (vedi nota ReDoS sopra).
+  const DAY_NAMES = 'luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica';
+  const openingHours = [...new Set([
+    ...(fullText.match(new RegExp(`(?:${DAY_NAMES})[^.\\n]{0,150}?\\d{1,2}[:.]\\d{2}\\s*-\\s*\\d{1,2}[:.]\\d{2}`, 'gi')) || []),
+    ...(fullText.match(new RegExp(`(?:${DAY_NAMES})[^.\\n]{0,80}?dalle\\s+(?:ore\\s+)?\\d{1,2}[:.]\\d{2}\\s+alle\\s+(?:ore\\s+)?\\d{1,2}[:.]\\d{2}`, 'gi')) || []),
+    ...(fullText.match(new RegExp(`(?:${DAY_NAMES})[^.\\n]{0,150}?\\d{1,2}[:.]\\d{2}\\s*[–—]\\s*\\d{1,2}[:.]\\d{2}`, 'gi')) || [])
+  ].map(s => s.replace(/\s+/g, ' ').trim()))].slice(0, 5);
+
+  return { title, metaDesc, rawText, headings, links, namedLinks, phones, emails, addresses, openingHours, pageUrl };
+}
+
+// ─── Fetch di una singola pagina, con retry veloce e cache ────────────────────
+
+/**
+ * Fetcha una pagina HTML e la mette in cache — condivisa tra il batch fetch
+ * di adaptiveSearch e prefetchRootPages (vedi sotto), per non duplicare la
+ * stessa logica fetch+extract+cache in due posti.
+ *
+ * Un solo retry, veloce, e SOLO su errori di rete/timeout (nessuna risposta
+ * ricevuta dal server — `!err.response`): un 404/403 non migliora
+ * ritentando. Molti fallimenti osservati nei test erano timeout/errori
+ * transitori di rete, non pagine realmente irraggiungibili — un retry con
+ * timeout più corto recupera questi casi senza rischiare di sforare il
+ * budget della query (mai più del timeout originale, floor 500ms sotto il
+ * quale non vale la pena ritentare).
+ */
+async function fetchAndCachePage(url, timeoutMs) {
+  const cached = cacheGet(pageCache, url);
+  if (cached) return cached;
+
+  const requestOpts = {
+    maxRedirects: 5,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; SiteAssistantBot/2.0; +https://assistant.local)',
+      'Accept': 'text/html,application/xhtml+xml',
+      'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
+    },
+    // Accetta solo HTML
+    validateStatus: s => s >= 200 && s < 400
+  };
+
+  let resp;
+  try {
+    resp = await httpClient.get(url, { ...requestOpts, timeout: timeoutMs });
+  } catch (err) {
+    if (err.response) throw err; // errore applicativo (4xx/5xx): ritentare non aiuta
+    const retryTimeout = Math.min(timeoutMs, 3000);
+    if (retryTimeout < 500) throw err; // budget troppo risicato per un retry
+    resp = await httpClient.get(url, { ...requestOpts, timeout: retryTimeout });
+  }
+
+  const contentType = (resp.headers['content-type'] || '').toLowerCase();
+  if (!contentType.includes('html')) return null;
+
+  const pageData = extractPageData(resp.data, url);
+  cacheSet(pageCache, url, pageData);
+  return pageData;
 }
 
 // ─── FASE 1: Ricerca Adattiva ─────────────────────────────────────────────────
@@ -377,32 +486,18 @@ async function adaptiveSearch(rootUrl, queryAnalysis, maxTime = 15000) {
       break;
     }
 
-    // Fetch parallelo
+    // Fetch parallelo (fetch+retry+cache condivisi con prefetchRootPages, vedi fetchAndCachePage)
     const fetched = await Promise.allSettled(
       batch.map(async ({ url, depth, strategy }) => {
-        // Controlla cache pagina
-        const cachedPage = cacheGet(pageCache, url);
-        if (cachedPage) return { pageData: cachedPage, url, depth, strategy };
-
         try {
-          const resp = await httpClient.get(url, {
-            // Floor a 1000ms come rete di sicurezza: mai passare ad axios un
-            // timeout <= 0 (vedi nota sopra).
-            timeout: Math.max(1000, Math.min(PAGE_TIMEOUT_MS, maxTime - (Date.now() - startTime))),
-            maxRedirects: 5,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (compatible; SiteAssistantBot/2.0; +https://assistant.local)',
-              'Accept': 'text/html,application/xhtml+xml',
-              'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
-            },
-            // Accetta solo HTML
-            validateStatus: s => s >= 200 && s < 400
-          });
-          const contentType = (resp.headers['content-type'] || '').toLowerCase();
-          if (!contentType.includes('html')) return null;
-
-          const pageData = extractPageData(resp.data, url);
-          cacheSet(pageCache, url, pageData);
+          // Floor a 1000ms come rete di sicurezza: mai passare ad axios un
+          // timeout <= 0 (un timeout <=0 è pericoloso: 0 = nessun timeout,
+          // negativo = eccezione non gestita negli internals dei socket di
+          // Node/follow-redirects — verificato: entrambi i casi possono
+          // bloccare la richiesta indefinitamente).
+          const timeoutMs = Math.max(1000, Math.min(PAGE_TIMEOUT_MS, maxTime - (Date.now() - startTime)));
+          const pageData = await fetchAndCachePage(url, timeoutMs);
+          if (!pageData) return null;
           return { pageData, url, depth, strategy };
         } catch (err) {
           console.log(`  ⚠️  Fetch failed [${url}]: ${err.message}`);
@@ -529,68 +624,64 @@ async function adaptiveSearch(rootUrl, queryAnalysis, maxTime = 15000) {
   return results;
 }
 
-// ─── FASE 2: SERPApi ricerca mirata ──────────────────────────────────────────
+// ─── FASE 2: Firecrawl ricerca mirata ─────────────────────────────────────────
 
-async function serpApiSearch(query, siteHostname, maxTime = PAGE_TIMEOUT_MS) {
-  const apiKey = process.env.SERPAPI_API_KEY;
-  if (!apiKey) {
-    console.log('  ⏩ SERPApi not configured, skipping');
+/**
+ * Ricerca supplementare via Firecrawl — sostituisce SerpAPI (righe di storia
+ * git precedenti), che nei test si è dimostrata inaffidabile: entrambe le
+ * query andavano spesso in timeout senza restituire nulla di utile.
+ *
+ * Una sola chiamata invece delle due query SerpAPI (site:dominio + "dominio"
+ * query): `includeDomains` sostituisce strutturalmente il trucco `site:`,
+ * stesso effetto di scoping con una chiamata sola invece di due (meno costo,
+ * meno latenza). `scrapeOptions.formats:['markdown']` fa sì che Firecrawl
+ * scrapi anche le pagine trovate nella stessa chiamata: risultati arricchiti
+ * con contenuto reale, non solo uno snippet — utile soprattutto quando FASE 1
+ * (il crawler custom, a budget di tempo limitato) non riesce a raggiungere la
+ * pagina più specifica, ma Firecrawl la trova comunque via ricerca diretta.
+ *
+ * Timeout NON allineato a PAGE_TIMEOUT_MS (8s, pensato per il fetch di una
+ * singola pagina): una ricerca che scrapa fino a `limit` pagine richiede più
+ * tempo di un fetch singolo o di uno snippet Google — verificato empiricamente
+ * (~7s per 3 risultati arricchiti). Allineato invece al budget pieno della
+ * query (`maxTime`), con floor più alto.
+ *
+ * Nessun retry: a differenza del retry economico usato per i singoli fetch di
+ * pagina, ritentare qui raddoppierebbe il costo di una chiamata che scrapa
+ * più pagine. Un solo tentativo; se fallisce, FASE 1 resta comunque la fonte
+ * primaria della risposta (stesso comportamento di graceful-degradation già
+ * in uso per SerpAPI).
+ */
+async function firecrawlSearch(query, siteHostname, maxTime = PAGE_TIMEOUT_MS) {
+  if (!process.env.FIRECRAWL_API_KEY) {
+    console.log('  ⏩ Firecrawl not configured, skipping');
     return [];
   }
 
-  // Due query: site-specific e branded — eseguite in parallelo (erano sequenziali,
-  // fino a 2×10s di timeout sommati per dominio).
-  //
-  // Timeout allineato al budget della query (`maxTime`, lo stesso che governa
-  // il crawl) invece di un fisso 10000ms scollegato da esso: prima, una query
-  // "semplice" con budget di crawl di soli 5s poteva comunque restare bloccata
-  // fino a 10s in attesa di SERPApi (FASE 1+2 attende `Promise.all` di crawl E
-  // SERPApi), rendendo SERPApi — dati supplementari, non la fonte primaria di
-  // telefoni/orari/indirizzi, che vengono dal crawl — il vero collo di
-  // bottiglia della richiesta. Floor a 3000ms per non tagliare troppo
-  // aggressivamente una chiamata che in condizioni normali risponde in 1-2s.
-  const queries = [
-    `site:${siteHostname} ${query}`,
-    `"${siteHostname}" ${query}`
-  ];
-  const timeout = Math.max(3000, Math.min(PAGE_TIMEOUT_MS, maxTime));
+  const timeout = Math.max(5000, Math.min(15000, maxTime));
+  const limit = 5;
 
-  const settled = await Promise.allSettled(queries.map(q => {
-    console.log(`  🔍 SERPApi query: "${q}"`);
-    return httpClient.get('https://serpapi.com/search', {
-      params: {
-        q,
-        api_key:  apiKey,
-        engine:   'google',
-        hl:       'it',
-        gl:       'it',
-        num:      10,
-        filter:   1
-      },
+  console.log(`  🔍 Firecrawl search: "${query}" (dominio: ${siteHostname})`);
+  try {
+    const response = await firecrawl.search(query, {
+      limit,
+      includeDomains: [siteHostname],
+      scrapeOptions: { formats: ['markdown'] },
       timeout
     });
-  }));
 
-  const results = [];
-  for (const [i, r] of settled.entries()) {
-    if (r.status !== 'fulfilled') {
-      console.log(`  ⚠️  SERPApi error [${queries[i]}]: ${r.reason.message}`);
-      continue;
-    }
-    const resp = r.value;
-    if (resp.data && resp.data.organic_results) {
-      for (const item of resp.data.organic_results.slice(0, 8)) {
-        results.push({
-          title:   item.title   || '',
-          snippet: item.snippet || '',
-          url:     item.link    || ''
-        });
-      }
-      console.log(`  ✅ SERPApi [${queries[i]}]: ${resp.data.organic_results.length} results`);
-    }
+    const results = (response.web || []).map(item => ({
+      title:    item.title       || '',
+      snippet:  item.description || '',
+      url:      item.url         || '',
+      markdown: item.markdown    || ''
+    }));
+    console.log(`  ✅ Firecrawl: ${results.length} risultati`);
+    return results;
+  } catch (err) {
+    console.log(`  ⚠️  Firecrawl error: ${err.message}`);
+    return [];
   }
-
-  return results;
 }
 
 // ─── Relevance scoring: trova le pagine più pertinenti alla query ─────────────
@@ -621,6 +712,14 @@ function tokenize(query) {
 
 // ─── Scoring di un link candidato PRIMA del fetch (guida la coda a priorità) ──
 
+// Pagine "di supporto" quasi sempre utili in una demo, a prescindere dai
+// token della specifica domanda: telefono/orari/indirizzo di solito vivono
+// proprio qui, spesso su una pagina figlia più specifica di quella che
+// nomina esplicitamente l'argomento cercato (es. la query menziona "carta
+// d'identità" ma l'orario vive sulla pagina "contatti" dell'ufficio, non su
+// quella del singolo servizio). Bonus fisso indipendente dai queryTokens.
+const SUPPORT_PAGE_PATTERNS = ['contatt', 'orari', 'orario', 'chi siamo', 'chi-siamo', 'dove siamo', 'dove-siamo'];
+
 function scoreLinkCandidate(linkText, url, queryTokens) {
   if (!queryTokens || queryTokens.length === 0) return 0;
   let path = '';
@@ -632,6 +731,7 @@ function scoreLinkCandidate(linkText, url, queryTokens) {
     if (text.includes(token)) score += 4;   // anchor text è il segnale più forte
     if (slug.includes(token)) score += 3;   // slug URL (es. /uffici/anagrafe/orari)
   }
+  if (SUPPORT_PAGE_PATTERNS.some(p => slug.includes(p) || text.includes(p))) score += 5;
   return score;
 }
 
@@ -706,7 +806,7 @@ async function getSitemapUrls(origin) {
 
 // ─── Costruisce il contesto testuale da passare all'AI ────────────────────────
 
-function buildContext(crawledPages, serpResults, query, configuredUrls) {
+function buildContext(crawledPages, searchResults, query, configuredUrls) {
   const tokens = tokenize(query);
 
   // Ordina le pagine per rilevanza
@@ -728,6 +828,7 @@ function buildContext(crawledPages, serpResults, query, configuredUrls) {
       page.phones.length > 0  ? `Telefoni: ${page.phones.join(', ')}` : '',
       page.emails.length > 0  ? `Email: ${page.emails.join(', ')}` : '',
       page.addresses.length > 0 ? `Indirizzi: ${page.addresses.join('; ')}` : '',
+      page.openingHours && page.openingHours.length > 0 ? `Orari: ${page.openingHours.join(' | ')}` : '',
       `Contenuto:\n${page.rawText.substring(0, 1200)}`,
       ''
     ].filter(Boolean).join('\n');
@@ -736,11 +837,27 @@ function buildContext(crawledPages, serpResults, query, configuredUrls) {
     charCount += block.length;
   }
 
-  // Aggiungi risultati SERPApi
-  if (serpResults.length > 0) {
-    lines.push('\n### Risultati Google (SERPApi):');
-    for (const r of serpResults.slice(0, 6)) {
+  // Aggiungi risultati Firecrawl — a differenza dei vecchi risultati SERPApi
+  // (solo snippet), questi includono anche il markdown scrapato da Firecrawl
+  // nella stessa chiamata (vedi firecrawlSearch), quindi possono portare
+  // contenuto reale anche per pagine che il crawler di FASE 1 non ha
+  // raggiunto. Nessun tetto di caratteri qui (richiesto esplicitamente): il
+  // markdown va incluso per intero, non solo un estratto.
+  //
+  // Il markdown di Firecrawl inizia quasi sempre con i link di accessibilità
+  // "Vai al contenuto/Vai alla navigazione/Vai al footer/Salta al contenuto"
+  // (skip-link dei siti istituzionali) — puro rumore, li rimuoviamo comunque.
+  const stripSkipLinks = (md) => md
+    .replace(/\[(?:Vai al contenuto|Vai alla navigazione|Vai al footer|Salta al contenuto)\]\([^)]*\)/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  if (searchResults.length > 0) {
+    lines.push('\n### Risultati di ricerca (Firecrawl):');
+    for (const r of searchResults.slice(0, 6)) {
       lines.push(`- [${r.title}](${r.url})\n  ${r.snippet}`);
+      if (r.markdown) {
+        lines.push(`  Contenuto:\n  ${stripSkipLinks(r.markdown).replace(/\n/g, '\n  ')}`);
+      }
     }
   }
 
@@ -803,15 +920,15 @@ async function searchConfiguredSites(query, configuredUrls, product = 'comunicai
   console.log(`  🎯 Strategy: ${queryAnalysis.strategy}`);
   console.log(`  ⏱️  Estimated time: ${queryAnalysis.estimatedTime}ms`);
 
-  // ── FASE 1+2: Crawling adattivo e SERPApi, in parallelo tra loro e per ogni
+  // ── FASE 1+2: Crawling adattivo e Firecrawl, in parallelo tra loro e per ogni
   // root URL configurato (erano due cicli for...await sequenziali, eseguiti
   // l'uno dopo l'altro: con demo a più searchUrls la latenza si sommava invece
   // di sovrapporsi) ─────────────────────────────────────────────────────────
-  console.log(`\n[FASE 1+2] Adaptive search + SERPApi in parallelo su ${configuredUrls.length} root URL...`);
+  console.log(`\n[FASE 1+2] Adaptive search + Firecrawl in parallelo su ${configuredUrls.length} root URL...`);
 
-  const [crawlSettled, serpSettled] = await Promise.all([
+  const [crawlSettled, searchSettled] = await Promise.all([
     Promise.allSettled(configuredUrls.map(rootUrl => adaptiveSearch(rootUrl, queryAnalysis, queryAnalysis.estimatedTime))),
-    Promise.allSettled(configuredUrls.map(rootUrl => serpApiSearch(query, getHostname(rootUrl), queryAnalysis.estimatedTime)))
+    Promise.allSettled(configuredUrls.map(rootUrl => firecrawlSearch(query, getHostname(rootUrl), queryAnalysis.estimatedTime)))
   ]);
 
   const allCrawledPages = [];
@@ -821,24 +938,24 @@ async function searchConfiguredSites(query, configuredUrls, product = 'comunicai
   });
   console.log(`[FASE 1 RISULTATO] ${allCrawledPages.length} pagine trovate`);
 
-  const allSerpResults = [];
-  serpSettled.forEach((r, i) => {
-    if (r.status === 'fulfilled') allSerpResults.push(...r.value);
-    else console.error(`  ❌ SERPApi search failed for ${configuredUrls[i]}: ${r.reason.message}`);
+  const allSearchResults = [];
+  searchSettled.forEach((r, i) => {
+    if (r.status === 'fulfilled') allSearchResults.push(...r.value);
+    else console.error(`  ❌ Firecrawl search failed for ${configuredUrls[i]}: ${r.reason.message}`);
   });
-  console.log(`[FASE 2 RISULTATO] ${allSerpResults.length} risultati SERPApi`);
+  console.log(`[FASE 2 RISULTATO] ${allSearchResults.length} risultati Firecrawl`);
 
   // ── FASE 3: Costruisci contesto ──────────────────────────────────────────────
   console.log(`\n[FASE 3] Building context...`);
 
   let context = '';
 
-  if (allCrawledPages.length === 0 && allSerpResults.length === 0) {
+  if (allCrawledPages.length === 0 && allSearchResults.length === 0) {
     // Nessun dato trovato — usa solo conoscenza AI con link al sito
     console.log(`  ⚠️  No data crawled, using AI general knowledge only`);
     context = `Il sito ${configuredUrls.join(', ')} non era accessibile al momento della ricerca.`;
   } else {
-    context = buildContext(allCrawledPages, allSerpResults, query, configuredUrls);
+    context = buildContext(allCrawledPages, allSearchResults, query, configuredUrls);
   }
 
   console.log(`  📄 Context size: ${context.length} chars`);
@@ -873,6 +990,43 @@ async function searchConfiguredSites(query, configuredUrls, product = 'comunicai
   return context;
 }
 
+/**
+ * prefetchRootPages(urls)
+ *
+ * Prefetch speculativo delle root URL configurate su una demo — pensato per
+ * essere lanciato SENZA await, in parallelo alla prima chiamata OpenAI che
+ * decide se il turno richiede search_configured_sites (vedi orchestrator.js).
+ * Per la stragrande maggioranza dei messaggi su una demo con searchUrls
+ * configurati il tool viene comunque chiamato: oggi il flusso è strettamente
+ * sequenziale ("prima decide, poi cerca"), e il primissimo fetch dentro
+ * adaptiveSearch è quasi sempre proprio la root URL. Anticiparlo qui elimina
+ * quella sequenzialità nel caso comune — usa lo stesso pageCache condiviso,
+ * quindi se il crawl vero parte la trova già in cache e la salta.
+ *
+ * Best-effort per design: un fallimento su un singolo URL non deve mai
+ * propagarsi al chiamante (la richiesta di chat non deve fallire per un
+ * prefetch speculativo) — se il prefetch fallisce, il crawl vero riproverà
+ * comunque da capo quando (e se) parte.
+ *
+ * @param {string[]} urls - demo.searchUrls
+ */
+async function prefetchRootPages(urls) {
+  if (!Array.isArray(urls) || urls.length === 0) return;
+  const startTime = Date.now();
+  const results = await Promise.allSettled(urls.map(async (rootUrl) => {
+    try {
+      const url = normalizeUrl(rootUrl, rootUrl) || rootUrl;
+      await fetchAndCachePage(url, PAGE_TIMEOUT_MS);
+      return true;
+    } catch (err) {
+      console.log(`  ⚠️  Prefetch speculativo fallito [${rootUrl}]: ${err.message}`);
+      return false;
+    }
+  }));
+  const ok = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  console.log(`  🚀 Prefetch speculativo: ${ok}/${urls.length} root URL pronte in cache in ${Date.now() - startTime}ms`);
+}
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-module.exports = { searchConfiguredSites };
+module.exports = { searchConfiguredSites, prefetchRootPages };

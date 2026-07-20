@@ -52,6 +52,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
   const [suggestions, setSuggestions] = useState([]);
   const [, setWelcomeText] = useState('');
   const [, setSiteName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState(null);
   const [attachmentError, setAttachmentError] = useState('');
 
@@ -151,6 +152,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
           }
           if (Array.isArray(data.questions) && data.questions.length) setSuggestions(data.questions);
           if (data.siteName) setSiteName(data.siteName);
+          if (data.logo) setLogoUrl(data.logo);
         })
         .catch(() => {});
     }
@@ -588,7 +590,9 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
 
           <div className="chatbot-bubble-header">
             <div className="chatbot-bubble-header-icon">
-              <img src={theme.logo} alt={theme.name} />
+              {/* Logo personalizzato della demo se presente (caricato via config
+                  UI), altrimenti il logo di default del prodotto (theme.logo). */}
+              <img src={logoUrl || theme.logo} alt={theme.name} />
             </div>
             <span className="chatbot-bubble-header-title">Assistente {theme.name}</span>
           </div>

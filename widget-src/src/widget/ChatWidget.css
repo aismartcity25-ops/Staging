@@ -968,7 +968,9 @@
 .typing-indicator span {
   width: 8px;
   height: 8px;
-  background: #ffffff;
+  /* Stesso gradiente dell'header (chatbot-bubble-header): colore1→colore2
+     della demo, invece del bianco fisso precedente che non seguiva il tema. */
+  background: linear-gradient(135deg, var(--cw-glow-1) 0%, var(--cw-glow-2) 100%);
   border-radius: 50%;
   animation: bounce 1.4s infinite ease-in-out both;
 }

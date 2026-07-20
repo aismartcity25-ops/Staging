@@ -478,6 +478,14 @@
     .style-field-row { display: flex; gap: 10px; }
     .style-field-row .style-field { flex: 1; }
 
+    /* Branding e messaggi — logo/welcome/domande suggerite (Step 4) */
+    .logo-upload-row { display: flex; align-items: center; gap: 12px; }
+    .logo-preview {
+      width: 56px; height: 56px; object-fit: contain; border-radius: 10px;
+      border: 1px solid var(--border2); background: rgba(255,255,255,0.6); padding: 6px;
+    }
+    .logo-upload-actions { display: flex; align-items: center; gap: 8px; }
+
     /* Analisi sito */
     .btn-analyze { margin-top: 16px; }
     .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -629,9 +637,9 @@
               <strong>⚡ Live</strong>
               <span>Ricerca in tempo reale sul sito ad ogni domanda dell'utente</span>
             </button>
-            <button type="button" class="mode-btn" id="modeBtnCrawling" onclick="setSearchMode('crawling')" disabled title="Prossimamente">
+            <button type="button" class="mode-btn" id="modeBtnCrawling" onclick="setSearchMode('crawling')">
               <strong>🗂️ Crawling</strong>
-              <span>Indicizzazione del sito — prossimamente</span>
+              <span>Indicizzazione del sito: crawl + ricerca sull'indice, con fallback live</span>
             </button>
           </div>
           <input type="hidden" id="searchMode" value="live">
@@ -703,6 +711,39 @@
                   <input type="text" id="colorAiTextText" value="#1f2937" class="color-text">
                 </div>
               </div>
+            </div>
+          </details>
+
+          <details class="style-subsection">
+            <summary>🖼️ Branding e messaggi</summary>
+            <div class="style-field">
+              <label for="logoFile">Logo (opzionale)</label>
+              <div class="logo-upload-row">
+                <img id="logoPreview" class="logo-preview" src="/Loghi/comunicai.png" alt="Anteprima logo">
+                <div class="logo-upload-actions">
+                  <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+                  <button type="button" class="btn-add" onclick="document.getElementById('logoFile').click()">Carica logo</button>
+                  <button type="button" class="btn-icon" id="btnRemoveLogo" title="Ripristina logo predefinito" onclick="removeLogo()" style="display:none">×</button>
+                </div>
+              </div>
+              <span class="section-desc">Se non caricato, viene usato il logo predefinito ComunicAI.</span>
+            </div>
+            <div class="style-field">
+              <label for="welcomeMessage">Messaggio di benvenuto</label>
+              <textarea id="welcomeMessage" placeholder="👋 Benvenuto in ComunicAI! Sono un assistente intelligente per i servizi comunali. Cosa vuoi sapere?" rows="3"></textarea>
+            </div>
+            <div class="style-field">
+              <label>Domande suggerite</label>
+              <div class="url-list" id="questionList">
+                <div class="url-row">
+                  <input type="text" placeholder="Es: Come posso richiedere un certificato?" class="suggested-question">
+                  <button class="btn-icon" title="Rimuovi" onclick="removeQuestion(this)">×</button>
+                </div>
+              </div>
+              <button class="btn-add" type="button" onclick="addQuestion()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Aggiungi domanda
+              </button>
             </div>
           </details>
 
@@ -829,6 +870,63 @@
       const rows = document.querySelectorAll('.url-row');
       if (rows.length <= 1) return; // keep at least one
       btn.closest('.url-row').remove();
+    }
+
+    // ── Domande suggerite (stesso pattern add/remove di addUrl/removeUrl) ───
+    const MAX_SUGGESTED_QUESTIONS = 6;
+
+    function addQuestion() {
+      const list = document.getElementById('questionList');
+      if (list.querySelectorAll('.url-row').length >= MAX_SUGGESTED_QUESTIONS) return;
+      const row = document.createElement('div');
+      row.className = 'url-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Es: Come posso richiedere un certificato?" class="suggested-question">
+        <button class="btn-icon" title="Rimuovi" onclick="removeQuestion(this)">×</button>
+      `;
+      list.appendChild(row);
+      row.querySelector('input').focus();
+    }
+
+    function removeQuestion(btn) {
+      btn.closest('.url-row').remove();
+    }
+
+    // ── Logo personalizzato: upload riusa lo stesso endpoint /api/chat/upload
+    // già usato per gli allegati chat (stesso storage, stesso limite 15MB,
+    // stessa validazione MIME immagine) — niente endpoint dedicato. Il logo
+    // caricato è un URL /uploads/... salvato sulla demo; se non impostato, il
+    // widget usa il default di prodotto (vedi ChatWidget.jsx#logoUrl).
+    let currentLogoUrl = '';
+    const DEFAULT_LOGO_COMUNICAI = '/Loghi/comunicai.png';
+
+    async function handleLogoUpload(event) {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+
+      const preview = document.getElementById('logoPreview');
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(ApiConfig.get('chatUpload'), { method: 'POST', body: formData });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Upload fallito');
+
+        currentLogoUrl = data.data.url;
+        preview.src = currentLogoUrl;
+        document.getElementById('btnRemoveLogo').style.display = 'inline-flex';
+      } catch (err) {
+        const errEl = document.getElementById('alertError');
+        errEl.textContent = 'Errore nel caricamento del logo: ' + err.message;
+        errEl.className = 'alert error visible';
+      }
+    }
+
+    function removeLogo() {
+      currentLogoUrl = '';
+      document.getElementById('logoPreview').src = DEFAULT_LOGO_COMUNICAI;
+      document.getElementById('btnRemoveLogo').style.display = 'none';
     }
 
     function addUrlsBulk() {
@@ -1040,7 +1138,6 @@
 
     // ── Modalità di ricerca (live / crawling) ───────────────────────────────
     function setSearchMode(mode) {
-      if (mode === 'crawling') return; // non ancora disponibile
       document.getElementById('searchMode').value = mode;
       document.getElementById('modeBtnLive').classList.toggle('active', mode === 'live');
       document.getElementById('modeBtnCrawling').classList.toggle('active', mode === 'crawling');
@@ -1263,7 +1360,23 @@
       applyStyleToControls(demo.style);
       sendPreviewUpdate();
 
-      setSearchMode(demo.searchMode === 'crawling' ? 'live' : (demo.searchMode || 'live'));
+      setSearchMode(demo.searchMode || 'live');
+
+      document.getElementById('welcomeMessage').value = demo.welcome || '';
+
+      const questionList = document.getElementById('questionList');
+      questionList.innerHTML = '';
+      (demo.questions && demo.questions.length ? demo.questions : ['']).forEach(q => {
+        const row = document.createElement('div');
+        row.className = 'url-row';
+        row.innerHTML = `<input type="text" placeholder="Es: Come posso richiedere un certificato?" class="suggested-question"><button class="btn-icon" title="Rimuovi" onclick="removeQuestion(this)">×</button>`;
+        row.querySelector('input').value = q;
+        questionList.appendChild(row);
+      });
+
+      currentLogoUrl = demo.logo || '';
+      document.getElementById('logoPreview').src = currentLogoUrl || DEFAULT_LOGO_COMUNICAI;
+      document.getElementById('btnRemoveLogo').style.display = currentLogoUrl ? 'inline-flex' : 'none';
 
       document.getElementById('alertError').className = 'alert';
       document.getElementById('alertSuccess').className = 'alert';
@@ -1293,6 +1406,10 @@
 
       setSearchMode('live');
 
+      document.getElementById('welcomeMessage').value = '';
+      document.getElementById('questionList').innerHTML = '<div class="url-row"><input type="text" placeholder="Es: Come posso richiedere un certificato?" class="suggested-question"><button class="btn-icon" title="Rimuovi" onclick="removeQuestion(this)">×</button></div>';
+      removeLogo();
+
       document.getElementById('btnCrea').querySelector('.btn-text').textContent = 'CREA DEMO';
       document.getElementById('btnCancelEdit').style.display = 'none';
     }
@@ -1302,6 +1419,9 @@
       const searchInputs = document.querySelectorAll('.search-url');
       const searchUrls = Array.from(searchInputs).map(i => i.value.trim()).filter(Boolean);
       const instructions = document.getElementById('instructions').value.trim();
+      const welcome = document.getElementById('welcomeMessage').value.trim();
+      const questions = Array.from(document.querySelectorAll('.suggested-question')).map(i => i.value.trim()).filter(Boolean);
+      const logo = currentLogoUrl;
 
       const { colors, style } = collectStyleAndColors();
 
@@ -1338,7 +1458,7 @@
       try {
         const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
           method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, style, searchMode })
+          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo })
         });
         const data = await res.json();
 

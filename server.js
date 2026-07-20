@@ -34,6 +34,8 @@ const { transcribeAudio } = require('./src/lib/stt');
 const { textToSpeech } = require('./src/lib/tts');
 const { searchConfiguredSites: deepSearchConfiguredSites } = require('./deep-search-engine.js');
 const { analyzeSite } = require('./src/lib/site-analyzer');
+const knowledgeEngine = require('./src/knowledge-engine');
+const { createRag } = require('./src/pipeline/rag');
 
 // Upload audio per l'input vocale (/api/chat/stt): in memoria, mai su disco
 // (a differenza di `upload`, che persiste gli allegati chat) — la
@@ -57,6 +59,15 @@ function getOpenAI() {
     console.log('✓ OpenAI inizializzato');
   }
   return _openai;
+}
+
+// ─── RAG (lazy, condivide il client OpenAI sopra) ────────────────────────────
+let _rag = null;
+function getRag() {
+  const client = getOpenAI();
+  if (!client) return null;
+  if (!_rag) _rag = createRag({ openai: client });
+  return _rag;
 }
 
 // ─── Monitoring ───────────────────────────────────────────────────────────────
@@ -393,9 +404,11 @@ apiRouter.post('/validate-url', async (req, res) => {
 
 // ── Site analysis (bottone "Analizza sito" in fase di creazione demo) ────────
 // Scan strutturale (non guidato da query) fino a 3 livelli: gerarchia +
-// data di ultima modifica per pagina, più verifica sitemap/feed. Non ha
-// relazione con deep-search-engine.js (quello è il motore di ricerca live
-// usato durante la chat) né con il knowledge-engine (ancora scollegato).
+// data di ultima modifica per pagina, più verifica sitemap/feed. Resta un
+// controllo live indipendente sia da deep-search-engine.js (motore di
+// ricerca live usato in chat) sia dal knowledge-engine (crawl/ingest/index):
+// serve solo a dare un'anteprima strutturale del sito PRIMA di creare la
+// demo, non è influenzato dalla modalità 'live'/'crawling' scelta.
 const SITE_ANALYSIS_VALID_MODES = new Set(['live', 'crawling']);
 
 // ── Sanitizzazione campo "style" delle demo (personalizzazione estetica del
@@ -435,6 +448,45 @@ function sanitizeStyle(style) {
   };
 }
 
+// ── Sanitizzazione campi welcome/questions/logo della demo ───────────────────
+// Alimentano GET /api/demos/:id/suggestions, già atteso dal widget
+// (ChatWidget.jsx fa fetch di questa rotta da tempo, ma non esisteva ancora
+// lato server — richiesta sempre in 404, fallback silenzioso ai default fissi
+// per prodotto). Stesso pattern difensivo di sanitizeStyle: qualunque valore
+// mancante/malformato ricade su un default sicuro, mai propagato as-is.
+const MAX_WELCOME_CHARS = 500;
+const MAX_QUESTION_CHARS = 120;
+const MAX_QUESTIONS = 6;
+
+function sanitizeWelcome(welcome) {
+  if (typeof welcome !== 'string') return '';
+  return welcome.trim().slice(0, MAX_WELCOME_CHARS);
+}
+
+function sanitizeQuestions(questions) {
+  if (!Array.isArray(questions)) return [];
+  return questions
+    .filter(q => typeof q === 'string' && q.trim())
+    .map(q => q.trim().slice(0, MAX_QUESTION_CHARS))
+    .slice(0, MAX_QUESTIONS);
+}
+
+// Logo: solo percorsi interni noti (/uploads/<file> da upload via
+// /api/chat/upload, o /Loghi/<file> i default di prodotto già serviti
+// staticamente) — mai un URL esterno arbitrario da un campo testo libero, per
+// non far caricare al widget (via <img src>) risorse fuori dal nostro
+// controllo. Un solo segmento dopo il prefisso (niente sotto-percorsi) e
+// nessun ".." nel nome file: express.static protegge già a valle da path
+// traversal, ma meglio essere espliciti anche qui piuttosto che affidarsi
+// solo a quello.
+function sanitizeLogo(logo) {
+  if (typeof logo !== 'string') return '';
+  const trimmed = logo.trim();
+  const match = /^\/(uploads|Loghi)\/([^/]+)$/.exec(trimmed);
+  if (!match || match[2].includes('..')) return '';
+  return trimmed;
+}
+
 apiRouter.post('/site-analysis', requireAuth, async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ success: false, error: 'URL richiesto' });
@@ -450,9 +502,41 @@ apiRouter.post('/site-analysis', requireAuth, async (req, res) => {
   }
 });
 
+// ── Knowledge base (crawling → ingest → index, src/knowledge-engine) ─────────
+// Una demo in modalità 'crawling' ha un knowledgeBaseId (== job id ==
+// namespace LanceDB, vedi src/lib/lancedb.js) che identifica la sua knowledge
+// base indicizzata. Crearne una nuova (id nuovo) invece di riusare quella
+// esistente quando i searchUrls cambiano evita di riavviare un job già
+// esistente con lo stesso id senza che i suoi seedUrls persistiti vengano
+// aggiornati (knowledge-engine/storage/jobs-db.js#upsertQueued non li
+// sovrascrive in caso di conflitto) — più semplice e sicuro che modificare
+// quel comportamento.
+function urlsEqual(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  return a.every((u, i) => u === b[i]);
+}
+
+function ensureKnowledgeBase(draft, previousDemo) {
+  if (draft.searchMode !== 'crawling') return previousDemo ? (previousDemo.knowledgeBaseId || null) : null;
+
+  const reuse = previousDemo
+    && previousDemo.knowledgeBaseId
+    && previousDemo.searchMode === 'crawling'
+    && urlsEqual(previousDemo.searchUrls, draft.searchUrls);
+  const kbId = reuse ? previousDemo.knowledgeBaseId : uuidv4();
+
+  try {
+    knowledgeEngine.enqueueJob({ id: kbId, seedUrls: draft.searchUrls });
+  } catch (err) {
+    console.error('knowledge-engine enqueueJob error:', err.message);
+    return previousDemo ? (previousDemo.knowledgeBaseId || null) : null;
+  }
+  return kbId;
+}
+
 // ── Demos CRUD ───────────────────────────────────────────────────────────────
 apiRouter.post('/demos', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, style, searchMode } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo } = req.body;
 
   if (!clientUrl || !searchUrls || !Array.isArray(searchUrls) || searchUrls.length === 0)
     return res.status(400).json({ error: 'Dati mancanti o non validi' });
@@ -466,15 +550,19 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
     createdBy:   req.session.user.username,
     product:     req.session.user.currentProduct,
     clientUrl, searchUrls,
-    // 'crawling' non è ancora collegato (knowledge-engine dormiente): la
-    // preferenza viene comunque salvata sulla demo, ma il motore usato in
-    // chat resta sempre quello live (deep-search-engine.js) finché non
-    // decidiamo insieme come attivare l'indicizzazione.
     searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : 'live',
     instructions: instructions || '',
     colors: colors || { primary:'#00b4ff', secondary:'#0066cc', userBg:'#3b82f6', userText:'#ffffff', aiBg:'#e5e7eb', aiText:'#1f2937' },
-    style: sanitizeStyle(style)
+    style: sanitizeStyle(style),
+    // Vuoti di default: il widget ricade sui default fissi per prodotto
+    // (FALLBACK_WELCOME/FALLBACK_SUGGESTIONS in themes.js) e sul logo di
+    // prodotto (/Loghi/comunicai.png o /Loghi/medicai.png) finché non
+    // vengono personalizzati — vedi GET /api/demos/:id/suggestions sotto.
+    welcome: sanitizeWelcome(welcome),
+    questions: sanitizeQuestions(questions),
+    logo: sanitizeLogo(logo)
   };
+  demo.knowledgeBaseId = ensureKnowledgeBase(demo, null);
 
   const demos = loadDemos();
   demos.push(demo);
@@ -483,7 +571,7 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
 });
 
 apiRouter.put('/demos/:id', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, style, searchMode } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo } = req.body;
   const demoId = req.params.id;
 
   if (!demoId) return res.status(400).json({ error: 'ID demo richiesto' });
@@ -502,14 +590,22 @@ apiRouter.put('/demos/:id', requireAuth, (req, res) => {
     return res.status(403).json({ error: 'Non autorizzato a modificare questa demo' });
   }
 
+  const previousDemo = demos[idx];
+  const resolvedSearchMode = SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : (previousDemo.searchMode || 'live');
+  const knowledgeBaseId = ensureKnowledgeBase({ searchMode: resolvedSearchMode, searchUrls }, previousDemo);
+
   demos[idx] = {
-    ...demos[idx],
+    ...previousDemo,
     clientUrl,
     searchUrls,
-    searchMode: SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : (demos[idx].searchMode || 'live'),
+    searchMode: resolvedSearchMode,
+    knowledgeBaseId,
     instructions: instructions || '',
-    colors: colors || demos[idx].colors,
-    style: style ? sanitizeStyle(style) : (demos[idx].style || sanitizeStyle(null)),
+    colors: colors || previousDemo.colors,
+    style: style ? sanitizeStyle(style) : (previousDemo.style || sanitizeStyle(null)),
+    welcome: sanitizeWelcome(welcome),
+    questions: sanitizeQuestions(questions),
+    logo: sanitizeLogo(logo),
     updatedAt: new Date().toISOString()
   };
 
@@ -544,17 +640,108 @@ apiRouter.get('/demos/:id', (req, res) => {
   res.json(demo);
 });
 
+// ── Ingestion status (popup di avanzamento in config_*.html) ─────────────────
+// Traduce lo stato grezzo di knowledge-engine (queued/running/.../completed +
+// stats del JobRunner) nel vocabolario di fase già atteso dal frontend
+// (STATUS_LABEL in config_comunicai.html/config_medicai.html): pending,
+// crawling, embedding, indexing, ready, empty, failed, legacy.
+const INGESTION_TERMINAL_PHASES = new Set(['ready', 'empty', 'failed', 'legacy']);
+
+function computeIngestionState(kbId) {
+  if (!kbId) return { phase: 'legacy', stats: {} };
+
+  let job;
+  try { job = knowledgeEngine.getJobStatus(kbId); } catch { job = null; }
+  if (!job) return { phase: 'legacy', stats: {} };
+
+  const stats = job.stats || {};
+  let phase;
+  switch (job.status) {
+    case 'queued':
+    case 'paused':
+      phase = 'pending';
+      break;
+    case 'running':
+      if (!stats.crawlComplete) phase = 'crawling';
+      else if ((stats.pagesPendingIngest || 0) > 0) phase = 'embedding';
+      else phase = 'indexing';
+      break;
+    case 'completed':
+      phase = (stats.chunksIndexed || 0) > 0 ? 'ready' : 'empty';
+      break;
+    case 'cancelled':
+    case 'failed':
+    default:
+      phase = 'failed';
+      break;
+  }
+
+  const error = job.error || (job.status === 'cancelled' ? 'Indicizzazione annullata' : undefined);
+  return { phase, stats, error };
+}
+
+apiRouter.get('/ingestion/:kbId/state', requireAuth, (req, res) => {
+  res.json(computeIngestionState(req.params.kbId));
+});
+
+apiRouter.get('/ingestion/:kbId/progress', requireAuth, (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  if (res.flushHeaders) res.flushHeaders();
+  res.write('retry: 2000\n\n');
+
+  const kbId = req.params.kbId;
+  let closed = false;
+
+  const timer = setInterval(() => {
+    if (closed) return;
+    const state = computeIngestionState(kbId);
+    res.write(`event: update\ndata: ${JSON.stringify(state)}\n\n`);
+    if (INGESTION_TERMINAL_PHASES.has(state.phase)) {
+      closed = true;
+      clearInterval(timer);
+      res.end();
+    }
+  }, 1000);
+
+  req.on('close', () => { closed = true; clearInterval(timer); });
+});
+
+// Messaggio di benvenuto/domande suggerite/logo personalizzati per demo — già
+// atteso da tempo da ChatWidget.jsx (fetch a questa rotta), che finora falliva
+// sempre in 404 e ricadeva silenziosamente sui default fissi per prodotto
+// (FALLBACK_WELCOME/FALLBACK_SUGGESTIONS/logo di prodotto in themes.js).
+// Pubblica come /demos/:id (nessun requireAuth): il widget la interroga da
+// una pagina demo pubblica, non da un contesto autenticato admin.
+apiRouter.get('/demos/:id/suggestions', (req, res) => {
+  const demo = loadDemos().find(d => d.id === req.params.id);
+  if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
+
+  let siteName = '';
+  try { siteName = new URL(demo.clientUrl).hostname.replace(/^www\./, ''); }
+  catch { /* clientUrl assente/non valido: siteName resta vuoto, non blocca la risposta */ }
+
+  res.json({
+    welcome: demo.welcome || '',
+    questions: Array.isArray(demo.questions) ? demo.questions : [],
+    siteName,
+    logo: demo.logo || ''
+  });
+});
+
 // ── Chat ─────────────────────────────────────────────────────────────────────
 // La logica di business (tool-calling, system prompt, streaming SSE) vive in
 // src/orchestrator.js + src/agents/*: il widget React si aspetta risposte in
 // streaming SSE, non JSON sincrono (vedi widget-src/src/widget/ChatWidget.jsx).
-// Il knowledge-engine NON è collegato: search_configured_sites interroga dal
-// vivo i siti configurati sulla demo tramite deep-search-engine.js (vedi
-// src/agents/tool-executor-agent.js).
+// Per le demo in modalità 'crawling', search_configured_sites interroga prima
+// la knowledge base indicizzata (RAG, src/pipeline/rag.js); la ricerca live su
+// deep-search-engine.js resta come fallback quando il RAG non trova nulla, e
+// come unico motore per le demo in modalità 'live' (vedi tool-executor-agent.js).
 apiRouter.post('/chat/message', async (req, res) => {
   const client = getOpenAI();
   if (!client) return res.status(503).json({ success: false, error: 'OpenAI non disponibile' });
-  await orchestrateChat(req, res, client);
+  await orchestrateChat(req, res, client, { rag: getRag() });
 });
 
 // Upload allegati chat (immagini/documenti) - salvati in data/uploads/, serviti da /uploads

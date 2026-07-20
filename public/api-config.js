@@ -49,6 +49,7 @@ window.ApiConfig = {
     demos: '/demos',
     siteAnalysis: '/site-analysis',
     chatMessage: '/chat/message',
+    chatUpload: '/chat/upload',
     chatClear: '/chat/clear',
     chatTts: '/chat/tts',
     liveavatarSession: '/liveavatar/session',

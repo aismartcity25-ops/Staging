@@ -6,11 +6,12 @@
  * Euristico (nessuna chiamata LLM): la decisione e' un semplice booleano su
  * demo.searchUrls (escludi search_websites quando la demo ha siti sorgente
  * configurati, per evitare che il modello preferisca la conoscenza generale
- * alla ricerca dal vivo sul sito del cliente). Il knowledge-engine non e'
- * ancora collegato in questo progetto: niente qui dipende da
- * demo.knowledgeBaseId. send_sms/send_email restano disattivati perche'
- * userebbero le stesse credenziali Twilio del canale WhatsApp, che resta
- * volutamente scollegato per ora.
+ * alla ricerca dal vivo/RAG sul sito del cliente). Lo stesso tool
+ * search_configured_sites copre sia la modalita' 'live' che 'crawling' — la
+ * scelta fra RAG e ricerca live avviene dentro tool-executor-agent.js in base
+ * a demo.searchMode/demo.knowledgeBaseId, non qui. send_sms/send_email
+ * restano disattivati perche' userebbero le stesse credenziali Twilio del
+ * canale WhatsApp, che resta volutamente scollegato per ora.
  */
 
 const { getToolsForDemo } = require('../lib/tools');
