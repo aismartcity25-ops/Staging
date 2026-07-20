@@ -1358,7 +1358,10 @@
   padding: 0;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  /* Stesso colore del testo del messaggio AI (--cw-ai-text, impostata da
+     ChatWidget.jsx in base ai colori scelti nella demo) — prima era un
+     bianco fisso, illeggibile/incoerente sulle demo con aiText scuro. */
+  color: var(--cw-ai-text, var(--white));
   font-weight: 600;
   font-size: 0.75rem;
   text-decoration: underline;

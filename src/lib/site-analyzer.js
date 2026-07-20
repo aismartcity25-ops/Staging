@@ -227,7 +227,15 @@ function parseItalianVisibleDate(raw) {
 }
 
 function extractVisibleLastModified(pageText) {
-  const match = pageText.match(VISIBLE_DATE_LABEL_REGEX);
+  // Molti CMS mettono l'etichetta ("Ultimo aggiornamento") e la data in tag
+  // fratelli separati (es. <h2>Ultimo aggiornamento</h2> ... <p>08/04/2026</p>):
+  // cheerio $('body').text() preserva l'indentazione/newline HTML tra i due
+  // come testo, che può superare abbondantemente il gap massimo ammesso dalla
+  // regex. Normalizzando ogni sequenza di whitespace a uno spazio singolo,
+  // la distanza reale (label -> data) torna minima indipendentemente da
+  // quanto sia indentato/annidato il markup originale.
+  const normalized = pageText.replace(/\s+/g, ' ');
+  const match = normalized.match(VISIBLE_DATE_LABEL_REGEX);
   if (!match) return null;
   return parseItalianVisibleDate(match[1].trim());
 }

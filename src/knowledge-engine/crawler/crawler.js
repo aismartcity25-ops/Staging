@@ -15,7 +15,7 @@
  */
 
 const { EventEmitter } = require('events');
-const { normalizeUrl, hostOf, sameSite } = require('../lib/url');
+const { normalizeUrl, hostOf, sameSite, isNewsLikePath } = require('../lib/url');
 const { HostThrottle } = require('../lib/host-throttle');
 const { sleep } = require('../lib/retry');
 const { RobotsGate } = require('./robots');
@@ -75,11 +75,16 @@ class CrawlWorker extends EventEmitter {
       const items = [];
       for (const raw of sitemapUrls) {
         const n = normalizeUrl(raw);
-        if (n && this._inScope(n)) items.push({ url: n, host: hostOf(n), depth: 0, priority: 100, discoveredFrom: 'sitemap' });
+        if (n && this._inScope(n)) items.push({ url: n, host: hostOf(n), depth: 0, priority: this._priorityFor(n, 100), discoveredFrom: 'sitemap' });
       }
       const sitemapInserted = this.store.enqueueMany(items);
       this.emit('log', `sitemap discovered ${items.length} url(s) for ${item.url} (${sitemapInserted} new)`);
     }
+  }
+
+  /** Applies the news/press deprioritization (config.js#newsLikePriorityPenalty) on top of a discovery-tier base priority. Never applied to seeds (see seed() doc comment). */
+  _priorityFor(url, basePriority) {
+    return isNewsLikePath(url) ? basePriority - this.options.newsLikePriorityPenalty : basePriority;
   }
 
   _inScope(url) {
@@ -198,7 +203,7 @@ class CrawlWorker extends EventEmitter {
       const items = [];
       for (const link of doc.links) {
         if (!this._inScope(link)) continue;
-        items.push({ url: link, host: hostOf(link), depth: depth + 1, priority: 0, discoveredFrom: doc.url });
+        items.push({ url: link, host: hostOf(link), depth: depth + 1, priority: this._priorityFor(link, 0), discoveredFrom: doc.url });
       }
       if (items.length) this.store.enqueueMany(items);
     }

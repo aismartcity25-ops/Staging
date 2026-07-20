@@ -18,6 +18,16 @@
 
 const { createQueryPlannerAgent } = require('./query-planner-agent');
 
+// Cap sulle citazioni mostrate/citate, non sul contesto passato al modello
+// (rag.retrieve usa k=10 sotto): con query mirate su un singolo ufficio/
+// argomento, il retrieval a k=10 spesso include anche pagine di uffici
+// diversi ma strutturalmente simili (stesso template "Orari/Contatti") con
+// punteggio comunque positivo — senza un cap, finivano tutte tra le
+// citazioni anche quando irrilevanti. result.meta è già ordinato per score
+// decrescente (rag.js#rerank), quindi le prime N dopo il dedup per URL sono
+// già le più rilevanti.
+const MAX_CITATIONS = 3;
+
 function createRagAgent({ rag, openai } = {}) {
   const queryPlanner = createQueryPlannerAgent({ openai });
 
@@ -60,7 +70,9 @@ function createRagAgent({ rag, openai } = {}) {
               return byUrl;
             }, new Map())
             .values()
-        );
+        )
+          .sort((a, b) => b.score - a.score)
+          .slice(0, MAX_CITATIONS);
 
         const confidence = citations.length ? Math.max(...citations.map(c => c.score)) : 0;
         const fonti = citations.map(c => `- ${c.title} (${c.url})`).join('\n');
