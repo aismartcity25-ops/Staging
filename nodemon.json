@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "data/**",
+    "*.log",
+    "npm-debug.log*",
+    "demos.json",
+    "users.json",
+    "widget-src/**"
+  ]
+}

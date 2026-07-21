@@ -23,6 +23,25 @@ const BINARY_EXTENSIONS = new Set([
 
 const DEFAULT_PORT = { 'http:': '80', 'https:': '443' };
 
+// Path segments that, across the institutional/business sites this product
+// builds demos from (comuni, cliniche, attività), almost always mean
+// time-sensitive news/press content (an old road-closure notice, a press
+// release) rather than the stable reference info a chatbot needs (hours,
+// services, contacts, staff). Deliberately narrow: doesn't include "eventi"
+// since event listings are often genuinely useful (esp. for the tourism
+// product), only unambiguous news/press sections.
+const NEWS_LIKE_PATH_PATTERN = /(^|\/)(novita|notizie|news|comunicat[oi]|comunicati-stampa|avvisi|press|press-release|blog|articoli|article)(\/|$)/i;
+
+/** True if the URL's path looks like a news/press-release section rather than stable reference content. */
+function isNewsLikePath(url) {
+  try {
+    const pathname = new URL(url).pathname;
+    return NEWS_LIKE_PATH_PATTERN.test(pathname);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Canonicalize a URL for queueing/dedup purposes. Returns null only for
  * URLs that are structurally impossible to crawl (bad scheme, malformed,
@@ -82,4 +101,4 @@ function sameSite(hostA, hostB) {
   return registrableHost(hostA) === registrableHost(hostB);
 }
 
-module.exports = { normalizeUrl, hostOf, registrableHost, sameSite };
+module.exports = { normalizeUrl, hostOf, registrableHost, sameSite, isNewsLikePath };

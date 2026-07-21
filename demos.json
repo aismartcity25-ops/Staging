@@ -407,5 +407,42 @@
     "welcome": "",
     "questions": [],
     "logo": ""
+  },
+  {
+    "id": "96035c1f-5279-4a6f-a87f-1334ee40a9d2",
+    "createdAt": "2026-07-20T11:15:13.394Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.palmacampania.na.it/",
+    "searchUrls": [
+      "https://www.comune.palmacampania.na.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#1a8c5c",
+      "userText": "#ffffff",
+      "aiBg": "#5379c6",
+      "aiText": "#ffffff"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "knowledgeBaseId": "a683f03d-5025-42e2-89b3-4dfa4f066761"
   }
 ]

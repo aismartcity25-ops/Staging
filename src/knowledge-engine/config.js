@@ -25,7 +25,14 @@ const DEFAULT_OPTIONS = {
 
   // Ingestion
   ingestConcurrency: 3,
-  embedBatchSize: 48
+  embedBatchSize: 48,
+
+  // Priority: news/press-style pages (lib/url.js#isNewsLikePath) are
+  // deprioritized by this much so the maxPages budget favors stable
+  // reference content (services/offices/hours) first — see
+  // crawler/crawler.js. Large enough to always sort a news page after
+  // every non-news page at the same discovery tier (seed/sitemap/link).
+  newsLikePriorityPenalty: 500
 };
 
 // How many jobs this process will run at once (each job runs its own
