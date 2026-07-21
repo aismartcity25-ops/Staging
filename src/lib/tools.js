@@ -26,11 +26,11 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'search_configured_sites',
-      description: 'Search this client\'s configured website(s) live, on-demand — performs a real-time crawl of the configured source URLs at the moment of the request (there is no pre-built index). Use this when the user asks about services, information, or content covered by the configured website(s).',
+      description: `Search the client's configured website(s) for services, information, contacts, or content. This tool uses a pre-built knowledge index when available (Crawling mode), otherwise it performs a live web crawl of the configured source URLs (Live mode). Use this whenever the user asks about anything specific to this organization, its services, or its website content.`,
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'The search query to find information in the knowledge base' }
+          query: { type: 'string', description: 'A concise search query in the same language as the user\'s message, focused on finding the specific information needed from the configured websites' }
         },
         required: ['query']
       }

@@ -3,6 +3,8 @@
  * High-performance chat service with optimized API integration and intelligent scraping
  */
 
+//TODO - non viene più usato lo rimuoverei
+
 const axios = require('axios');
 
 class EnhancedChatService {
