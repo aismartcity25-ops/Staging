@@ -444,5 +444,42 @@
     "questions": [],
     "logo": "",
     "knowledgeBaseId": "a683f03d-5025-42e2-89b3-4dfa4f066761"
+  },
+  {
+    "id": "fb5f9830-2e42-4b90-a7e4-619a08517b66",
+    "createdAt": "2026-07-20T13:57:24.037Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.ospedalesassuolo.it/",
+    "searchUrls": [
+      "https://www.ospedalesassuolo.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "knowledgeBaseId": "322399fb-7d78-4e55-8b35-3cc55bdcef19"
   }
 ]

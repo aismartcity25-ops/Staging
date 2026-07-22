@@ -516,17 +516,38 @@ function urlsEqual(a, b) {
   return a.every((u, i) => u === b[i]);
 }
 
+// Override opzionali di maxDepth/maxPages (campi "crawlMaxDepth"/"crawlMaxPages"
+// nel form demo, accanto agli URL sorgente). Non validi/assenti -> undefined,
+// cioè "usa il default di src/knowledge-engine/config.js" — non viene mai
+// scritto un valore di default hardcoded sulla demo, solo l'eventuale
+// personalizzazione esplicita dell'operatore.
+function sanitizeCrawlNumber(value, min, max) {
+  if (value === null || value === undefined || value === '') return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) return undefined;
+  return n;
+}
+
 function ensureKnowledgeBase(draft, previousDemo) {
   if (draft.searchMode !== 'crawling') return previousDemo ? (previousDemo.knowledgeBaseId || null) : null;
 
+  const sameUrls = previousDemo && urlsEqual(previousDemo.searchUrls, draft.searchUrls);
+  const sameCrawlOptions = previousDemo
+    && (previousDemo.crawlMaxDepth || null) === (draft.crawlMaxDepth || null)
+    && (previousDemo.crawlMaxPages || null) === (draft.crawlMaxPages || null);
   const reuse = previousDemo
     && previousDemo.knowledgeBaseId
     && previousDemo.searchMode === 'crawling'
-    && urlsEqual(previousDemo.searchUrls, draft.searchUrls);
+    && sameUrls
+    && sameCrawlOptions;
   const kbId = reuse ? previousDemo.knowledgeBaseId : uuidv4();
 
+  const options = {};
+  if (draft.crawlMaxDepth) options.maxDepth = draft.crawlMaxDepth;
+  if (draft.crawlMaxPages) options.maxPages = draft.crawlMaxPages;
+
   try {
-    knowledgeEngine.enqueueJob({ id: kbId, seedUrls: draft.searchUrls });
+    knowledgeEngine.enqueueJob({ id: kbId, seedUrls: draft.searchUrls, options });
   } catch (err) {
     console.error('knowledge-engine enqueueJob error:', err.message);
     return previousDemo ? (previousDemo.knowledgeBaseId || null) : null;
@@ -536,7 +557,7 @@ function ensureKnowledgeBase(draft, previousDemo) {
 
 // ── Demos CRUD ───────────────────────────────────────────────────────────────
 apiRouter.post('/demos', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo, crawlMaxDepth, crawlMaxPages } = req.body;
 
   if (!clientUrl || !searchUrls || !Array.isArray(searchUrls) || searchUrls.length === 0)
     return res.status(400).json({ error: 'Dati mancanti o non validi' });
@@ -562,6 +583,10 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
     questions: sanitizeQuestions(questions),
     logo: sanitizeLogo(logo)
   };
+  const sanitizedMaxDepth = sanitizeCrawlNumber(crawlMaxDepth, 1, 10);
+  const sanitizedMaxPages = sanitizeCrawlNumber(crawlMaxPages, 10, 2000);
+  if (sanitizedMaxDepth !== undefined) demo.crawlMaxDepth = sanitizedMaxDepth;
+  if (sanitizedMaxPages !== undefined) demo.crawlMaxPages = sanitizedMaxPages;
   demo.knowledgeBaseId = ensureKnowledgeBase(demo, null);
 
   const demos = loadDemos();
@@ -571,7 +596,7 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
 });
 
 apiRouter.put('/demos/:id', requireAuth, (req, res) => {
-  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo } = req.body;
+  const { clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo, crawlMaxDepth, crawlMaxPages } = req.body;
   const demoId = req.params.id;
 
   if (!demoId) return res.status(400).json({ error: 'ID demo richiesto' });
@@ -592,7 +617,12 @@ apiRouter.put('/demos/:id', requireAuth, (req, res) => {
 
   const previousDemo = demos[idx];
   const resolvedSearchMode = SITE_ANALYSIS_VALID_MODES.has(searchMode) ? searchMode : (previousDemo.searchMode || 'live');
-  const knowledgeBaseId = ensureKnowledgeBase({ searchMode: resolvedSearchMode, searchUrls }, previousDemo);
+  const sanitizedMaxDepth = sanitizeCrawlNumber(crawlMaxDepth, 1, 10);
+  const sanitizedMaxPages = sanitizeCrawlNumber(crawlMaxPages, 10, 2000);
+  const knowledgeBaseId = ensureKnowledgeBase(
+    { searchMode: resolvedSearchMode, searchUrls, crawlMaxDepth: sanitizedMaxDepth, crawlMaxPages: sanitizedMaxPages },
+    previousDemo
+  );
 
   demos[idx] = {
     ...previousDemo,
@@ -608,6 +638,10 @@ apiRouter.put('/demos/:id', requireAuth, (req, res) => {
     logo: sanitizeLogo(logo),
     updatedAt: new Date().toISOString()
   };
+  if (sanitizedMaxDepth !== undefined) demos[idx].crawlMaxDepth = sanitizedMaxDepth;
+  else delete demos[idx].crawlMaxDepth;
+  if (sanitizedMaxPages !== undefined) demos[idx].crawlMaxPages = sanitizedMaxPages;
+  else delete demos[idx].crawlMaxPages;
 
   saveDemos(demos);
   res.json({ success: true, demo: demos[idx] });

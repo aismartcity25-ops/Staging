@@ -174,7 +174,7 @@
       margin-bottom: 8px;
     }
 
-    input[type="text"], input[type="url"], textarea {
+    input[type="text"], input[type="url"], input[type="number"], textarea {
       width: 100%;
       padding: 12px 14px;
       background: rgba(255,255,255,0.04);
@@ -189,10 +189,12 @@
 
     input[type="text"]::placeholder,
     input[type="url"]::placeholder,
+    input[type="number"]::placeholder,
     textarea::placeholder { color: var(--muted); }
 
     input[type="text"]:focus,
     input[type="url"]:focus,
+    input[type="number"]:focus,
     textarea:focus {
       border-color: rgba(19,160,106,0.5);
       box-shadow: 0 0 0 3px rgba(19,160,106,0.08);
@@ -568,6 +570,9 @@
     .mode-btn.active { border-color: var(--accent); background: rgba(19,160,106,0.08); }
     .mode-btn.active strong { color: var(--accent); }
     .mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .crawl-options-row { display: flex; gap: 12px; }
+    .crawl-options-row > div { flex: 1; }
+    .crawl-options-row label { font-weight: 400; text-transform: none; letter-spacing: normal; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -643,6 +648,20 @@
             </button>
           </div>
           <input type="hidden" id="searchMode" value="live">
+        </div>
+
+        <div style="margin-top:16px; display:none;" id="crawlOptionsBlock">
+          <label>Opzioni di crawling <span style="font-weight:400; text-transform:none; letter-spacing:normal;">(opzionale — vuoto = valori di default)</span></label>
+          <div class="crawl-options-row">
+            <div>
+              <label for="crawlMaxDepth">Profondità massima</label>
+              <input type="number" id="crawlMaxDepth" min="1" max="10" step="1" placeholder="5 (default)">
+            </div>
+            <div>
+              <label for="crawlMaxPages">Numero massimo di pagine</label>
+              <input type="number" id="crawlMaxPages" min="10" max="2000" step="1" placeholder="500 (default)">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1141,6 +1160,7 @@
       document.getElementById('searchMode').value = mode;
       document.getElementById('modeBtnLive').classList.toggle('active', mode === 'live');
       document.getElementById('modeBtnCrawling').classList.toggle('active', mode === 'crawling');
+      document.getElementById('crawlOptionsBlock').style.display = mode === 'crawling' ? 'block' : 'none';
     }
 
     // Color picker sync
@@ -1361,6 +1381,8 @@
       sendPreviewUpdate();
 
       setSearchMode(demo.searchMode || 'live');
+      document.getElementById('crawlMaxDepth').value = demo.crawlMaxDepth || '';
+      document.getElementById('crawlMaxPages').value = demo.crawlMaxPages || '';
 
       document.getElementById('welcomeMessage').value = demo.welcome || '';
 
@@ -1405,6 +1427,8 @@
       sendPreviewUpdate();
 
       setSearchMode('live');
+      document.getElementById('crawlMaxDepth').value = '';
+      document.getElementById('crawlMaxPages').value = '';
 
       document.getElementById('welcomeMessage').value = '';
       document.getElementById('questionList').innerHTML = '<div class="url-row"><input type="text" placeholder="Es: Come posso richiedere un certificato?" class="suggested-question"><button class="btn-icon" title="Rimuovi" onclick="removeQuestion(this)">×</button></div>';
@@ -1453,12 +1477,16 @@
       btn.disabled = true; btn.classList.add('loading');
 
       const searchMode = document.getElementById('searchMode').value;
+      const crawlMaxDepthRaw = document.getElementById('crawlMaxDepth').value;
+      const crawlMaxPagesRaw = document.getElementById('crawlMaxPages').value;
+      const crawlMaxDepth = crawlMaxDepthRaw ? parseInt(crawlMaxDepthRaw, 10) : undefined;
+      const crawlMaxPages = crawlMaxPagesRaw ? parseInt(crawlMaxPagesRaw, 10) : undefined;
       const isEditing = !!editingDemoId;
 
       try {
         const res = await fetch(isEditing ? `${ApiConfig.get('demos')}/${editingDemoId}` : ApiConfig.get('demos'), {
           method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo })
+          body: JSON.stringify({ clientUrl, searchUrls, instructions, colors, style, searchMode, welcome, questions, logo, crawlMaxDepth, crawlMaxPages })
         });
         const data = await res.json();
 
