@@ -206,7 +206,17 @@ export default function Message({ message, onPlayAudio, onOpenCitation }) {
   );
 }
 
-export function TypingIndicator() {
+const STATUS_LABELS = {
+  searching: 'Sto cercando le informazioni richieste…'
+};
+
+// statusPhase arriva dall'evento SSE `status` (vedi orchestrator.js): copre
+// il gap silenzioso fra l'inizio della richiesta e la ripresa dello
+// streaming vero e proprio (es. durante l'esecuzione di un tool di ricerca),
+// cosi' l'utente vede un'indicazione invece dei soli puntini per diversi
+// secondi e la risposta finale non sembra comparire tutta insieme.
+export function TypingIndicator({ statusPhase } = {}) {
+  const label = statusPhase && STATUS_LABELS[statusPhase];
   return (
     <div className="chatbot__message chatbot__message--ai">
       <div className="chatbot__message-icon">
@@ -215,7 +225,8 @@ export function TypingIndicator() {
         </div>
       </div>
       <div className="chatbot__message-content">
-        <div className="typing-indicator" role="status" aria-label="L'assistente sta scrivendo">
+        {label && <div className="chatbot__typing-status">{label}</div>}
+        <div className="typing-indicator" role="status" aria-label={label || "L'assistente sta scrivendo"}>
           <span></span>
           <span></span>
           <span></span>

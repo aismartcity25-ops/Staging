@@ -7,6 +7,8 @@
   <script src="/api-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/toast.css">
+  <script src="/toast.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -243,6 +245,8 @@
       cursor:pointer; text-decoration:none; transition:all .2s;
     }
     .btn-open-demo:hover { background:rgba(0,102,204,.15); }
+    .btn-open-demo--pending { opacity:.55; cursor:default; pointer-events:none; }
+    .btn-open-demo--pending:hover { background:var(--light); }
 
     .demo-card-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
     .btn-delete-demo {
@@ -476,6 +480,7 @@
 
 </head>
 <body>
+  <div id="toastContainer" class="toast-container"></div>
   <header>
     <a class="logo" href="#">
       <div class="logo-mark">
@@ -1293,17 +1298,33 @@
       const sucEl = document.getElementById('alertSuccess');
       errEl.className='alert'; sucEl.className='alert';
 
-      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
-      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+      if (!clientUrl) {
+        errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible';
+        showToast('Inserisci l\'URL del sito del cliente.', 'error');
+        return;
+      }
+      if (!searchUrls.length) {
+        errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible';
+        showToast('Inserisci almeno un URL sorgente.', 'error');
+        return;
+      }
+
+      // Mostrato subito al click: colma il vuoto tra "Crea Demo" e la
+      // comparsa del popup di avanzamento, durante il quale si verificano
+      // tutti gli URL uno per uno (validateAllUrls) prima di poter creare
+      // la demo.
+      const verifyToast = showToast('Attendere, verifica dei link in corso…', 'info');
 
       // Validate all URLs before creating demo
       const validationResults = await validateAllUrls();
       const invalidUrls = validationResults.filter(r => !r.valid);
 
       if (invalidUrls.length > 0) {
+        dismissToast(verifyToast);
         const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
         errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
         errEl.className='alert error visible';
+        showToast(`URL non validi:\n${invalidList}`, 'error', { duration: 10000 });
         return;
       }
 
@@ -1323,11 +1344,14 @@
           body:JSON.stringify({clientUrl,searchUrls,instructions,colors,style,searchMode,welcome,questions,logo,crawlMaxDepth,crawlMaxPages})
         });
         const data = await res.json();
+        dismissToast(verifyToast);
         if (!res.ok) {
           errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+          showToast(data.error || 'Errore nella creazione della demo.', 'error');
         } else if (isEditing) {
           cancelEdit();
           sucEl.textContent='Demo aggiornata con successo.'; sucEl.className='alert success visible';
+          showToast('Demo aggiornata con successo.', 'success');
           loadDemos();
         } else {
           errEl.className='alert';
@@ -1340,12 +1364,15 @@
             // Nessun crawling da attendere (modalità live, deep-search-engine.js):
             // la demo è già pronta, si apre subito senza popup di avanzamento.
             sucEl.textContent='Demo creata con successo! Apertura in una nuova scheda...'; sucEl.className='alert success visible';
+            showToast('Demo creata con successo!', 'success');
             setTimeout(() => window.open(data.demoUrl, '_blank'), 600);
           }
           loadDemos();
         }
       } catch {
+        dismissToast(verifyToast);
         errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+        showToast('Errore di connessione.', 'error');
       } finally {
         btn.disabled=false; btn.classList.remove('loading');
       }
@@ -1355,6 +1382,14 @@
     let allDemos = [];
     let demoShowCount = DEMO_PAGE_SIZE;
 
+    // Fasi terminali dell'ingestion (vedi INGESTION_TERMINAL_PHASES in
+    // server.js): finche' il kbId di una demo non raggiunge una di queste,
+    // "Apri" resta bloccato su "Attendi…" — evita che si apra una demo il cui
+    // crawling/indicizzazione e' ancora in corso.
+    const INGESTION_TERMINAL = new Set(['ready', 'empty', 'failed', 'legacy']);
+    const kbReadyCache = new Set(); // kbId gia' verificati in fase terminale
+    const kbPolling = new Set(); // kbId con un polling gia' attivo
+
     function renderDemoList() {
       const listEl = document.getElementById('demoList');
       if (!allDemos.length) {
@@ -1363,23 +1398,59 @@
         if (moreEl) moreEl.remove();
         return;
       }
-      listEl.innerHTML = allDemos.slice(0, demoShowCount).map(d=>`
+      listEl.innerHTML = allDemos.slice(0, demoShowCount).map(d=>{
+        const kbId = d.knowledgeBaseId;
+        const stillCrawling = kbId && !kbReadyCache.has(kbId);
+        const openBtn = stillCrawling
+          ? `<a class="btn-open-demo btn-open-demo--pending" href="#" title="Crawling in corso: attendi il completamento" onclick="return false;">Attendi…</a>`
+          : `<a class="btn-open-demo" href="/demo.html?id=${d.id}" target="_blank">Apri ↗</a>`;
+        return `
         <div class="demo-card">
           <div class="demo-card-left">
             <div class="demo-card-url">${d.clientUrl}</div>
             <div class="demo-card-meta">${new Date(d.createdAt).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${d.createdBy}</div>
           </div>
           <div class="demo-card-actions">
-            <a class="btn-open-demo" href="/demo.html?id=${d.id}" target="_blank">Apri ↗</a>
-            <button class="btn-edit-demo" title="Modifica demo" onclick="editDemo('${d.id}')">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-            </button>
+            ${openBtn}
+            <!-- Pulsante "Modifica demo" temporaneamente disattivato su richiesta utente (23/07/2026): ripristinare rimuovendo questo commento -->
             <button class="btn-delete-demo" title="Cancella demo" onclick="deleteDemo('${d.id}')">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7zm2 2v11h8V9H8zm1-5h6l1 2H8l1-2zM4 6h16v2H4V6z"/></svg>
             </button>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
       renderShowMoreButton();
+      scheduleIngestionChecks();
+    }
+
+    // Avvia (se non gia' in corso) il polling dello stato ingestion per ogni
+    // demo della lista corrente il cui crawling non risulta ancora concluso.
+    function scheduleIngestionChecks() {
+      allDemos.forEach(d => {
+        const kbId = d.knowledgeBaseId;
+        if (!kbId || kbReadyCache.has(kbId) || kbPolling.has(kbId)) return;
+        kbPolling.add(kbId);
+        pollIngestionForList(kbId);
+      });
+    }
+
+    async function pollIngestionForList(kbId) {
+      const stillListed = () => allDemos.some(d => d.knowledgeBaseId === kbId);
+      if (!stillListed()) { kbPolling.delete(kbId); return; }
+      try {
+        const res = await fetch(ApiConfig.basePath + '/ingestion/' + kbId + '/state');
+        const data = res.ok ? await res.json() : null;
+        if (data && INGESTION_TERMINAL.has(data.phase)) {
+          kbReadyCache.add(kbId);
+          kbPolling.delete(kbId);
+          renderDemoList();
+          return;
+        }
+      } catch {}
+      setTimeout(() => {
+        kbPolling.delete(kbId);
+        if (stillListed()) { kbPolling.add(kbId); pollIngestionForList(kbId); }
+      }, 3000);
     }
 
     function renderShowMoreButton() {
@@ -1447,7 +1518,7 @@
         <div class="pm-message" id="pmMessage"></div>
       </div>
       <div class="pm-actions">
-        <button class="pm-btn pm-btn-ghost" id="pmClose">Chiudi</button>
+        <button class="pm-btn pm-btn-ghost" id="pmClose">Chiudi Finestra Popup</button>
         <a class="pm-btn pm-btn-primary" id="pmOpen" target="_blank" style="pointer-events:none;opacity:.5">Apri Demo ↗</a>
       </div>
     </div>
@@ -1517,6 +1588,8 @@
         ready: 'pronta', empty: 'nessun contenuto trovato', failed: 'errore'
       };
 
+      let terminalNotified = false;
+
       function render(data) {
         const phase = data.phase || 'pending';
         badge.textContent = STATUS_LABEL[phase] || phase;
@@ -1539,6 +1612,17 @@
         }
 
         if (phase === 'ready') { openBtn.style.pointerEvents = 'auto'; openBtn.style.opacity = '1'; }
+
+        if (!terminalNotified && (phase === 'ready' || phase === 'empty' || phase === 'failed')) {
+          terminalNotified = true;
+          if (phase === 'ready') {
+            showToast('Demo completata! Crawling e indicizzazione terminati.', 'success');
+          } else if (phase === 'empty') {
+            showToast('Crawling terminato ma nessun contenuto trovato da indicizzare.', 'error');
+          } else {
+            showToast(data.error ? `Errore durante il crawling: ${data.error}` : 'Errore durante il crawling.', 'error');
+          }
+        }
       }
 
       let es = null;

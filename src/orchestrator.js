@@ -204,7 +204,26 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
 
     if (first.finishReason === 'tool_calls' && first.toolCalls.length) {
       const assistantMessage = { role: 'assistant', content: first.text || null, tool_calls: first.toolCalls };
-      const { toolResults, retrieval, attachment: generatedAttachment } = await toolExecutor.execute(first.toolCalls, { demo, languageHintLabel });
+
+      // La ricerca (RAG o live web search in deep-search-engine.js) non produce
+      // testo: senza un segnale esplicito il widget resta con la bolla vuota
+      // per tutta la sua durata (anche diversi secondi), e la risposta vera —
+      // quando arriva — sembra "comparire tutta insieme" invece che in streaming.
+      // Un evento `status` fa comparire un'indicazione ("sto cercando...") al
+      // posto dei soli puntini, coprendo esattamente il gap silenzioso.
+      sendEvent({ type: 'status', phase: 'searching' });
+
+      // Ping periodico (commento SSE, ignorato dal parser) durante l'attesa:
+      // mantiene viva la connessione ed forza un flush lato Node/eventuali
+      // proxy intermedi, cosi' che una volta pronti i chunk reali non restino
+      // bufferizzati dietro l'attesa del tool.
+      const heartbeat = setInterval(() => res.write(': ping\n\n'), 4000);
+      let toolResults, retrieval, generatedAttachment;
+      try {
+        ({ toolResults, retrieval, attachment: generatedAttachment } = await toolExecutor.execute(first.toolCalls, { demo, languageHintLabel }));
+      } finally {
+        clearInterval(heartbeat);
+      }
 
       const messagesForSecondCall = [...messagesForAPI, assistantMessage, ...toolResults];
 

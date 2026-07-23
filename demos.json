@@ -821,5 +821,386 @@
     "questions": [],
     "logo": "/uploads/8cb8ff50-0690-4dfd-9724-828a23e61a77.png",
     "knowledgeBaseId": "37746bcd-f429-467f-bf1b-af617a58f00f"
+  },
+  {
+    "id": "37556e68-2b5e-4951-84f1-584a074e0a8c",
+    "createdAt": "2026-07-23T09:56:39.941Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.clinicacittadiparma.it/",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "CONTESTO LOCALE E SPECIFICO - CLINICA CITTÀ DI PARMA:\n\n1. RIFERIMENTO STRUTTURA:\n- La struttura di riferimento principale è la Casa di Cura Privata / Clinica Città di Parma (S.p.A.), situata a Parma in Piazzale Maestri.\n- Nota di contesto importante: Se l'utente chiede del \"Pronto Soccorso\", specifica subito che la Clinica Città di Parma non dispone di un Pronto Soccorso per le emergenze/urgenze ad accesso diretto, ma eroga prestazioni di ricovero e ambulatoriali. Per le urgenze/emergenze indicale il 112 o il Pronto Soccorso dell'Azienda Ospedaliero-Universitaria di Parma (Ospedale Maggiore).\n\n2. GEOGRAFIA E LOGISTICA LOCALE:\n- Quando fornisci indicazioni su come raggiungere la Clinica Città di Parma, ricordati di fare riferimento a riferimenti locali chiari (es. zona Piazzale Maestri / Via Montebello) e alle modalità di accesso e parcheggio specificate sul sito.\n\n3. CONVENZIONI E REGIMI DI EROGAZIONE:\n- Fai sempre chiarezza sul fatto che le prestazioni possono essere erogate sia in regime privato/solventi, sia in convenzione con il Servizio Sanitario Nazionale (SSN) o con Fondi Integrativi / Assicurazioni (es. Unisalute, Metasalute, ecc.), verificando la disponibilità tramite il sito.\n\n4. GESTIONE DEI CANALI DI PRENOTAZIONE:\n- Se l'utente chiede come prenotare o consultare referti presso la clinica, guida l'utente verso i servizi online della Clinica (portale prenotazioni/referti della clinica) o tramite i numeri telefonici dedicati reperibili dalla ricerca.",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxDepth": 3,
+    "crawlMaxPages": 50,
+    "knowledgeBaseId": "8b59c91c-7474-4ca0-ab63-539e2ff1d3bd"
+  },
+  {
+    "id": "0e8ff11f-fce2-4aac-822a-6ac49ff6e263",
+    "createdAt": "2026-07-23T10:16:24.531Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.clinicacittadiparma.it",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxDepth": 5,
+    "crawlMaxPages": 100,
+    "knowledgeBaseId": "9707f128-b77e-4af6-9649-9eed7c86de1b"
+  },
+  {
+    "id": "aec97f17-6a85-407c-8076-f3b12b7e151d",
+    "createdAt": "2026-07-23T12:07:14.222Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.cesano-boscone.mi.it/",
+    "searchUrls": [
+      "https://www.comune.cesano-boscone.mi.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#9f9d9d",
+      "secondary": "#0071c1",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 2,
+        "saturate": 140,
+        "opacity": 0.04
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, Sono il tuo assistente per il comune di Cesano Boscone, come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/7aaecb72-7b92-4c92-ab6f-737498c34e61.png",
+    "knowledgeBaseId": "79237153-4003-426e-8dbb-eca5b7d8c5ff"
+  },
+  {
+    "id": "77f0ec8e-8232-43e1-9762-2e53163db93c",
+    "createdAt": "2026-07-23T12:20:50.956Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.clinicacittadiparma.it/",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxDepth": 5,
+    "crawlMaxPages": 100,
+    "knowledgeBaseId": "e877e33c-d594-4006-ad3c-cd3794f5f2f0"
+  },
+  {
+    "id": "61726d70-3f9f-4293-ae2e-39f3e4dc3802",
+    "createdAt": "2026-07-23T12:27:19.416Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.tirano.so.it/it",
+    "searchUrls": [
+      "https://www.comune.tirano.so.it/it"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#8f3c38",
+      "secondary": "#8f3c38",
+      "userBg": "#2273f7",
+      "userText": "#ffffff",
+      "aiBg": "#8f3c38",
+      "aiText": "#ffffff"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il Comune di Tirano. Come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/bc0c12f1-ee3a-4c58-b787-cdd79a49c5bd.jpg",
+    "knowledgeBaseId": "1ac484a7-96c9-4c60-9610-c35b95e0ece3"
+  },
+  {
+    "id": "71965e63-079a-49a6-b265-a3b5931c03cb",
+    "createdAt": "2026-07-23T12:41:57.833Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.clinicacittadiparma.it/",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxPages": 98,
+    "knowledgeBaseId": "757eeb12-a13a-4e7f-a17e-36dbaccf7499"
+  },
+  {
+    "id": "5721e43a-8b47-4ec6-9c38-bac468e68ff2",
+    "createdAt": "2026-07-23T12:50:07.002Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.aspag.it/presidio-ospedaliero-agrigento/",
+    "searchUrls": [
+      "https://www.aspag.it/presidio-ospedaliero-agrigento/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxPages": 100,
+    "knowledgeBaseId": "fe32aa0f-1e93-4b35-983f-3434c0a46b58"
+  },
+  {
+    "id": "a8148a71-c743-4471-bf9f-5ac50051a8c8",
+    "createdAt": "2026-07-23T12:59:31.982Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.clinicacittadiparma.it/",
+    "searchUrls": [
+      "https://www.clinicacittadiparma.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxPages": 100,
+    "knowledgeBaseId": "7efc80d2-d966-4a74-8a01-1b59cc23c574"
+  },
+  {
+    "id": "da4cce2c-28ac-46a2-98ba-827680279754",
+    "createdAt": "2026-07-23T13:00:13.919Z",
+    "createdBy": "admin",
+    "product": "medicai",
+    "clientUrl": "https://www.aspag.it/presidio-ospedaliero-agrigento/",
+    "searchUrls": [
+      "https://www.aspag.it/presidio-ospedaliero-agrigento/"
+    ],
+    "searchMode": "live",
+    "instructions": "",
+    "colors": {
+      "primary": "#00b4ff",
+      "secondary": "#0066cc",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#e5e7eb",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxPages": 100,
+    "knowledgeBaseId": null
+  },
+  {
+    "id": "dd3979e4-f437-4bc9-8bd2-9e8d46c32167",
+    "createdAt": "2026-07-23T13:12:20.310Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.ai4smartcity.ai/servizi/notizie/notizie_homepage.aspx",
+    "searchUrls": [
+      "https://www.ai4smartcity.ai/servizi/notizie/notizie_homepage.aspx"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "crawlMaxPages": 50,
+    "knowledgeBaseId": "75993487-6732-4daa-b750-01be44df3e70"
   }
 ]

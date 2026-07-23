@@ -12,6 +12,7 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 const lancedb = require('@lancedb/lancedb');
 const { Schema, Field, FixedSizeList, Float32, Float64, Int32, Utf8 } = require('apache-arrow');
 
@@ -78,4 +79,23 @@ async function openOrCreateTable(kbId) {
   }
 }
 
-module.exports = { openOrCreateTable, tableExists, kbDbPath, TABLE_NAME, EMBEDDING_DIM };
+/**
+ * Permanently deletes a knowledge base's vector store: closes any cached
+ * connection/table for it (so this process doesn't keep a handle open on
+ * a directory it's about to remove) and deletes its on-disk directory.
+ * Used when a job is being permanently removed (scripts/delete-job.js),
+ * not for the recrawl checker's per-page updates (see
+ * knowledge-engine/vectorstore/lancedb-store.js#deleteChunksForUrl).
+ */
+async function deleteKnowledgeBase(kbId) {
+  const key = String(kbId);
+  const connPromise = _connections.get(key);
+  _connections.delete(key);
+  _tables.delete(key);
+  if (connPromise) {
+    try { (await connPromise).close(); } catch {}
+  }
+  fs.rmSync(kbDbPath(key), { recursive: true, force: true });
+}
+
+module.exports = { openOrCreateTable, tableExists, deleteKnowledgeBase, kbDbPath, TABLE_NAME, EMBEDDING_DIM };

@@ -60,7 +60,7 @@
     "username": "denis.bar",
     "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
     "name": "Denis Bar",
-    "role": "sales",
+    "role": "admin",
     "products": ["comunicai", "medicai"]
   },
   {
@@ -78,5 +78,13 @@
     "name": "Fabio Neri",
     "role": "sales",
     "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "11",
+    "username": "oum.aya",
+    "password":"$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Oumaya",
+    "role": "sales",
+    "products": ["comunicai", "medicai","tourism"]
   }
 ]

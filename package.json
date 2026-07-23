@@ -12,7 +12,8 @@
     "build:widget": "npm --prefix widget-src run build:embed",
     "recrawl-check": "node scripts/recrawl-check.js",
     "job-status": "node scripts/job-status.js",
-    "cancel-job": "node scripts/cancel-job.js"
+    "cancel-job": "node scripts/cancel-job.js",
+    "delete-job": "node scripts/delete-job.js"
   },
   "dependencies": {
     "@heygen/liveavatar-web-sdk": "^0.0.11",

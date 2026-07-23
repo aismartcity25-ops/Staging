@@ -428,8 +428,11 @@
     .mode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
   <script src="/api-config.js"></script>
+  <link rel="stylesheet" href="/toast.css">
+  <script src="/toast.js"></script>
 </head>
 <body>
+  <div id="toastContainer" class="toast-container"></div>
   <header>
     <a class="logo" href="#">
       <div class="logo-mark">
@@ -1069,17 +1072,32 @@ async function createDemo() {
       const sucEl = document.getElementById('alertSuccess');
       errEl.className='alert'; sucEl.className='alert';
 
-      if (!clientUrl) { errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible'; return; }
-      if (!searchUrls.length) { errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible'; return; }
+      if (!clientUrl) {
+        errEl.textContent='Inserisci l\'URL del sito del cliente.'; errEl.className='alert error visible';
+        showToast('Inserisci l\'URL del sito del cliente.', 'error');
+        return;
+      }
+      if (!searchUrls.length) {
+        errEl.textContent='Inserisci almeno un URL sorgente.'; errEl.className='alert error visible';
+        showToast('Inserisci almeno un URL sorgente.', 'error');
+        return;
+      }
+
+      // Mostrato subito al click: colma il vuoto tra "Crea Demo" e l'esito,
+      // durante il quale si verificano tutti gli URL uno per uno
+      // (validateAllUrls) prima di poter creare la demo.
+      const verifyToast = showToast('Attendere, verifica dei link in corso…', 'info');
 
       // Validate all URLs before creating demo
       const validationResults = await validateAllUrls();
       const invalidUrls = validationResults.filter(r => !r.valid);
 
       if (invalidUrls.length > 0) {
+        dismissToast(verifyToast);
         const invalidList = invalidUrls.map(r => `- ${r.url}: ${r.message}`).join('\n');
         errEl.textContent = `Alcuni URL non sono validi:\n${invalidList}`;
         errEl.className='alert error visible';
+        showToast(`URL non validi:\n${invalidList}`, 'error', { duration: 10000 });
         return;
       }
 
@@ -1094,15 +1112,20 @@ async function createDemo() {
           body:JSON.stringify({clientUrl,searchUrls,instructions,colors,style,searchMode})
         });
         const data = await res.json();
+        dismissToast(verifyToast);
         if (!res.ok) {
           errEl.textContent=data.error||'Errore.'; errEl.className='alert error visible';
+          showToast(data.error || 'Errore nella creazione della demo.', 'error');
         } else {
           sucEl.textContent='Demo creata! Apertura in una nuova scheda...'; sucEl.className='alert success visible';
+          showToast('Demo creata con successo!', 'success');
           setTimeout(()=>window.open(data.demoUrl,'_blank'),600);
           loadDemos();
         }
       } catch {
+        dismissToast(verifyToast);
         errEl.textContent='Errore di connessione.'; errEl.className='alert error visible';
+        showToast('Errore di connessione.', 'error');
       } finally {
         btn.disabled=false; btn.classList.remove('loading');
       }
@@ -1127,7 +1150,7 @@ async function createDemo() {
             </div>
             <div class="demo-actions">
               <a class="btn-open-demo" href="demo.html?id=${d.id}" target="_blank">Apri ↗</a>
-              <button class="btn-modifica" onclick="editDemo('${d.id}')" title="Modifica configurazione">Modifica</button>
+              <!-- Pulsante "Modifica" temporaneamente disattivato su richiesta utente (23/07/2026): ripristinare rimuovendo questo commento -->
             </div>
           </div>`).join('');
       } catch { listEl.innerHTML='<div class="empty-state">Errore nel caricamento.</div>'; }

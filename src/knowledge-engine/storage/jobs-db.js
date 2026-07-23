@@ -193,6 +193,20 @@ class JobsDb {
     return info.changes;
   }
 
+  /**
+   * Permanently removes a job's row from the registry — unlike
+   * setStatus('cancelled'), which leaves the row (and its persisted
+   * seed_urls/options/stats) in place so upsertQueued() can revive it the
+   * next time enqueueJob() is called with the same id. After deleteJob,
+   * that same call just creates a brand-new job: nothing is left to
+   * resume. Caller is responsible for also removing the per-job crawl
+   * state (storage/crawl-db.js#deleteJobDb) and vector store namespace
+   * (lib/lancedb.js) — this only clears the registry row.
+   */
+  deleteJob(id) {
+    return this.db.prepare('DELETE FROM jobs WHERE id = ?').run(String(id)).changes > 0;
+  }
+
   close() {
     this.db.close();
   }

@@ -250,10 +250,39 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
     const aiMessageId = `ai_${Date.now()}`;
     setMessages((prev) => [
       ...prev,
-      { id: aiMessageId, type: 'ai', content: '', timestamp: new Date(), streaming: true }
+      { id: aiMessageId, type: 'ai', content: '', timestamp: new Date(), streaming: true, statusPhase: null }
     ]);
 
     let fullText = '';
+
+    // Rete/proxy intermedi possono consegnare gli eventi SSE "a raffica"
+    // (piu' testo insieme) invece che perfettamente token-per-token, anche
+    // quando il backend li scrive uno alla volta — capitava soprattutto sui
+    // domini pubblici dietro nginx/browser, con la risposta che sembrava
+    // comparire tutta insieme. Questo buffer di rilascio disaccoppia il
+    // testo mostrato dal ritmo di arrivo di rete: qualunque sia la
+    // granularita' con cui arrivano i chunk, il testo viene sempre rivelato
+    // a un ritmo costante (piu' veloce se si e' accumulato un arretrato).
+    let displayedText = '';
+    let pendingReveal = '';
+    let revealTimer = null;
+    let revealStarted = false;
+    let streamFinished = false;
+    let resolveRevealComplete;
+    const revealComplete = new Promise((resolve) => { resolveRevealComplete = resolve; });
+
+    const revealTick = () => {
+      if (pendingReveal) {
+        const step = Math.max(1, Math.ceil(pendingReveal.length / 15));
+        displayedText += pendingReveal.slice(0, step);
+        pendingReveal = pendingReveal.slice(step);
+        setMessages((prev) => prev.map((m) => (m.id === aiMessageId ? { ...m, content: displayedText, statusPhase: null } : m)));
+      } else if (streamFinished) {
+        clearInterval(revealTimer);
+        revealTimer = null;
+        resolveRevealComplete();
+      }
+    };
 
     try {
       const response = await fetch(apiEndpoint, {
@@ -282,13 +311,22 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
         while ((sepIndex = buffer.indexOf('\n\n')) !== -1) {
           const rawEvent = buffer.slice(0, sepIndex);
           buffer = buffer.slice(sepIndex + 2);
+          // Righe che iniziano con ':' sono commenti/ping SSE (keep-alive
+          // durante l'esecuzione dei tool) e non vanno parsate come JSON.
+          if (!rawEvent || rawEvent.startsWith(':')) continue;
           const line = rawEvent.replace(/^data:\s*/, '');
           if (!line) continue;
 
           const event = JSON.parse(line);
           if (event.type === 'chunk') {
             fullText += event.text;
-            setMessages((prev) => prev.map((m) => (m.id === aiMessageId ? { ...m, content: fullText } : m)));
+            pendingReveal += event.text;
+            if (!revealTimer) {
+              revealStarted = true;
+              revealTimer = setInterval(revealTick, 20);
+            }
+          } else if (event.type === 'status') {
+            setMessages((prev) => prev.map((m) => (m.id === aiMessageId ? { ...m, statusPhase: event.phase } : m)));
           } else if (event.type === 'done') {
             meta = event;
           } else if (event.type === 'error') {
@@ -296,6 +334,9 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
           }
         }
       }
+
+      streamFinished = true;
+      if (revealStarted) await revealComplete;
 
       setMessages((prev) =>
         prev.map((m) =>
@@ -314,6 +355,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
         )
       );
     } catch (error) {
+      if (revealTimer) clearInterval(revealTimer);
       console.error('Error:', error);
       setMessages((prev) =>
         prev.map((m) =>
@@ -600,7 +642,7 @@ export default function ChatWidget({ product = 'comunicai', demoId = '', colors 
           <div className="chatbot-bubble-messages">
             {messages.map((msg) =>
               msg.streaming && !msg.content ? (
-                <TypingIndicator key={msg.id} />
+                <TypingIndicator key={msg.id} statusPhase={msg.statusPhase} />
               ) : (
                 <Message key={msg.id} message={msg} onPlayAudio={previewMode ? undefined : handlePlayAudio} onOpenCitation={openCitation} />
               )
