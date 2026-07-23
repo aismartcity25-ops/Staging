@@ -15,7 +15,7 @@
  */
 
 const { EventEmitter } = require('events');
-const { normalizeUrl, hostOf, sameSite, isNewsLikePath } = require('../lib/url');
+const { normalizeUrl, hostOf, sameSite, isNewsLikePath, isLikelyNonPagePath } = require('../lib/url');
 const { HostThrottle } = require('../lib/host-throttle');
 const { sleep } = require('../lib/retry');
 const { RobotsGate } = require('./robots');
@@ -82,9 +82,12 @@ class CrawlWorker extends EventEmitter {
     }
   }
 
-  /** Applies the news/press deprioritization (config.js#newsLikePriorityPenalty) on top of a discovery-tier base priority. Never applied to seeds (see seed() doc comment). */
+  /** Applies the news/press and bare-ID-download deprioritizations (config.js) on top of a discovery-tier base priority. Never applied to seeds (see seed() doc comment). */
   _priorityFor(url, basePriority) {
-    return isNewsLikePath(url) ? basePriority - this.options.newsLikePriorityPenalty : basePriority;
+    let priority = basePriority;
+    if (isNewsLikePath(url)) priority -= this.options.newsLikePriorityPenalty;
+    if (isLikelyNonPagePath(url)) priority -= this.options.nonPagePathPriorityPenalty;
+    return priority;
   }
 
   _inScope(url) {
@@ -154,7 +157,7 @@ class CrawlWorker extends EventEmitter {
 
   async _processUrl(item) {
     const { url, depth, host } = item;
-    const isSeed = item.discoveredFrom === 'seed' && depth === 0;
+    const isSeed = item.discovered_from === 'seed' && depth === 0;
     this.emit('visit', { url, depth });
 
     if (!isSeed && !(await this.robots.isAllowed(url))) {
@@ -176,10 +179,12 @@ class CrawlWorker extends EventEmitter {
     }
 
     if (!result.ok) {
+      if (result.status === 429) this.throttle.reportRateLimited(effectiveHost);
       const info = this.store.markUrlFailed(url, { error: result.error, retryable: result.retryable });
       this.emit('error', { url, error: result.error, finalFailure: info.finalFailure });
       return; // isolated failure -- the crawl keeps going
     }
+    this.throttle.reportSuccess(effectiveHost);
 
     const doc = extractDocument(result.html, result.finalUrl || url);
     const contentHash = sha256(doc.text || '');

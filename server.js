@@ -35,6 +35,9 @@ const { textToSpeech } = require('./src/lib/tts');
 const { searchConfiguredSites: deepSearchConfiguredSites } = require('./deep-search-engine.js');
 const { analyzeSite } = require('./src/lib/site-analyzer');
 const knowledgeEngine = require('./src/knowledge-engine');
+const { loadDemos, saveDemos } = require('./src/lib/demos-store');
+const cron = require('node-cron');
+const { runRecrawlBatch, runRecrawlForDemo, readHistory } = require('./src/knowledge-engine/recrawl-checker');
 const { createRag } = require('./src/pipeline/rag');
 
 // Upload audio per l'input vocale (/api/chat/stt): in memoria, mai su disco
@@ -45,7 +48,7 @@ const sttUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 
 // ─── App ───────────────────────────────────────────────────────────────────────
 const app  = express();
 app.set('trust proxy', 1);
-const PORT = process.env.PORT || 65535;
+const PORT = process.env.PORT || 7000;
 
 // ─── OpenAI (lazy) ────────────────────────────────────────────────────────────
 let _openai = null;
@@ -74,6 +77,20 @@ function getRag() {
 const monitoring = new MonitoringSystem();
 monitoring.start();
 console.log('📊 Monitoring system started');
+
+// ─── Recrawl checker (periodic "has this demo's site changed?") ───────────────
+// Fires every night at 22:00; runRecrawlBatch itself skips any demo whose
+// own recrawlIntervalDays (default 7, src/knowledge-engine/recrawl-checker.js)
+// hasn't elapsed yet, so the net effect is "each demo re-checked every N
+// days" while still self-healing if a given night's tick is missed (server
+// down, etc.). No cap on how long a triggered recrawl may run past 05:00 —
+// this only governs when the nightly check starts.
+cron.schedule('0 22 * * *', () => {
+  console.log('🔄 Recrawl checker: avvio controllo notturno');
+  runRecrawlBatch({ trigger: 'cron' })
+    .then((records) => console.log(`🔄 Recrawl checker: completato (${records.length} demo controllate)`))
+    .catch((err) => console.error('🔄 Recrawl checker: errore batch notturno:', err.message));
+}, { timezone: 'Europe/Rome' });
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json({
@@ -212,15 +229,6 @@ app.use('/api', apiRouter);
 function loadUsers() {
   try   { return JSON.parse(fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8')); }
   catch { return []; }
-}
-
-function loadDemos() {
-  try   { return JSON.parse(fs.readFileSync(path.join(__dirname, 'demos.json'), 'utf8')); }
-  catch { return []; }
-}
-
-function saveDemos(demos) {
-  fs.writeFileSync(path.join(__dirname, 'demos.json'), JSON.stringify(demos, null, 2));
 }
 
 function requireAuth(req, res, next) {
@@ -672,6 +680,64 @@ apiRouter.get('/demos/:id', (req, res) => {
   const demo = loadDemos().find(d => d.id === req.params.id);
   if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
   res.json(demo);
+});
+
+// ── Recrawl history (controllo periodico "il sito è stato aggiornato?") ──────
+// Storico letto da data/knowledge-engine/recrawl-history.json (scritto solo
+// da src/knowledge-engine/recrawl-checker.js — mai da queste route). Stesso
+// pattern auth/filtro di GET /demos: admin vede tutto, gli altri solo le
+// proprie demo.
+apiRouter.get('/recrawl-history', requireAuth, (req, res) => {
+  const user = req.session.user;
+  const demos = loadDemos();
+  const visible = user.role === 'admin' ? demos : demos.filter(d => d.createdBy === user.username);
+  const history = readHistory();
+  const rows = visible
+    .filter(d => history[d.id])
+    .map(d => {
+      const h = history[d.id];
+      return {
+        demoId: d.id,
+        product: d.product,
+        clientUrl: d.clientUrl,
+        createdBy: d.createdBy,
+        lastRunAt: h.lastRunAt,
+        lastRunOutcome: h.lastRunOutcome,
+        runsCount: (h.runs || []).length
+      };
+    });
+  res.json(rows);
+});
+
+apiRouter.get('/recrawl-history/:demoId', requireAuth, (req, res) => {
+  const demo = loadDemos().find(d => d.id === req.params.demoId);
+  if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
+  const user = req.session.user;
+  if (user.role !== 'admin' && demo.createdBy !== user.username) {
+    return res.status(403).json({ error: 'Non autorizzato' });
+  }
+  const entry = readHistory()[demo.id];
+  if (!entry) return res.status(404).json({ error: 'Nessuno storico per questa demo' });
+  res.json(entry);
+});
+
+// Trigger manuale "esegui ora" dalla UI. Risponde subito e lascia girare la
+// pipeline in background (può richiedere minuti se ci sono pagine cambiate)
+// — il client rilegge GET /recrawl-history/:demoId per vedere l'esito,
+// stesso pattern di polling già usato per l'avanzamento dell'ingestion.
+apiRouter.post('/recrawl-history/:demoId/run', requireAuth, (req, res) => {
+  const demo = loadDemos().find(d => d.id === req.params.demoId);
+  if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
+  const user = req.session.user;
+  if (user.role !== 'admin' && demo.createdBy !== user.username) {
+    return res.status(403).json({ error: 'Non autorizzato' });
+  }
+  if (demo.searchMode !== 'crawling' || !demo.knowledgeBaseId) {
+    return res.status(400).json({ error: "La demo non è in modalità 'crawling'" });
+  }
+  runRecrawlForDemo(demo, { trigger: 'manual', triggeredBy: user.username })
+    .catch(err => console.error(`[recrawl] run-now fallito per ${demo.id}:`, err.message));
+  res.json({ started: true });
 });
 
 // ── Ingestion status (popup di avanzamento in config_*.html) ─────────────────

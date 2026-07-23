@@ -57,7 +57,7 @@ class PageFetcher {
   }
 
   async _ensureBrowser() {
-    if (this.browser && this.browser.isConnected()) return this.browser;
+    if (this.browser && this.browser.connected) return this.browser;
     if (this._launching) return this._launching;
     this._launching = puppeteer
       .launch({
@@ -114,11 +114,13 @@ class PageFetcher {
             if (res.status >= 500 || res.status === 429) {
               const e = new Error(`HTTP ${res.status}`);
               e.retryable = true;
+              e.status = res.status;
               throw e;
             }
             if (res.status >= 400) {
               const e = new Error(`HTTP ${res.status}`);
               e.retryable = false;
+              e.status = res.status;
               throw e;
             }
             const contentType = res.headers.get('content-type') || '';
@@ -136,7 +138,7 @@ class PageFetcher {
       );
       return { ok: true, html: result.html, finalUrl: result.finalUrl };
     } catch (e) {
-      return { ok: false, error: e.message, retryable: e.retryable !== false };
+      return { ok: false, error: e.message, retryable: e.retryable !== false, status: e.status ?? lastStatus };
     }
   }
 
@@ -164,11 +166,13 @@ class PageFetcher {
               if (status >= 500 || status === 429) {
                 const e = new Error(`HTTP ${status}`);
                 e.retryable = true;
+                e.status = status;
                 throw e;
               }
               if (status >= 400) {
                 const e = new Error(`HTTP ${status}`);
                 e.retryable = false;
+                e.status = status;
                 throw e;
               }
             }
@@ -176,7 +180,7 @@ class PageFetcher {
           { retries, baseDelayMs: 1000, isRetryable: (e) => e.retryable !== false }
         );
       } catch (e) {
-        return { ok: false, error: e.message, retryable: e.retryable !== false };
+        return { ok: false, error: e.message, retryable: e.retryable !== false, status: e.status };
       }
 
       const finalUrl = page.url();

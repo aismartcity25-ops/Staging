@@ -1,1 +1,82 @@
-[{"id":"1","username":"admin","password":"$2a$10$dIxMIn8BKStMcWYIFQUyUu1YJmMMUe4UZfIlxq6SsWHpYN.YrdldK","name":"Admin","role":"admin","products":["comunicai","medicai","tourism"]},{"id":"2","username":"Luca.com","password":"$2a$10$YR/PEGh/MPS3cvzBOlrKEuY4h1YhG1UKL0Gf6ldQOnWVNi9hiVhuy","name":"Luca Bacchelli","role":"sales","products":["comunicai","medicai","tourism"]},{"id":"3","username":"Denis.tec","password":"$2a$10$TEOONDmVvmwEB0NQ.qD83elFUbheyCLxjeLZXIza3GE12M0hqp5ry","name":"Denis Baruffaldi","role":"admin","products":["comunicai","medicai","tourism"]},{"id":"4","username":"Marzia.com","password":"$2a$10$pLEEtkWMLj0WChEboIgoNuZSwCYj2An539vAPSQsDroiuUl.AOALG","name":"Marzia Marotta","role":"sales","products":["comunicai","medicai","tourism"]},{"id":"5","username":"Lorenzo","password":"$2a$10$TEOONDmVvmwEB0NQ.qD83elFUbheyCLxjeLZXIza3GE12M0hqp5ry","name":"Lorenzo Canali","role":"admin","products":["comunicai","medicai","tourism"]}]
+[
+  {
+    "id": "1",
+    "username": "admin",
+    "password": "$2a$10$pPISDJTP9a3a.cP1gx/2MO/iwSC6wr381VZ1vWskidoTHTB1mynuu",
+    "name": "Admin",
+    "role": "admin",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "2",
+    "username": "mario.rossi",
+    "password": "$2a$10$pPISDJTP9a3a.cP1gx/2MO/iwSC6wr381VZ1vWskidoTHTB1mynuu",
+    "name": "Mario Rossi",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "3",
+    "username": "giulia.bianchi",
+    "password": "$2a$10$pPISDJTP9a3a.cP1gx/2MO/iwSC6wr381VZ1vWskidoTHTB1mynuu",
+    "name": "Giulia Bianchi",
+    "role": "sales",
+    "products": ["comunicai"]
+  },
+  {
+    "id": "4",
+    "username": "lorenzo.canali",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Lorenzo Canali",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "5",
+    "username": "max.ghelfi",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Max Ghelfi",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "6",
+    "username": "luca.bac",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Luca Bac",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "7",
+    "username": "marzia.mar",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Marzia Mar",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "8",
+    "username": "denis.bar",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Denis Bar",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "9",
+    "username": "dr.ana",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Dr. Ana",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  },
+  {
+    "id": "10",
+    "username": "fabio.neri",
+    "password": "$2a$10$dhuEi3aXm3yxSwHGOs/aL.JFAjhHXBIjQfxMCTD2dPa/N0lVyHVZe",
+    "name": "Fabio Neri",
+    "role": "sales",
+    "products": ["comunicai", "medicai"]
+  }
+]

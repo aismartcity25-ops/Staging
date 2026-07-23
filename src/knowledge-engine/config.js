@@ -32,7 +32,13 @@ const DEFAULT_OPTIONS = {
   // reference content (services/offices/hours) first — see
   // crawler/crawler.js. Large enough to always sort a news page after
   // every non-news page at the same discovery tier (seed/sitemap/link).
-  newsLikePriorityPenalty: 500
+  newsLikePriorityPenalty: 500,
+
+  // Priority: bare-ID download links (lib/url.js#isLikelyNonPagePath,
+  // e.g. /media/1891) are deprioritized by this much — larger than
+  // newsLikePriorityPenalty so a sitemap listing thousands of these
+  // alongside real content pages can't bury the real pages behind them.
+  nonPagePathPriorityPenalty: 2000
 };
 
 // How many jobs this process will run at once (each job runs its own

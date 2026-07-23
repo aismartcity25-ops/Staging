@@ -1240,7 +1240,7 @@
 .chatbot__citation-icon { font-size: 0.8rem; line-height: 1; }
 
 .chatbot__citation-text {
-  color: var(--white, #fff);
+  color: var(--cw-ai-text, var(--white));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

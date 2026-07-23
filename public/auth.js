@@ -30,6 +30,30 @@ async function checkAuth(expectedProduct) {
   }
 }
 
+/**
+ * Like checkAuth, but for pages not tied to a single product (e.g. the
+ * recrawl history admin page) — only requires a valid session, regardless
+ * of the user's currentProduct.
+ */
+async function checkAuthAny() {
+  try {
+    const res = await fetch(ApiConfig.get('me'), { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    const user = data.user;
+
+    if (!user) {
+      window.location.href = '/login_comunicai.html';
+      return null;
+    }
+
+    return user;
+  } catch (e) {
+    console.error('Auth check failed:', e);
+    window.location.href = '/login_comunicai.html';
+    return null;
+  }
+}
+
 async function logout(product) {
   try {
     await fetch(ApiConfig.get('logout'), { method: 'POST', credentials: 'include' });
@@ -42,5 +66,6 @@ async function logout(product) {
 // Export for use in other scripts
 if (typeof window !== 'undefined') {
   window.checkAuth = checkAuth;
+  window.checkAuthAny = checkAuthAny;
   window.logout = logout;
 }

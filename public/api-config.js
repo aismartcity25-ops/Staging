@@ -47,6 +47,7 @@ window.ApiConfig = {
     me: '/me',
     validateUrl: '/validate-url',
     demos: '/demos',
+    recrawlHistory: '/recrawl-history',
     siteAnalysis: '/site-analysis',
     chatMessage: '/chat/message',
     chatUpload: '/chat/upload',

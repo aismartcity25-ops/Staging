@@ -108,7 +108,7 @@ class CrawlDb {
         ON CONFLICT(url) DO NOTHING
       `),
       claimUrlBatch: this.db.prepare(`
-        SELECT id, url, host, depth, priority, attempts, max_attempts
+        SELECT id, url, host, depth, priority, attempts, max_attempts, discovered_from
         FROM urls
         WHERE status = 'queued' AND next_attempt_at <= ?
         ORDER BY priority DESC, depth ASC, id ASC
@@ -144,6 +144,11 @@ class CrawlDb {
       waitingUrlCount: this.db.prepare("SELECT COUNT(*) n, MIN(next_attempt_at) t FROM urls WHERE status = 'queued' AND next_attempt_at > ?"),
       leasedUrlCount: this.db.prepare("SELECT COUNT(*) n FROM urls WHERE status = 'leased'"),
       hasUrl: this.db.prepare('SELECT 1 FROM urls WHERE url = ? LIMIT 1'),
+      requeueUrl: this.db.prepare(`
+        UPDATE urls SET status = 'queued', attempts = 0, next_attempt_at = 0,
+               lease_owner = NULL, lease_expires_at = 0, last_error = NULL, updated_at = ?
+        WHERE url = ? AND status <> 'queued'
+      `),
 
       upsertPage: this.db.prepare(`
         INSERT INTO pages (url, canonical_url, title, description, lang, text, content_hash, depth, fetched_at, ingest_status, updated_at)
@@ -226,6 +231,28 @@ class CrawlDb {
       return inserted;
     });
     return insert(items);
+  }
+
+  /**
+   * Forces a re-fetch of specific URLs on the next run: brand-new URLs
+   * (never seen by this job) are inserted as 'queued' via enqueueMany;
+   * URLs already fetched/failed/skipped are flipped back to 'queued' with
+   * their attempt counter reset. Used by the periodic recrawl checker to
+   * re-visit only the pages a site's own freshness signal (site-analyzer)
+   * says have changed, instead of re-crawling the whole site.
+   */
+  requeueUrls(urls) {
+    if (!urls || !urls.length) return 0;
+    this.enqueueMany(urls.map((url) => ({ url, depth: 0, priority: 1000, discoveredFrom: 'recrawl' })));
+    const tx = this.db.transaction((list) => {
+      let requeued = 0;
+      for (const url of list) {
+        const info = this.stmts.requeueUrl.run(now(), url);
+        if (info.changes) requeued++;
+      }
+      return requeued;
+    });
+    return tx(urls);
   }
 
   claimUrlBatch(n, owner, leaseMs) {

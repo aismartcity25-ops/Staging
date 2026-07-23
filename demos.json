@@ -481,5 +481,345 @@
     "questions": [],
     "logo": "",
     "knowledgeBaseId": "322399fb-7d78-4e55-8b35-3cc55bdcef19"
+  },
+  {
+    "id": "8df5113a-1b5f-46ab-bb17-70ba06b07dc6",
+    "createdAt": "2026-07-22T07:06:16.796Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://comune.poggibonsi.si.it/it",
+    "searchUrls": [
+      "https://comune.poggibonsi.si.it/it"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "welcomeMessage": "",
+    "suggestedQuestions": [],
+    "logo": "/uploads/d39f970f-6131-4b46-a559-e5bb144d0bc8.jpg",
+    "siteName": "",
+    "colors": {
+      "primary": "#8f3c38",
+      "secondary": "#2e3c5c",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#8f3c38",
+      "aiText": "#ffffff"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 3,
+        "saturate": 145,
+        "opacity": 0.11
+      }
+    },
+    "knowledgeBaseId": "fe190310-afee-43ea-9bbc-a1a12b8db006",
+    "welcome": "",
+    "questions": [],
+    "updatedAt": "2026-07-22T07:20:35.264Z"
+  },
+  {
+    "id": "c0eb6475-2f48-47b0-bed5-0bdd6bd3a04d",
+    "createdAt": "2026-07-22T07:27:48.051Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.stezzano.bg.it/index.php/it",
+    "searchUrls": [
+      "https://www.comune.stezzano.bg.it/index.php/it"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#828282",
+      "secondary": "#e60000",
+      "userBg": "#2d2c96",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto nel Comune di Stezzano, io sono Ste il tuo Assistente Virtuale!",
+    "questions": [],
+    "logo": "/uploads/c68a2cc0-3a56-4362-8eb1-80b27c3513ae.jpg",
+    "crawlMaxDepth": 5,
+    "crawlMaxPages": 700,
+    "knowledgeBaseId": "8e4770bf-7073-4140-a1e1-02164af69fe8"
+  },
+  {
+    "id": "28852835-95e6-46ca-afed-f4d0eda6051d",
+    "createdAt": "2026-07-22T08:16:22.225Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.cremona.it/",
+    "searchUrls": [
+      "https://www.comune.cremona.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a4c8e",
+      "secondary": "#388567",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto nel comune di Cremona, come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/1ea27e65-b4fc-42c3-9f55-a7c94b0faa11.jpg",
+    "knowledgeBaseId": "1e8e38ec-b544-42f7-b196-aff613abd4ab",
+    "updatedAt": "2026-07-22T08:39:04.514Z"
+  },
+  {
+    "id": "721f3f1a-a235-4c89-94b5-0057432c9a9c",
+    "createdAt": "2026-07-22T10:23:17.793Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.conselice.ra.it/",
+    "searchUrls": [
+      "https://www.comune.conselice.ra.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#13111d",
+      "secondary": "#241593",
+      "userBg": "#1c3154",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "/uploads/28259a26-7c8e-4787-a430-33c9dd227892.png",
+    "knowledgeBaseId": "da1eef32-63e4-480b-afd6-cae6295e39d0"
+  },
+  {
+    "id": "56723b85-e9dc-416e-989b-e385379c69ce",
+    "createdAt": "2026-07-22T10:45:06.184Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.poviglio.re.it/",
+    "searchUrls": [
+      "https://www.comune.poviglio.re.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#1a8c5c",
+      "secondary": "#13a06a",
+      "userBg": "#3b82f6",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 24,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "",
+    "questions": [],
+    "logo": "",
+    "knowledgeBaseId": "d891814a-de01-415b-8b21-00e8586b2736"
+  },
+  {
+    "id": "b74e458f-675e-4a6b-954d-dc6be94c86f1",
+    "createdAt": "2026-07-23T07:30:20.049Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.fontanellato.pr.it/",
+    "searchUrls": [
+      "https://www.comune.fontanellato.pr.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#de071d",
+      "secondary": "#841520",
+      "userBg": "#de071d",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il comune di Fontanellato. Come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/c4af584c-3b24-4253-aad0-42c1fe7e4bc7.png",
+    "knowledgeBaseId": "b1ac7afb-eaa8-40b2-b95f-e2360d54fc9a"
+  },
+  {
+    "id": "2ac9e60d-6d2d-45b2-b1ac-6464582bb68c",
+    "createdAt": "2026-07-23T07:56:35.253Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.traversetolo.pr.it/",
+    "searchUrls": [
+      "https://www.comune.traversetolo.pr.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#3a0e03",
+      "secondary": "#661703",
+      "userBg": "#661703",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente virtuale per il comune di Traversetolo. Come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/01fb2051-2fca-4dff-9769-5cc1ca40fc93.png",
+    "knowledgeBaseId": "3a34c624-1744-4021-b580-9df388d50dcb"
+  },
+  {
+    "id": "3635d917-73dd-4c93-b6e5-0c8bd16410e7",
+    "createdAt": "2026-07-23T08:16:18.266Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.sanbonifacio.vr.it/",
+    "searchUrls": [
+      "https://www.comune.sanbonifacio.vr.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#0a1943",
+      "secondary": "#112c78",
+      "userBg": "#112c78",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente virtuale per il comune di San Bonifacio. Come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/edc55089-2596-4d91-b986-56a6bdaa288d.png",
+    "knowledgeBaseId": "ba2dbb27-b540-44bd-a15e-be78c2bbab6c"
+  },
+  {
+    "id": "3a4d9b6f-9bd8-43bd-946c-4fa853240dc5",
+    "createdAt": "2026-07-23T08:21:03.653Z",
+    "createdBy": "admin",
+    "product": "comunicai",
+    "clientUrl": "https://www.comune.san-secondo-parmense.pr.it/",
+    "searchUrls": [
+      "https://www.comune.san-secondo-parmense.pr.it/"
+    ],
+    "searchMode": "crawling",
+    "instructions": "",
+    "colors": {
+      "primary": "#0b3c28",
+      "secondary": "#0c402b",
+      "userBg": "#0c402b",
+      "userText": "#ffffff",
+      "aiBg": "#ffffff",
+      "aiText": "#1f2937"
+    },
+    "style": {
+      "borderRadius": {
+        "window": 32,
+        "bubble": 32
+      },
+      "position": "bottom-right",
+      "sizePreset": "standard",
+      "glass": {
+        "blur": 24,
+        "saturate": 200,
+        "opacity": 0.12
+      }
+    },
+    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il comune di San Secondo Parmense. Come posso aiutarti?",
+    "questions": [],
+    "logo": "/uploads/8cb8ff50-0690-4dfd-9724-828a23e61a77.png",
+    "knowledgeBaseId": "37746bcd-f429-467f-bf1b-af617a58f00f"
   }
 ]

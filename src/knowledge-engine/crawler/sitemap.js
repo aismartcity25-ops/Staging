@@ -6,7 +6,7 @@ const { withRetry } = require('../lib/retry');
 
 const MAX_SITEMAPS = 50;
 const MAX_URLS = 50000;
-const MAX_SITEMAP_DEPTH = 3;
+const MAX_SITEMAP_DEPTH = 5;
 
 async function fetchXml(url, timeoutMs) {
   return withRetry(

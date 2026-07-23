@@ -42,6 +42,27 @@ function isNewsLikePath(url) {
   }
 }
 
+// Institutional CMS platforms (Drupal and similar, common across comune/
+// clinica sites) commonly serve binary downloads (PDFs, docs) behind a
+// path with no file extension at all — e.g. /media/1891 — so
+// BINARY_EXTENSIONS can't exclude them before they're fetched. A sitemap
+// that lists thousands of these alongside real content pages, all at the
+// same discovery-tier priority, can bury the real pages behind a long
+// run of downloads. Not a hard exclude (occasionally a real page does
+// live at such a path) — see isLikelyNonPagePath, used only to
+// deprioritize, never to skip.
+const LIKELY_NON_PAGE_PATH_PATTERN = /(^|\/)(media|file|files|document[oi]?|documenti|allegat[oi]|attachment[si]?|download[s]?|asset[s]?|risorsa|risorse)\/\d+(\/|$)/i;
+
+/** True if the URL's path looks like a bare-ID binary download (e.g. /media/1891) rather than a content page. */
+function isLikelyNonPagePath(url) {
+  try {
+    const pathname = new URL(url).pathname;
+    return LIKELY_NON_PAGE_PATH_PATTERN.test(pathname);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Canonicalize a URL for queueing/dedup purposes. Returns null only for
  * URLs that are structurally impossible to crawl (bad scheme, malformed,
@@ -101,4 +122,4 @@ function sameSite(hostA, hostB) {
   return registrableHost(hostA) === registrableHost(hostB);
 }
 
-module.exports = { normalizeUrl, hostOf, registrableHost, sameSite, isNewsLikePath };
+module.exports = { normalizeUrl, hostOf, registrableHost, sameSite, isNewsLikePath, isLikelyNonPagePath };

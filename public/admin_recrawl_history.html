@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storico Recrawl</title>
+  <script src="/api-config.js"></script>
+  <script src="/auth.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #f5f9f7;
+      --panel:   #ffffff;
+      --panel2:  #e8f5ee;
+      --border:  rgba(26, 140, 92, 0.15);
+      --border2: rgba(26, 140, 92, 0.08);
+      --accent:  #1a8c5c;
+      --accent2: #13a06a;
+      --text:    #1a202c;
+      --muted:   #718096;
+      --error:   #ff4d6d;
+      --success: #00e5a0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border2);
+      background: rgba(5, 13, 26, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+    .logo-name span { color: var(--success); }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .user-badge { font-size: 13px; color: rgba(255,255,255,0.7); }
+    .user-badge strong { color: #fff; }
+    .btn-logout {
+      padding: 7px 16px; background: transparent; border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: 8px; color: rgba(255,255,255,0.8); font-family: inherit; font-size: 13px;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+
+    main { flex: 1; padding: 40px 32px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+    .page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    .page-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+    .toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .toolbar input, .toolbar select {
+      padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 13.5px; background: var(--panel); color: var(--text);
+    }
+    .toolbar input { flex: 1; min-width: 200px; }
+
+    .panel {
+      background: var(--panel); border: 1.5px solid var(--border); border-radius: 16px;
+      overflow: hidden; box-shadow: 0 2px 12px rgba(26,140,92,0.05);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead th {
+      text-align: left; padding: 12px 16px; background: var(--panel2);
+      font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted);
+      cursor: pointer; user-select: none; white-space: nowrap;
+    }
+    thead th:hover { color: var(--accent); }
+    tbody td { padding: 12px 16px; border-top: 1px solid var(--border2); vertical-align: top; }
+    tbody tr.demo-row { cursor: pointer; }
+    tbody tr.demo-row:hover { background: rgba(26,140,92,0.04); }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+      border-radius: 999px; font-size: 12px; font-weight: 600;
+    }
+    .pill.updated   { background: rgba(0,229,160,0.15); color: #0a8f61; }
+    .pill.no-changes{ background: rgba(113,128,150,0.15); color: var(--muted); }
+    .pill.error     { background: rgba(255,77,109,0.12); color: var(--error); }
+
+    .empty-state { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    .detail-row td { background: var(--bg); padding: 0 16px 16px 16px; }
+    .detail-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+    .detail-table th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; }
+    .detail-table td { padding: 8px 10px; border-top: 1px solid var(--border2); }
+    .pages-list { margin: 0; padding-left: 18px; }
+    .pages-list li { margin-bottom: 2px; word-break: break-all; }
+
+    .btn-run {
+      padding: 6px 12px; background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    }
+    .btn-run:hover { background: var(--accent2); }
+    .btn-run:disabled { opacity: .5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-name">Recrawl · <span>Storico</span></div>
+    <div class="header-right">
+      <div class="user-badge">Ciao, <strong id="userName">—</strong></div>
+      <button class="btn-logout" onclick="logout('comunicai')">Esci</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">Storico controlli e recrawl</div>
+    <div class="page-subtitle">Una riga per demo in modalità crawling — clicca per vedere il dettaglio dei singoli controlli.</div>
+
+    <div class="toolbar">
+      <input type="text" id="filterText" placeholder="Filtra per sito o prodotto…">
+      <select id="filterOutcome">
+        <option value="">Tutti gli esiti</option>
+        <option value="updated">Aggiornato</option>
+        <option value="no-changes">Nessuna modifica</option>
+        <option value="error">Errore</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th data-sort="clientUrl">Demo</th>
+            <th data-sort="lastRunAt">Ultimo controllo</th>
+            <th data-sort="lastRunOutcome">Esito</th>
+            <th data-sort="runsCount">N. esecuzioni</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">Nessuno storico disponibile ancora.</div>
+    </div>
+  </main>
+
+  <script>
+    let allRows = [];
+    let sortKey = 'lastRunAt';
+    let sortDir = -1;
+    const expanded = new Set();
+    const detailCache = new Map();
+
+    const OUTCOME_LABEL = { updated: 'Aggiornato', 'no-changes': 'Nessuna modifica', error: 'Errore' };
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function pill(outcome) {
+      return `<span class="pill ${outcome}">${OUTCOME_LABEL[outcome] || outcome}</span>`;
+    }
+
+    function applyFiltersAndSort() {
+      const text = document.getElementById('filterText').value.trim().toLowerCase();
+      const outcome = document.getElementById('filterOutcome').value;
+      let rows = allRows.filter(r => {
+        if (outcome && r.lastRunOutcome !== outcome) return false;
+        if (text && !(`${r.clientUrl} ${r.product}`.toLowerCase().includes(text))) return false;
+        return true;
+      });
+      rows.sort((a, b) => {
+        const av = a[sortKey] ?? '', bv = b[sortKey] ?? '';
+        if (av < bv) return -1 * sortDir;
+        if (av > bv) return 1 * sortDir;
+        return 0;
+      });
+      renderRows(rows);
+    }
+
+    function renderRows(rows) {
+      const body = document.getElementById('historyBody');
+      const empty = document.getElementById('emptyState');
+      body.innerHTML = '';
+      empty.style.display = rows.length ? 'none' : 'block';
+
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        tr.className = 'demo-row';
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(r.product)}</strong><br><span style="color:var(--muted);font-size:12px">${escapeHtml(r.clientUrl)}</span></td>
+          <td>${formatDate(r.lastRunAt)}</td>
+          <td>${pill(r.lastRunOutcome)}</td>
+          <td>${r.runsCount}</td>
+        `;
+        tr.onclick = () => toggleDetail(r.demoId);
+        body.appendChild(tr);
+
+        if (expanded.has(r.demoId)) {
+          const detailTr = document.createElement('tr');
+          detailTr.className = 'detail-row';
+          const td = document.createElement('td');
+          td.colSpan = 4;
+          td.innerHTML = detailCache.has(r.demoId) ? renderDetail(detailCache.get(r.demoId), r) : 'Caricamento…';
+          detailTr.appendChild(td);
+          body.appendChild(detailTr);
+        }
+      }
+    }
+
+    function renderDetail(entry, row) {
+      const runs = (entry.runs || []).slice().reverse();
+      const runsHtml = runs.map(run => `
+        <tr>
+          <td>${formatDate(run.startedAt)}</td>
+          <td>${run.trigger === 'cron' ? 'Automatico' : `Manuale${run.triggeredBy ? ` (${escapeHtml(run.triggeredBy)})` : ''}`}</td>
+          <td>${run.pagesChecked}</td>
+          <td>${run.pagesChanged.length ? `<ul class="pages-list">${run.pagesChanged.map(p => `<li>${escapeHtml(p.url)} <span style="color:var(--muted)">(${escapeHtml(p.lastModifiedSource || '')})</span></li>`).join('')}</ul>` : '—'}</td>
+          <td>${run.pagesRecrawled.length}</td>
+          <td>${pill(run.outcome)}${run.error ? `<br><span style="color:var(--error);font-size:11.5px">${escapeHtml(run.error)}</span>` : ''}</td>
+          <td>${Math.round(run.durationMs / 1000)}s</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn-run" onclick="event.stopPropagation(); runNow('${row.demoId}', this)">Esegui ora</button>
+        </div>
+        <table class="detail-table">
+          <thead><tr><th>Data</th><th>Trigger</th><th>Controllate</th><th>Cambiate</th><th>Ricrawlate</th><th>Esito</th><th>Durata</th></tr></thead>
+          <tbody>${runsHtml || '<tr><td colspan="7">Nessuna esecuzione registrata.</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    async function toggleDetail(demoId) {
+      if (expanded.has(demoId)) {
+        expanded.delete(demoId);
+      } else {
+        expanded.add(demoId);
+        if (!detailCache.has(demoId)) {
+          try {
+            const res = await fetch(`${ApiConfig.get('recrawlHistory')}/${demoId}`, { credentials: 'include' });
+            if (res.ok) detailCache.set(demoId, await res.json());
+          } catch (e) {
+            console.error('Errore caricamento dettaglio:', e);
+          }
+        }
+      }
+      applyFiltersAndSort();
+    }
+
+    async function runNow(demoId, btn) {
+      btn.disabled = true;
+      btn.textContent = 'Avviato…';
+      try {
+        await fetch(`${ApiConfig.get('recrawlHistory')}/${demoId}/run`, { method: 'POST', credentials: 'include' });
+      } catch (e) {
+        console.error('Errore avvio recrawl:', e);
+      }
+    }
+
+    document.querySelectorAll('#historyTable thead th').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        sortDir = (sortKey === key) ? -sortDir : -1;
+        sortKey = key;
+        applyFiltersAndSort();
+      });
+    });
+    document.getElementById('filterText').addEventListener('input', applyFiltersAndSort);
+    document.getElementById('filterOutcome').addEventListener('change', applyFiltersAndSort);
+
+    (async function init() {
+      const user = await checkAuthAny();
+      if (!user) return;
+      document.getElementById('userName').textContent = user.name || user.username;
+
+      try {
+        const res = await fetch(ApiConfig.get('recrawlHistory'), { credentials: 'include' });
+        allRows = res.ok ? await res.json() : [];
+      } catch (e) {
+        console.error('Errore caricamento storico:', e);
+        allRows = [];
+      }
+      applyFiltersAndSort();
+    })();
+  </script>
+</body>
+</html>

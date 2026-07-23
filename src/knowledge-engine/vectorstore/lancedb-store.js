@@ -39,6 +39,19 @@ async function insertChunks(jobId, rows) {
   return rows.length;
 }
 
+/**
+ * Deletes every indexed chunk for one URL. Used by the periodic recrawl
+ * checker right before re-ingesting a page whose site-truth freshness
+ * signal changed: insertChunks only ever adds rows, so without this the
+ * old chunks for a changed page would sit alongside the new ones forever,
+ * both retrievable by RAG.
+ */
+async function deleteChunksForUrl(jobId, url) {
+  const table = await openOrCreateTable(jobId);
+  const escaped = String(url).replace(/'/g, "''");
+  await table.delete(`url = '${escaped}'`);
+}
+
 async function rowCount(jobId) {
   const table = await openOrCreateTable(jobId);
   try {
@@ -61,4 +74,4 @@ async function buildIndex(jobId) {
   return { built: true, count };
 }
 
-module.exports = { loadIndexedHashes, insertChunks, rowCount, buildIndex, MIN_VECTORS_FOR_INDEX };
+module.exports = { loadIndexedHashes, insertChunks, deleteChunksForUrl, rowCount, buildIndex, MIN_VECTORS_FOR_INDEX };

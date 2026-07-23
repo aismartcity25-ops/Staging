@@ -22,7 +22,7 @@ data/knowledge-engine/*
 !data/knowledge-engine/jobs
 data/knowledge-engine/jobs/*
 !data/knowledge-engine/jobs/.gitkeep
-
+/certs
 # Logs
 *.log
 npm-debug.log*
