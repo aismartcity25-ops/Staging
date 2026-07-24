@@ -121,6 +121,16 @@ async function orchestrateChat(req, res, openai, { rag } = {}) {
     buildApiUserContent(messageText, attachment)
   ]);
 
+  // Kill-switch per le demo disattivate (vedi PATCH /api/demos/:id/enabled
+  // in server.js): questo è l'unico punto che il widget incorporato sul sito
+  // reale del cliente attraversa sempre, a differenza di GET /demos/:id (solo
+  // anteprima demo.html) — va controllato qui perché è ciò che genera
+  // davvero le risposte. Risposta JSON semplice: gli header SSE non sono
+  // ancora stati scritti a questo punto (vedi sotto).
+  if (demo && demo.enabled === false) {
+    return res.status(403).json({ success: false, error: 'Questa demo è stata disattivata.' });
+  }
+
   let customInstructions = '';
   let demoProduct = product;
   if (demo) {

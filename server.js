@@ -589,7 +589,8 @@ apiRouter.post('/demos', requireAuth, (req, res) => {
     // vengono personalizzati — vedi GET /api/demos/:id/suggestions sotto.
     welcome: sanitizeWelcome(welcome),
     questions: sanitizeQuestions(questions),
-    logo: sanitizeLogo(logo)
+    logo: sanitizeLogo(logo),
+    enabled: true
   };
   const sanitizedMaxDepth = sanitizeCrawlNumber(crawlMaxDepth, 1, 10);
   const sanitizedMaxPages = sanitizeCrawlNumber(crawlMaxPages, 10, 2000);
@@ -676,9 +677,35 @@ apiRouter.delete('/demos/:id', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// Attiva/disattiva una demo senza cancellarla (a differenza di DELETE sopra,
+// non tocca dati/knowledge base: la demo resta modificabile e riattivabile in
+// qualsiasi momento). Una demo disattivata sparisce dal punto di vista del
+// pubblico: GET /demos/:id e /demos/:id/suggestions rispondono 404 e
+// orchestrateChat rifiuta i messaggi (vedi src/orchestrator.js), quindi né
+// l'anteprima (demo.html) né il widget incorporato sul sito del cliente si
+// aprono più — vedi anche `npm run disable-demo` / `npm run enable-demo`.
+apiRouter.patch('/demos/:id/enabled', requireAuth, (req, res) => {
+  const demos = loadDemos();
+  const demo = demos.find(d => d.id === req.params.id);
+  if (!demo) return res.status(404).json({ success: false, error: 'Demo non trovata' });
+
+  const user = req.session.user;
+  if (user.role !== 'admin' && demo.createdBy !== user.username) {
+    return res.status(403).json({ success: false, error: 'Non autorizzato a modificare questa demo' });
+  }
+
+  if (typeof req.body.enabled !== 'boolean') {
+    return res.status(400).json({ success: false, error: 'Campo "enabled" booleano richiesto' });
+  }
+
+  demo.enabled = req.body.enabled;
+  saveDemos(demos);
+  res.json({ success: true, demo });
+});
+
 apiRouter.get('/demos/:id', (req, res) => {
   const demo = loadDemos().find(d => d.id === req.params.id);
-  if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
+  if (!demo || demo.enabled === false) return res.status(404).json({ error: 'Demo non trovata' });
   res.json(demo);
 });
 
@@ -816,7 +843,7 @@ apiRouter.get('/ingestion/:kbId/progress', requireAuth, (req, res) => {
 // una pagina demo pubblica, non da un contesto autenticato admin.
 apiRouter.get('/demos/:id/suggestions', (req, res) => {
   const demo = loadDemos().find(d => d.id === req.params.id);
-  if (!demo) return res.status(404).json({ error: 'Demo non trovata' });
+  if (!demo || demo.enabled === false) return res.status(404).json({ error: 'Demo non trovata' });
 
   let siteName = '';
   try { siteName = new URL(demo.clientUrl).hostname.replace(/^www\./, ''); }

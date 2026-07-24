@@ -272,6 +272,28 @@
     .btn-edit-demo:hover { background: rgba(0,102,204,0.12); }
     .btn-edit-demo svg { width: 16px; height: 16px; }
 
+    .btn-toggle-demo {
+      width: 34px; height: 34px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgb(255, 255, 255);
+      border: 1.5px solid rgba(245,158,11,0.4);
+      border-radius: 8px;
+      color: #b45309;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-toggle-demo:hover { background: rgba(245,158,11,0.16); }
+    .btn-toggle-demo svg { width: 16px; height: 16px; }
+
+    .demo-card--disabled { opacity: 0.55; }
+    .demo-card-status {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 20px; margin-left: 8px;
+      background: rgba(245,158,11,0.18); color: #b45309;
+      border: 1px solid rgba(245,158,11,0.35);
+    }
+
     .btn-show-more {
       display:block; width:100%; margin-top:12px;
       padding:10px; text-align:center;
@@ -1401,18 +1423,29 @@
       listEl.innerHTML = allDemos.slice(0, demoShowCount).map(d=>{
         const kbId = d.knowledgeBaseId;
         const stillCrawling = kbId && !kbReadyCache.has(kbId);
-        const openBtn = stillCrawling
+        const isDisabled = d.enabled === false;
+        const openBtn = isDisabled
+          ? `<a class="btn-open-demo btn-open-demo--pending" href="#" title="Demo disattivata" onclick="return false;">Disattivata</a>`
+          : stillCrawling
           ? `<a class="btn-open-demo btn-open-demo--pending" href="#" title="Crawling in corso: attendi il completamento" onclick="return false;">Attendi…</a>`
           : `<a class="btn-open-demo" href="/demo.html?id=${d.id}" target="_blank">Apri ↗</a>`;
+        const toggleBtn = isDisabled
+          ? `<button class="btn-toggle-demo" title="Riattiva demo" onclick="toggleDemo('${d.id}', true)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+            </button>`
+          : `<button class="btn-toggle-demo" title="Disattiva demo" onclick="toggleDemo('${d.id}', false)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+            </button>`;
         return `
-        <div class="demo-card">
+        <div class="demo-card${isDisabled ? ' demo-card--disabled' : ''}">
           <div class="demo-card-left">
-            <div class="demo-card-url">${d.clientUrl}</div>
+            <div class="demo-card-url">${d.clientUrl}${isDisabled ? '<span class="demo-card-status">Disattivata</span>' : ''}</div>
             <div class="demo-card-meta">${new Date(d.createdAt).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${d.createdBy}</div>
           </div>
           <div class="demo-card-actions">
             ${openBtn}
             <!-- Pulsante "Modifica demo" temporaneamente disattivato su richiesta utente (23/07/2026): ripristinare rimuovendo questo commento -->
+            ${toggleBtn}
             <button class="btn-delete-demo" title="Cancella demo" onclick="deleteDemo('${d.id}')">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7zm2 2v11h8V9H8zm1-5h6l1 2H8l1-2zM4 6h16v2H4V6z"/></svg>
             </button>
@@ -1493,6 +1526,30 @@
         }
         allDemos = allDemos.filter(d => d.id !== id);
         if (demoShowCount > allDemos.length) demoShowCount = Math.max(DEMO_PAGE_SIZE, allDemos.length);
+        renderDemoList();
+      } catch { alert('Errore di connessione.'); }
+    }
+
+    // A differenza di deleteDemo, non rimuove nulla: sposta solo il flag
+    // "enabled" (vedi PATCH /api/demos/:id/enabled in server.js), quindi è
+    // sempre reversibile richiamando toggleDemo(id, true).
+    async function toggleDemo(id, nextEnabled) {
+      const confirmMsg = nextEnabled ? 'Riattivare questa demo?' : 'Disattivare questa demo? Non sarà più accessibile né in anteprima né sul sito del cliente, ma potrà essere riattivata in qualsiasi momento.';
+      if (!confirm(confirmMsg)) return;
+      try {
+        const res = await fetch(ApiConfig.get('demos') + '/' + id + '/enabled', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ enabled: nextEnabled })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.error || 'Errore nell\'aggiornamento della demo.');
+          return;
+        }
+        const demo = allDemos.find(d => d.id === id);
+        if (demo) demo.enabled = nextEnabled;
         renderDemoList();
       } catch { alert('Errore di connessione.'); }
     }

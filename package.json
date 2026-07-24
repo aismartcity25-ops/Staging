@@ -13,7 +13,9 @@
     "recrawl-check": "node scripts/recrawl-check.js",
     "job-status": "node scripts/job-status.js",
     "cancel-job": "node scripts/cancel-job.js",
-    "delete-job": "node scripts/delete-job.js"
+    "delete-job": "node scripts/delete-job.js",
+    "disable_demo": "node scripts/disable-demo.js",
+    "enable_demo": "node scripts/enable-demo.js"
   },
   "dependencies": {
     "@heygen/liveavatar-web-sdk": "^0.0.11",

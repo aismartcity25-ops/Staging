@@ -16,7 +16,8 @@
       "userText": "#ffffff",
       "aiBg": "#e5e7eb",
       "aiText": "#1f2937"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "f70ed985-962e-4ebf-871e-e90985f81e3d",
@@ -35,7 +36,8 @@
       "userText": "#000000",
       "aiBg": "#5d092d",
       "aiText": "#ffffff"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "fc5b0a05-c607-469b-86dd-db9144932759",
@@ -55,7 +57,8 @@
       "aiBg": "#1b5917",
       "aiText": "#000000"
     },
-    "updatedAt": "2026-03-12T16:36:39.748Z"
+    "updatedAt": "2026-03-12T16:36:39.748Z",
+    "enabled": true
   },
   {
     "id": "33483c56-e6bc-40ef-bab5-70511b6f2596",
@@ -74,7 +77,8 @@
       "userText": "#ffffff",
       "aiBg": "#5e0303",
       "aiText": "#ffffff"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "53abe1da-b6ba-421b-af8c-28f5fb3f0a10",
@@ -93,7 +97,8 @@
       "userText": "#ffffff",
       "aiBg": "#ec092b",
       "aiText": "#ffffff"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "f30d80fa-af21-41d6-ac2e-1f788fa8af3f",
@@ -112,7 +117,8 @@
       "userText": "#000000",
       "aiBg": "#ec092b",
       "aiText": "#ffffff"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "0af689b7-be30-45d6-93ca-eb6fb2784770",
@@ -132,7 +138,8 @@
       "aiBg": "#a51d2d",
       "aiText": "#e5e7eb"
     },
-    "updatedAt": "2026-03-12T16:17:26.892Z"
+    "updatedAt": "2026-03-12T16:17:26.892Z",
+    "enabled": true
   },
   {
     "id": "0b12ac15-50a3-419d-a94c-1bffac891d24",
@@ -152,7 +159,8 @@
       "aiBg": "#a51d2d",
       "aiText": "#e5e7eb"
     },
-    "updatedAt": "2026-03-12T16:21:23.731Z"
+    "updatedAt": "2026-03-12T16:21:23.731Z",
+    "enabled": true
   },
   {
     "id": "cd9ccd35-c92f-43aa-b014-002cffcbc391",
@@ -172,7 +180,8 @@
       "aiBg": "#b5835a",
       "aiText": "#e5e7eb"
     },
-    "updatedAt": "2026-03-12T16:29:32.015Z"
+    "updatedAt": "2026-03-12T16:29:32.015Z",
+    "enabled": true
   },
   {
     "id": "5a4c52ad-6b3e-474c-a876-94ed89b0b5c6",
@@ -191,7 +200,8 @@
       "userText": "#000000",
       "aiBg": "#b5835a",
       "aiText": "#e5e7eb"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "e98d6687-2665-40be-99ff-4e141f286570",
@@ -211,7 +221,8 @@
       "aiBg": "#1b5917",
       "aiText": "#000000"
     },
-    "updatedAt": "2026-03-12T16:38:56.262Z"
+    "updatedAt": "2026-03-12T16:38:56.262Z",
+    "enabled": true
   },
   {
     "id": "0329efc0-2d42-43fb-bf3f-8ea4a7e31fb1",
@@ -233,7 +244,8 @@
       "aiBg": "#1b5917",
       "aiText": "#000000"
     },
-    "updatedAt": "2026-03-12T16:44:41.559Z"
+    "updatedAt": "2026-03-12T16:44:41.559Z",
+    "enabled": true
   },
   {
     "id": "04da1617-9de4-454c-b6b6-70f88d552e2a",
@@ -255,7 +267,8 @@
       "aiBg": "#f6d32d",
       "aiText": "#1b5917"
     },
-    "updatedAt": "2026-03-12T16:47:18.493Z"
+    "updatedAt": "2026-03-12T16:47:18.493Z",
+    "enabled": true
   },
   {
     "id": "85b38799-a955-458e-8404-00120065c953",
@@ -276,7 +289,8 @@
       "userText": "#e01b24",
       "aiBg": "#f6d32d",
       "aiText": "#1b5917"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "bb552697-67fb-4d92-8ba7-69afa4c449b9",
@@ -306,7 +320,8 @@
       "userText": "#000000",
       "aiBg": "#0066cc",
       "aiText": "#e5e7eb"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "172a5f56-eb5d-4095-9981-337743eba499",
@@ -327,7 +342,8 @@
       "userText": "#ffffff",
       "aiBg": "#e5e7eb",
       "aiText": "#1f2937"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "e8b84959-0616-4362-831b-c2508071ca7e",
@@ -348,7 +364,8 @@
       "userText": "#ffffff",
       "aiBg": "#e5e7eb",
       "aiText": "#1f2937"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "cd12d568-4ba0-4cd3-9cf5-c274eedae828",
@@ -369,7 +386,8 @@
       "userText": "#ffffff",
       "aiBg": "#e5e7eb",
       "aiText": "#1f2937"
-    }
+    },
+    "enabled": true
   },
   {
     "id": "1e729602-9172-4f82-9f1d-fc5de5b5f464",
@@ -406,7 +424,8 @@
     "updatedAt": "2026-07-20T08:32:01.463Z",
     "welcome": "",
     "questions": [],
-    "logo": ""
+    "logo": "",
+    "enabled": true
   },
   {
     "id": "96035c1f-5279-4a6f-a87f-1334ee40a9d2",
@@ -443,7 +462,8 @@
     "welcome": "",
     "questions": [],
     "logo": "",
-    "knowledgeBaseId": "a683f03d-5025-42e2-89b3-4dfa4f066761"
+    "knowledgeBaseId": "a683f03d-5025-42e2-89b3-4dfa4f066761",
+    "enabled": true
   },
   {
     "id": "fb5f9830-2e42-4b90-a7e4-619a08517b66",
@@ -480,7 +500,8 @@
     "welcome": "",
     "questions": [],
     "logo": "",
-    "knowledgeBaseId": "322399fb-7d78-4e55-8b35-3cc55bdcef19"
+    "knowledgeBaseId": "322399fb-7d78-4e55-8b35-3cc55bdcef19",
+    "enabled": true
   },
   {
     "id": "8df5113a-1b5f-46ab-bb17-70ba06b07dc6",
@@ -521,7 +542,8 @@
     "knowledgeBaseId": "fe190310-afee-43ea-9bbc-a1a12b8db006",
     "welcome": "",
     "questions": [],
-    "updatedAt": "2026-07-22T07:20:35.264Z"
+    "updatedAt": "2026-07-22T07:20:35.264Z",
+    "enabled": true
   },
   {
     "id": "c0eb6475-2f48-47b0-bed5-0bdd6bd3a04d",
@@ -560,7 +582,8 @@
     "logo": "/uploads/c68a2cc0-3a56-4362-8eb1-80b27c3513ae.jpg",
     "crawlMaxDepth": 5,
     "crawlMaxPages": 700,
-    "knowledgeBaseId": "8e4770bf-7073-4140-a1e1-02164af69fe8"
+    "knowledgeBaseId": "8e4770bf-7073-4140-a1e1-02164af69fe8",
+    "enabled": true
   },
   {
     "id": "28852835-95e6-46ca-afed-f4d0eda6051d",
@@ -598,7 +621,8 @@
     "questions": [],
     "logo": "/uploads/1ea27e65-b4fc-42c3-9f55-a7c94b0faa11.jpg",
     "knowledgeBaseId": "1e8e38ec-b544-42f7-b196-aff613abd4ab",
-    "updatedAt": "2026-07-22T08:39:04.514Z"
+    "updatedAt": "2026-07-22T08:39:04.514Z",
+    "enabled": true
   },
   {
     "id": "721f3f1a-a235-4c89-94b5-0057432c9a9c",
@@ -635,7 +659,8 @@
     "welcome": "",
     "questions": [],
     "logo": "/uploads/28259a26-7c8e-4787-a430-33c9dd227892.png",
-    "knowledgeBaseId": "da1eef32-63e4-480b-afd6-cae6295e39d0"
+    "knowledgeBaseId": "da1eef32-63e4-480b-afd6-cae6295e39d0",
+    "enabled": true
   },
   {
     "id": "56723b85-e9dc-416e-989b-e385379c69ce",
@@ -672,7 +697,8 @@
     "welcome": "",
     "questions": [],
     "logo": "",
-    "knowledgeBaseId": "d891814a-de01-415b-8b21-00e8586b2736"
+    "knowledgeBaseId": "d891814a-de01-415b-8b21-00e8586b2736",
+    "enabled": true
   },
   {
     "id": "b74e458f-675e-4a6b-954d-dc6be94c86f1",
@@ -709,7 +735,8 @@
     "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il comune di Fontanellato. Come posso aiutarti?",
     "questions": [],
     "logo": "/uploads/c4af584c-3b24-4253-aad0-42c1fe7e4bc7.png",
-    "knowledgeBaseId": "b1ac7afb-eaa8-40b2-b95f-e2360d54fc9a"
+    "knowledgeBaseId": "b1ac7afb-eaa8-40b2-b95f-e2360d54fc9a",
+    "enabled": true
   },
   {
     "id": "2ac9e60d-6d2d-45b2-b1ac-6464582bb68c",
@@ -746,7 +773,8 @@
     "welcome": "Benvenuto in ComunicAI, sono il tuo assistente virtuale per il comune di Traversetolo. Come posso aiutarti?",
     "questions": [],
     "logo": "/uploads/01fb2051-2fca-4dff-9769-5cc1ca40fc93.png",
-    "knowledgeBaseId": "3a34c624-1744-4021-b580-9df388d50dcb"
+    "knowledgeBaseId": "3a34c624-1744-4021-b580-9df388d50dcb",
+    "enabled": true
   },
   {
     "id": "3635d917-73dd-4c93-b6e5-0c8bd16410e7",
@@ -783,7 +811,8 @@
     "welcome": "Benvenuto in ComunicAI, sono il tuo assistente virtuale per il comune di San Bonifacio. Come posso aiutarti?",
     "questions": [],
     "logo": "/uploads/edc55089-2596-4d91-b986-56a6bdaa288d.png",
-    "knowledgeBaseId": "ba2dbb27-b540-44bd-a15e-be78c2bbab6c"
+    "knowledgeBaseId": "ba2dbb27-b540-44bd-a15e-be78c2bbab6c",
+    "enabled": true
   },
   {
     "id": "3a4d9b6f-9bd8-43bd-946c-4fa853240dc5",
@@ -820,7 +849,8 @@
     "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il comune di San Secondo Parmense. Come posso aiutarti?",
     "questions": [],
     "logo": "/uploads/8cb8ff50-0690-4dfd-9724-828a23e61a77.png",
-    "knowledgeBaseId": "37746bcd-f429-467f-bf1b-af617a58f00f"
+    "knowledgeBaseId": "37746bcd-f429-467f-bf1b-af617a58f00f",
+    "enabled": true
   },
   {
     "id": "37556e68-2b5e-4951-84f1-584a074e0a8c",
@@ -859,7 +889,8 @@
     "logo": "",
     "crawlMaxDepth": 3,
     "crawlMaxPages": 50,
-    "knowledgeBaseId": "8b59c91c-7474-4ca0-ab63-539e2ff1d3bd"
+    "knowledgeBaseId": "8b59c91c-7474-4ca0-ab63-539e2ff1d3bd",
+    "enabled": true
   },
   {
     "id": "0e8ff11f-fce2-4aac-822a-6ac49ff6e263",
@@ -898,7 +929,8 @@
     "logo": "",
     "crawlMaxDepth": 5,
     "crawlMaxPages": 100,
-    "knowledgeBaseId": "9707f128-b77e-4af6-9649-9eed7c86de1b"
+    "knowledgeBaseId": "9707f128-b77e-4af6-9649-9eed7c86de1b",
+    "enabled": true
   },
   {
     "id": "aec97f17-6a85-407c-8076-f3b12b7e151d",
@@ -935,7 +967,8 @@
     "welcome": "Benvenuto in ComunicAI, Sono il tuo assistente per il comune di Cesano Boscone, come posso aiutarti?",
     "questions": [],
     "logo": "/uploads/7aaecb72-7b92-4c92-ab6f-737498c34e61.png",
-    "knowledgeBaseId": "79237153-4003-426e-8dbb-eca5b7d8c5ff"
+    "knowledgeBaseId": "79237153-4003-426e-8dbb-eca5b7d8c5ff",
+    "enabled": true
   },
   {
     "id": "77f0ec8e-8232-43e1-9762-2e53163db93c",
@@ -974,44 +1007,8 @@
     "logo": "",
     "crawlMaxDepth": 5,
     "crawlMaxPages": 100,
-    "knowledgeBaseId": "e877e33c-d594-4006-ad3c-cd3794f5f2f0"
-  },
-  {
-    "id": "61726d70-3f9f-4293-ae2e-39f3e4dc3802",
-    "createdAt": "2026-07-23T12:27:19.416Z",
-    "createdBy": "admin",
-    "product": "comunicai",
-    "clientUrl": "https://www.comune.tirano.so.it/it",
-    "searchUrls": [
-      "https://www.comune.tirano.so.it/it"
-    ],
-    "searchMode": "crawling",
-    "instructions": "",
-    "colors": {
-      "primary": "#8f3c38",
-      "secondary": "#8f3c38",
-      "userBg": "#2273f7",
-      "userText": "#ffffff",
-      "aiBg": "#8f3c38",
-      "aiText": "#ffffff"
-    },
-    "style": {
-      "borderRadius": {
-        "window": 24,
-        "bubble": 32
-      },
-      "position": "bottom-right",
-      "sizePreset": "standard",
-      "glass": {
-        "blur": 24,
-        "saturate": 200,
-        "opacity": 0.12
-      }
-    },
-    "welcome": "Benvenuto in ComunicAI, sono il tuo assistente per il Comune di Tirano. Come posso aiutarti?",
-    "questions": [],
-    "logo": "/uploads/bc0c12f1-ee3a-4c58-b787-cdd79a49c5bd.jpg",
-    "knowledgeBaseId": "1ac484a7-96c9-4c60-9610-c35b95e0ece3"
+    "knowledgeBaseId": "e877e33c-d594-4006-ad3c-cd3794f5f2f0",
+    "enabled": true
   },
   {
     "id": "71965e63-079a-49a6-b265-a3b5931c03cb",
@@ -1049,7 +1046,8 @@
     "questions": [],
     "logo": "",
     "crawlMaxPages": 98,
-    "knowledgeBaseId": "757eeb12-a13a-4e7f-a17e-36dbaccf7499"
+    "knowledgeBaseId": "757eeb12-a13a-4e7f-a17e-36dbaccf7499",
+    "enabled": true
   },
   {
     "id": "5721e43a-8b47-4ec6-9c38-bac468e68ff2",
@@ -1087,7 +1085,8 @@
     "questions": [],
     "logo": "",
     "crawlMaxPages": 100,
-    "knowledgeBaseId": "fe32aa0f-1e93-4b35-983f-3434c0a46b58"
+    "knowledgeBaseId": "fe32aa0f-1e93-4b35-983f-3434c0a46b58",
+    "enabled": true
   },
   {
     "id": "a8148a71-c743-4471-bf9f-5ac50051a8c8",
@@ -1125,7 +1124,8 @@
     "questions": [],
     "logo": "",
     "crawlMaxPages": 100,
-    "knowledgeBaseId": "7efc80d2-d966-4a74-8a01-1b59cc23c574"
+    "knowledgeBaseId": "7efc80d2-d966-4a74-8a01-1b59cc23c574",
+    "enabled": true
   },
   {
     "id": "da4cce2c-28ac-46a2-98ba-827680279754",
@@ -1163,44 +1163,7 @@
     "questions": [],
     "logo": "",
     "crawlMaxPages": 100,
-    "knowledgeBaseId": null
-  },
-  {
-    "id": "dd3979e4-f437-4bc9-8bd2-9e8d46c32167",
-    "createdAt": "2026-07-23T13:12:20.310Z",
-    "createdBy": "admin",
-    "product": "comunicai",
-    "clientUrl": "https://www.ai4smartcity.ai/servizi/notizie/notizie_homepage.aspx",
-    "searchUrls": [
-      "https://www.ai4smartcity.ai/servizi/notizie/notizie_homepage.aspx"
-    ],
-    "searchMode": "crawling",
-    "instructions": "",
-    "colors": {
-      "primary": "#1a8c5c",
-      "secondary": "#13a06a",
-      "userBg": "#3b82f6",
-      "userText": "#ffffff",
-      "aiBg": "#ffffff",
-      "aiText": "#1f2937"
-    },
-    "style": {
-      "borderRadius": {
-        "window": 24,
-        "bubble": 32
-      },
-      "position": "bottom-right",
-      "sizePreset": "standard",
-      "glass": {
-        "blur": 24,
-        "saturate": 200,
-        "opacity": 0.12
-      }
-    },
-    "welcome": "",
-    "questions": [],
-    "logo": "",
-    "crawlMaxPages": 50,
-    "knowledgeBaseId": "75993487-6732-4daa-b750-01be44df3e70"
+    "knowledgeBaseId": null,
+    "enabled": true
   }
 ]
